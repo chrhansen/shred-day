@@ -2,10 +2,19 @@ import { SkiDay, SkiStats } from '@/types/ski';
 
 export const skiService = {
   async getStats(): Promise<SkiStats> {
-    // TODO: Implement fetching stats from your API
-    console.warn('getStats not implemented - returning placeholder data');
-    // Placeholder structure, replace with actual fetch and data
-    return { totalDays: 0, uniqueResorts: 0, mostUsedSki: "N/A" };
+    const response = await fetch('https://example.com/stats', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch ski stats');
+    }
+
+    const stats: SkiStats = await response.json();
+    return stats;
   },
 
   async logDay(day: Omit<SkiDay, 'id'>): Promise<SkiDay> {
