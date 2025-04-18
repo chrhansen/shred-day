@@ -1,54 +1,30 @@
-# Welcome to your Lovable project
+# Ski days Builder
 
-## Project info
+An app for skiers to log and later view their skiing days. You enter things like date, ski resort, skis, who you skied with, what you did (training, powder, etc.). 
 
-**URL**: https://lovable.dev/projects/22aa9498-5456-4765-a18f-565a1ab6e680
+You can see all your ski days in a calendar or on a map. 
 
-## How can I edit this code?
+## 🌟 Project Overview
 
-There are several ways of editing your application.
 
-**Use Lovable**
+## ✨ Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/22aa9498-5456-4765-a18f-565a1ab6e680) and start prompting.
+•⁠ A calendar to flick through months or weeks to see when you skied
+•⁠ A map to see where you went
+•⁠ A simple form or similar way of input where you log: Date, equipment, ski resort, people, specific focus of the day, a photo, etc. 
+•⁠ You could also filter (e.g. skis, people, etc.) to find when or where you used that piece of equipment or hung out with a certain person
+•⁠ A user will come to the app when they need to log a new ski day or review their skiing days. Therefore there will be a backend, reached via HTTP, to store and retrieve the data. 
 
-Changes made via Lovable will be committed automatically to this repo.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## To run this project:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+# Step 1: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 2: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
 
@@ -60,14 +36,3 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/22aa9498-5456-4765-a18f-565a1ab6e680) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
