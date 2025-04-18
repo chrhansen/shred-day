@@ -2,7 +2,7 @@ import { SkiDay, SkiStats } from '@/types/ski';
 
 export const skiService = {
   async getStats(): Promise<SkiStats> {
-    const response = await fetch('https://example.com/stats', {
+    const response = await fetch('http://localhost:3000/api/v1/stats', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -18,7 +18,7 @@ export const skiService = {
   },
 
   async logDay(day: Omit<SkiDay, 'id'>): Promise<SkiDay> {
-    const response = await fetch('https://example.com/days', {
+    const response = await fetch('http://localhost:3000/api/v1/days', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

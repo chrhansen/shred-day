@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2025-04-18
+  resort: MyString
+  ski: MyString
+  activity: MyString
+
+two:
+  date: 2025-04-18
+  resort: MyString
+  ski: MyString
+  activity: MyString
