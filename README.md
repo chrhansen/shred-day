@@ -18,13 +18,23 @@ You can see all your ski days in a calendar or on a map.
 
 ## To run this project:
 
+This project is a monorepo containing the frontend client and the backend server.
+
+### Client (React Frontend)
+
 ```sh
+cd client
+
 # Step 1: Install the necessary dependencies.
 npm i
 
 # Step 2: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+### Server (Rails API)
+
+(Instructions to run the server will be added once it's set up.)
 
 ## What technologies are used for this project?
 

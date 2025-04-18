@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Node / Frontend specific
+client/node_modules
+client/dist
+client/dist-ssr
+
+# Rails / Backend specific
+server/tmp/*
+!server/tmp/cache
+!server/tmp/cache/assets
+!server/tmp/sockets
+!server/tmp/pids
+server/log/*
+!server/log/.keep
+server/storage/*
+!server/storage/.keep
+server/public/assets
+.bundle/
+config/master.key
+config/credentials.yml.enc
