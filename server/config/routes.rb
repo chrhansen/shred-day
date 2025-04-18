@@ -14,7 +14,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      post 'days', to: 'days#create' # Route for creating a ski day
+      resources :days, only: [:create] # Route for creating a ski day (POST /api/v1/days)
       resource :stats, only: [:show] # Route for fetching stats (GET /api/v1/stats)
       # We might add: get 'days', to: 'days#index' later
     end
