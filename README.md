@@ -40,9 +40,18 @@ npm run dev
 
 This project is built with:
 
+### Frontend in /client-directory
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
 
+### Backend in /server-directory
+- Ruby on Rails - API-only
+- Postgres Database
+
+### Deploy
+
+- Hetzner VPS with Ubuntu
+- Kamal for deploying both Rails and React
