@@ -12,7 +12,7 @@ ARG RUBY_VERSION=3.3.0
 # Define Node.js version to use for building frontend
 ARG NODE_VERSION=20
 
-# --- Base Stage --- Find the base stage early, so it is not confusing
+# --- Base Stage ---
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 RUN apt-get update -qq && \
@@ -25,6 +25,7 @@ ENV RAILS_ENV="production" \
 
 # --- Build Stage --- Install build dependencies
 FROM base AS build
+WORKDIR /rails
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -35,15 +36,27 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
-# Copy application code
-COPY server/ . # Copy only server code here initially
+# Create server directory in the build stage
+RUN mkdir -p server
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
+# Copy application code (server part) piece by piece
+COPY server/app ./server/app
+COPY server/bin ./server/bin
+COPY server/config ./server/config
+COPY server/db ./server/db
+COPY server/lib ./server/lib
+COPY server/log ./server/log
+COPY server/public ./server/public
+COPY server/storage ./server/storage
+COPY server/test ./server/test
+COPY server/tmp ./server/tmp
+COPY server/vendor ./server/vendor
+COPY server/script ./server/script
+COPY server/.gitattributes server/.gitignore server/.github server/.kamal server/.rubocop.yml server/.ruby-version ./server/
+COPY server/config.ru server/Rakefile server/README.md ./server/
 
-# Precompile Rails assets (if any - less common in API mode but good practice)
-# If you don't have traditional Rails assets, you can potentially remove this.
-# RUN bundle exec rails assets:precompile
+# Precompile bootsnap code - adjust path
+RUN bundle exec bootsnap precompile server/app/ server/lib/
 
 # --- Node Build Stage --- Build the frontend application
 FROM docker.io/library/node:$NODE_VERSION-slim AS build-node
@@ -60,7 +73,8 @@ COPY client/ .
 RUN npm run build
 
 # --- Final Stage --- Combine Rails app and frontend assets
-FROM base
+FROM base AS final
+WORKDIR /rails
 
 # Copy built Rails gems and application code
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
@@ -69,15 +83,15 @@ COPY --from=build /rails /rails
 # Copy built frontend assets into Rails public directory
 COPY --from=build-node /app/dist /rails/public/
 
-# Ensure ownership and permissions are correct for runtime
+# Ensure ownership and permissions are correct for runtime, adjusting for server/ subdir
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp public # Add public here
+    chown -R rails:rails server/db server/log server/storage server/tmp server/public
 USER 1000:1000
 
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+# Entrypoint prepares the database - adjust path
+ENTRYPOINT ["/rails/server/bin/docker-entrypoint"]
 
-# Start server via Thruster by default
+# Start server via Thruster by default - adjust paths
 EXPOSE 80
-CMD ["./bin/thrust", "./bin/rails", "server"]
+CMD ["./server/bin/thrust", "./server/bin/rails", "server"]
