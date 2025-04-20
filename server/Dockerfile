@@ -80,8 +80,9 @@ WORKDIR /rails
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
-# Copy built frontend assets into Rails public directory
+# Copy built frontend assets into the correct Rails public directory
 COPY --from=build-node /app/dist /rails/public/
+COPY --from=build-node /app/dist /rails/server/public/
 
 # Ensure ownership and permissions are correct for runtime, adjusting for server/ subdir
 RUN groupadd --system --gid 1000 rails && \
