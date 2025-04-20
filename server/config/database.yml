@@ -81,9 +81,11 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: server_production
-    username: server
-    password: <%= ENV["SERVER_DATABASE_PASSWORD"] %>
+    database: shred_day_production
+    username: rails
+    password: <%= ENV["POSTGRES_PASSWORD"] %>
+    host: <%= ENV["DB_HOST"] %>
+    port: 5432
   cache:
     <<: *primary_production
     database: server_production_cache

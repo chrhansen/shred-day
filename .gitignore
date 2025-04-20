@@ -42,3 +42,6 @@ server/public/assets
 .bundle/
 config/master.key
 config/credentials.yml.enc
+
+# Kamal secrets
+.kamal/
