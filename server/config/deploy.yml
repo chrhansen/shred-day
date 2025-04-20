@@ -50,7 +50,7 @@ env:
 
     # Match this to any external database server to configure Active Record correctly
     # Use server-db for a db accessory server on same machine via local kamal docker network.
-    DB_HOST: shred-day-db
+    DB_HOST: 91.99.62.190
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
@@ -82,8 +82,9 @@ ssh:
 accessories:
   db:
     image: postgres:16
+    service: postgresql
     host: 91.99.62.190 # Internal Docker network hostname
-    port: 5432
+    port: "127.0.0.1:5432:5432"
     env:
       clear:
         POSTGRES_USER: rails
