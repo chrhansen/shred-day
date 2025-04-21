@@ -1,26 +1,35 @@
 # Ski days Builder
 
-An app for skiers to log and later view their skiing days. You enter things like date, ski resort, skis, who you skied with, what you did (training, powder, etc.). 
+An app for skiers to log and later view their skiing days. You enter things like date, ski resort, skis, who you skied with, what you did (training, powder, etc.).
 
-You can see all your ski days in a calendar or on a map. 
+You can see all your ski days in a calendar or on a map.
 
-## 🌟 Project Overview
+## Project Overview
 
+This is a monorepo containing both the frontend (React client) and the backend (Rails API).
+
+## 🏗️ Project Structure
+
+*   `/client`: Contains the frontend application built with Vite, React, TypeScript, and Tailwind CSS (using shadcn/ui).
+*   `/server`: Contains the backend API built with Ruby on Rails (API-only mode) using a PostgreSQL database.
+*   `/memory-bank`: Project documentation and context for AI assistance.
+*   `/`: Root directory containing configuration files for Docker (`.dockerignore`), Git (`.gitignore`), Kamal (`.kamal/`), and this README.
 
 ## ✨ Key Features
 
 •⁠ A calendar to flick through months or weeks to see when you skied
 •⁠ A map to see where you went
-•⁠ A simple form or similar way of input where you log: Date, equipment, ski resort, people, specific focus of the day, a photo, etc. 
+•⁠ A simple form or similar way of input where you log: Date, equipment, ski resort, people, specific focus of the day, a photo, etc.
+•⁠ User accounts with email/password authentication.
+•⁠ Logged days and statistics are associated with the logged-in user.
 •⁠ You could also filter (e.g. skis, people, etc.) to find when or where you used that piece of equipment or hung out with a certain person
-•⁠ A user will come to the app when they need to log a new ski day or review their skiing days. Therefore there will be a backend, reached via HTTP, to store and retrieve the data. 
+•⁠ A user will come to the app when they need to log a new ski day or review their skiing days. Therefore there will be a backend, reached via HTTP, to store and retrieve the data.
 
-
-## To run this project:
+## 🚀 To run this project:
 
 This project is a monorepo containing the frontend client and the backend server.
 
-### Client (React Frontend)
+### Client (React Frontend - in `/client`)
 
 ```sh
 cd client
@@ -28,30 +37,48 @@ cd client
 # Step 1: Install the necessary dependencies.
 npm i
 
-# Step 2: Start the development server with auto-reloading and an instant preview.
+# Step 2: Start the development server (usually on http://localhost:8080).
 npm run dev
 ```
 
-### Server (Rails API)
+### Server (Rails API - in `/server`)
 
-(Instructions to run the server will be added once it's set up.)
+```sh
+# Navigate to the server directory
+cd server
 
-## What technologies are used for this project?
+# Install dependencies (including bcrypt for passwords)
+bundle install
 
-This project is built with:
+# Setup the database (create users table, days table, etc.)
+# Note: This will drop existing data if run multiple times!
+bin/rails db:setup
+# Or to just run pending migrations: bin/rails db:migrate
 
-### Frontend in /client-directory
-- Vite
+# Start the Rails server (typically on http://localhost:3000)
+bin/rails server
+```
+
+## 🛠️ What technologies are used for this project?
+
+### Frontend (`/client`)
+- Vite (Build tool & Dev Server)
 - TypeScript
 - React
-- shadcn-ui
-- Tailwind CSS
+- React Router
+- shadcn/ui (UI Components)
+- Tailwind CSS (Styling)
+- TanStack Query (Data Fetching/Caching)
 
-### Backend in /server-directory
-- Ruby on Rails - API-only
-- Postgres Database
+### Backend (`/server`)
+- Ruby on Rails (API-only)
+- PostgreSQL (Database)
+- Puma (Web Server)
+- bcrypt (Password Hashing)
 
-### Deploy
-
-- Hetzner VPS with Ubuntu
-- Kamal for deploying both Rails and React
+### Deployment (`/` and `/server`)
+- Docker (Containerization)
+- Kamal (Deployment tool, run from project root)
+  - Configuration: `server/config/deploy.yml`
+  - Target: Hetzner VPS with Ubuntu
+- Traefik (Reverse Proxy, managed by Kamal)
