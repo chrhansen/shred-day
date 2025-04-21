@@ -1,17 +1,72 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { skiService } from "@/services/skiService";
+import { toast } from "sonner";
 
 export default function AuthPage() {
   const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
   const [signupPasswordVisible, setSignupPasswordVisible] = useState(false);
   const navigate = useNavigate();
+
+  // --- Sign Up State ---
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupPasswordConfirmation, setSignupPasswordConfirmation] = useState("");
+  const [isSigningUp, setIsSigningUp] = useState(false);
+
+  // --- Login State ---
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // --- Sign Up Handler ---
+  const handleSignUpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (signupPassword !== signupPasswordConfirmation) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setIsSigningUp(true);
+    try {
+      const user = await skiService.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        password_confirmation: signupPasswordConfirmation,
+      });
+      toast.success(`Welcome, ${user.email}! Sign up successful.`);
+      // TODO: Update auth state (e.g., context) if needed here
+      navigate("/dashboard"); // Navigate to dashboard after successful signup
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An unknown error occurred");
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
+  // --- Sign In Handler ---
+  const handleSignInSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const user = await skiService.signIn({
+        email: loginEmail,
+        password: loginPassword,
+      });
+      toast.success(`Welcome back, ${user.email}!`);
+      // TODO: Update auth state (e.g., context) if needed here
+      navigate("/dashboard"); // Navigate to dashboard after successful sign in
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An unknown error occurred");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
@@ -30,7 +85,7 @@ export default function AuthPage() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="login">
-              <form className="w-full space-y-6">
+              <form className="w-full space-y-6" onSubmit={handleSignInSubmit}>
                 <div>
                   <Label htmlFor="login-email" className="block mb-1 text-slate-700">Email</Label>
                   <div className="relative">
@@ -41,6 +96,9 @@ export default function AuthPage() {
                       placeholder="you@email.com"
                       className="pl-10"
                       autoComplete="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -54,6 +112,9 @@ export default function AuthPage() {
                       placeholder="Password"
                       className="pl-10 pr-10"
                       autoComplete="current-password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
                     />
                     <button
                       type="button"
@@ -66,8 +127,15 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl">
-                  <LogIn className="mr-2 w-5 h-5" /> Login
+                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
+                  disabled={isLoggingIn}
+                >
+                  {isLoggingIn ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <LogIn className="mr-2 w-5 h-5" />
+                  )}
+                  {isLoggingIn ? "Logging In..." : "Login"}
                 </Button>
               </form>
               <div className="mt-4 text-center">
@@ -76,7 +144,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     className="text-blue-600 font-medium underline"
-                    onClick={() => document.querySelector('[data-state="signup"]')?.click()}
+                    onClick={() => (document.querySelector('[data-state="signup"]') as HTMLElement)?.click()}
                   >
                     Sign up
                   </button>
@@ -84,7 +152,7 @@ export default function AuthPage() {
               </div>
             </TabsContent>
             <TabsContent value="signup">
-              <form className="w-full space-y-6">
+              <form className="w-full space-y-6" onSubmit={handleSignUpSubmit}>
                 <div>
                   <Label htmlFor="signup-email" className="block mb-1 text-slate-700">Email</Label>
                   <div className="relative">
@@ -95,6 +163,9 @@ export default function AuthPage() {
                       placeholder="you@email.com"
                       className="pl-10"
                       autoComplete="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -105,9 +176,12 @@ export default function AuthPage() {
                     <Input
                       id="signup-password"
                       type={signupPasswordVisible ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Create a password (min 8 chars)"
                       className="pl-10 pr-10"
                       autoComplete="new-password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
                     />
                     <button
                       type="button"
@@ -120,8 +194,31 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl">
-                  <UserPlus className="mr-2 w-5 h-5" /> Sign Up
+                <div>
+                  <Label htmlFor="signup-password-confirmation" className="block mb-1 text-slate-700">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400"/>
+                    <Input
+                      id="signup-password-confirmation"
+                      type={signupPasswordVisible ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      className="pl-10 pr-10"
+                      autoComplete="new-password"
+                      value={signupPasswordConfirmation}
+                      onChange={(e) => setSignupPasswordConfirmation(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
+                  disabled={isSigningUp}
+                >
+                  {isSigningUp ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <UserPlus className="mr-2 w-5 h-5" />
+                  )}
+                  {isSigningUp ? "Signing Up..." : "Sign Up"}
                 </Button>
               </form>
               <div className="mt-4 text-center">
@@ -130,7 +227,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     className="text-blue-600 font-medium underline"
-                    onClick={() => document.querySelector('[data-state="login"]')?.click()}
+                    onClick={() => (document.querySelector('[data-state="login"]') as HTMLElement)?.click()}
                   >
                     Login
                   </button>
@@ -141,9 +238,9 @@ export default function AuthPage() {
           <Button
             variant="ghost"
             className="block mx-auto mt-8 text-slate-600 hover:text-blue-700 transition-all"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           >
-            ← Back to Dashboard
+            ← Go to Dashboard (temp)
           </Button>
         </CardContent>
       </Card>

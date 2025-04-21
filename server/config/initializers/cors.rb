@@ -10,9 +10,10 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     # Allow requests from the Vite development server
     origins "http://localhost:8080"
 
-    # Allow all standard HTTP methods and headers
+    # Allow all standard HTTP methods and headers, and allow credentials
     resource "*",
       headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+      methods: [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: true
   end
 end

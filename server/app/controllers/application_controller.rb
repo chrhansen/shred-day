@@ -1,4 +1,7 @@
 class ApplicationController < ActionController::API
+  # Include cookie methods needed for session management
+  include ActionController::Cookies
+
   # Apply require_login globally to all inheriting controllers
   before_action :require_login
 

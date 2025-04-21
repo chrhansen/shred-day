@@ -3,6 +3,9 @@ class User < ApplicationRecord
   # This requires a `password_digest` attribute.
   has_secure_password
 
+  # Associations
+  has_many :days, dependent: :destroy
+
   # Validations
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
