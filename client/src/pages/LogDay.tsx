@@ -25,7 +25,7 @@ export default function LogDay() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       toast.success("Ski day logged successfully!");
-      navigate('/');
+      navigate('/dashboard');
     },
     onError: () => {
       toast.error("Failed to log ski day");
@@ -112,7 +112,7 @@ export default function LogDay() {
           </div>
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
           disabled={isPending}
           className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
