@@ -1,7 +1,9 @@
 class Api::V1::DaysController < ApplicationController
+
   # POST /api/v1/days
   def create
-    day = Day.new(day_params)
+    # Build the day associated with the current_user
+    day = current_user.days.build(day_params)
 
     if day.save
       render json: day, status: :created # Return created day on success (201)

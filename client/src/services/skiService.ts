@@ -1,8 +1,21 @@
-import { SkiDay, SkiStats } from '@/types/ski';
+import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp } from '@/types/ski';
+
+// Determine API base URL based on environment
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
+
+// Default options for fetch requests, including credentials
+const defaultFetchOptions: RequestInit = {
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  credentials: 'include', // Important: sends cookies (like session id) with requests
+};
 
 export const skiService = {
   async getStats(): Promise<SkiStats> {
-    const response = await fetch('/api/v1/stats', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/stats`, {
+      ...defaultFetchOptions,
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -18,7 +31,7 @@ export const skiService = {
   },
 
   async logDay(day: Omit<SkiDay, 'id'>): Promise<SkiDay> {
-    const response = await fetch('/api/v1/days', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

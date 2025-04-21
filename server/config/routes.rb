@@ -17,6 +17,10 @@ Rails.application.routes.draw do
       resources :days, only: [:create] # Route for creating a ski day (POST /api/v1/days)
       resource :stats, only: [:show] # Route for fetching stats (GET /api/v1/stats)
       # We might add: get 'days', to: 'days#index' later
+
+      # Authentication routes
+      resources :users, only: [:create] # POST /api/v1/users (Sign Up)
+      resource :session, only: [:create, :destroy] # POST /api/v1/session (Sign In), DELETE /api/v1/session (Sign Out)
     end
   end
 end
