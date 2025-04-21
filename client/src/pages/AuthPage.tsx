@@ -8,11 +8,13 @@ import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { skiService } from "@/services/skiService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthPage() {
   const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
   const [signupPasswordVisible, setSignupPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // --- Sign Up State ---
   const [signupEmail, setSignupEmail] = useState("");
@@ -40,8 +42,8 @@ export default function AuthPage() {
         password_confirmation: signupPasswordConfirmation,
       });
       toast.success(`Welcome, ${user.email}! Sign up successful.`);
-      // TODO: Update auth state (e.g., context) if needed here
-      navigate("/dashboard"); // Navigate to dashboard after successful signup
+      login(user);
+      navigate("/dashboard");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
@@ -59,8 +61,8 @@ export default function AuthPage() {
         password: loginPassword,
       });
       toast.success(`Welcome back, ${user.email}!`);
-      // TODO: Update auth state (e.g., context) if needed here
-      navigate("/dashboard"); // Navigate to dashboard after successful sign in
+      login(user);
+      navigate("/dashboard");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
@@ -235,13 +237,6 @@ export default function AuthPage() {
               </div>
             </TabsContent>
           </Tabs>
-          <Button
-            variant="ghost"
-            className="block mx-auto mt-8 text-slate-600 hover:text-blue-700 transition-all"
-            onClick={() => navigate("/dashboard")}
-          >
-            ← Go to Dashboard (temp)
-          </Button>
         </CardContent>
       </Card>
     </div>

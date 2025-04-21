@@ -1,5 +1,13 @@
 import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp } from '@/types/ski';
 
+// Custom error for authentication issues
+export class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
 // Determine API base URL based on environment
 const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
 
@@ -20,7 +28,10 @@ export const skiService = {
       // No body needed for GET
     });
     if (!response.ok) {
-      // TODO: Handle unauthorized (401) specifically?
+      if (response.status === 401) {
+        throw new AuthenticationError('User not authenticated');
+      }
+      // TODO: Handle other errors more specifically if needed
       throw new Error('Failed to fetch ski stats');
     }
     const stats: SkiStats = await response.json();
@@ -34,7 +45,10 @@ export const skiService = {
       body: JSON.stringify({ day }), // Ensure payload matches expected format if Rails expects { day: { ... } }
     });
     if (!response.ok) {
-      // TODO: Handle unauthorized (401) specifically?
+      if (response.status === 401) {
+        throw new AuthenticationError('User not authenticated');
+      }
+      // TODO: Handle other errors more specifically if needed
       throw new Error('Failed to log ski day via API');
     }
     const createdDay: SkiDay = await response.json();
