@@ -43,5 +43,11 @@ server/public/assets
 config/master.key
 config/credentials.yml.enc
 
-# Kamal secrets
-.kamal/
+# Kamal secrets and potentially large build cache
+.kamal/*
+# But DO track the hooks directory
+!.kamal/hooks/
+# And ensure the specific hook file isn't ignored by other patterns (optional but safe)
+!.kamal/hooks/pre-deploy
+# Also specifically ignore the env file if it exists
+.kamal/*.env

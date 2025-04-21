@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+ORIGINAL_PWD=$(pwd)
+
+echo "---> Running pre-deploy hook: Database Migrations (from root hook)"
+
+# Change to the server directory where Gemfile and config/deploy.yml reside
+cd "${ORIGINAL_PWD}/server"
+
+echo "---> Changed directory to $(pwd)"
+
+# Execute the db:migrate command using bundle exec
+# Kamal will find config/deploy.yml relative to the current dir (server/)
+# The rails path is relative to the WORKDIR (/rails/server) set in the Dockerfile.
+echo "---> Executing migration command..."
+bundle exec kamal app exec 'bin/rails db:migrate'
+echo "---> Migration command finished."
+
+# Change back to the original directory (optional, good practice)
+cd "${ORIGINAL_PWD}"
+
+echo "---> Finished pre-deploy hook: Database Migrations (from root hook)"

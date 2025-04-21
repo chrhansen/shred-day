@@ -116,16 +116,10 @@ accessories:
 #   batch_size: 1
 #   batch_wait: 2 # seconds
 
-# Run commands after build or before deploy
+# Removed inline hooks block - will use script-based hooks instead
 # hooks:
-#   build:
-#     before: echo 'Building...'
-#     after: echo 'Built!'
 #   deploy:
-#     before: echo 'Deploying...'
-#     after: echo 'Deployed!'
-#   post:
-#     build:
-#       remote: echo 'Built on remote!'
-#     deploy:
-#       remote: echo 'Deployed on remote!'
+#     before:
+#       - app: exec -i bin/rails db:migrate
+
+# Add any other top-level config needed below
