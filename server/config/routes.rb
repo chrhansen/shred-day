@@ -23,4 +23,13 @@ Rails.application.routes.draw do
       resource :session, only: [:create, :destroy] # POST /api/v1/session (Sign In), DELETE /api/v1/session (Sign Out)
     end
   end
+
+  # Serve frontend routes - must be last
+  # This ensures that any GET request not matched by the API or other routes
+  # above will be served the index.html file, allowing React Router to handle it.
+  get '*path', to: 'static_pages#frontend', constraints: ->(req) { !req.xhr? && req.format.html? }
+
+  # Optional: You might want a root path specifically for the frontend too,
+  # although the catch-all above should handle it if nothing else matches.
+  # root 'application#frontend'
 end
