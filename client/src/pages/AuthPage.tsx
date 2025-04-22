@@ -19,7 +19,6 @@ export default function AuthPage() {
   // --- Sign Up State ---
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
-  const [signupPasswordConfirmation, setSignupPasswordConfirmation] = useState("");
   const [isSigningUp, setIsSigningUp] = useState(false);
 
   // --- Login State ---
@@ -30,16 +29,11 @@ export default function AuthPage() {
   // --- Sign Up Handler ---
   const handleSignUpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (signupPassword !== signupPasswordConfirmation) {
-      toast.error("Passwords do not match");
-      return;
-    }
     setIsSigningUp(true);
     try {
       const user = await skiService.signUp({
         email: signupEmail,
         password: signupPassword,
-        password_confirmation: signupPasswordConfirmation,
       });
       toast.success(`Welcome, ${user.email}! Sign up successful.`);
       login(user);
@@ -78,11 +72,17 @@ export default function AuthPage() {
             Welcome to Shred Day
           </h1>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="flex w-full bg-slate-100 rounded-full mb-8">
-              <TabsTrigger value="login" className="flex-1 text-md py-2 aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white">
+            <TabsList className="flex w-full bg-slate-100 rounded-lg mb-8 p-0">
+              <TabsTrigger
+                value="login"
+                className="flex-1 text-md py-2 rounded-l-lg rounded-r-none aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white data-[state=inactive]:hover:bg-slate-200 data-[state=inactive]:text-slate-600 transition-all duration-150"
+              >
                 <LogIn className="inline mr-1 w-4 h-4" /> Login
               </TabsTrigger>
-              <TabsTrigger value="signup" className="flex-1 text-md py-2 aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white">
+              <TabsTrigger
+                value="signup"
+                className="flex-1 text-md py-2 rounded-r-lg rounded-l-none aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white data-[state=inactive]:hover:bg-slate-200 data-[state=inactive]:text-slate-600 transition-all duration-150"
+              >
                 <UserPlus className="inline mr-1 w-4 h-4" /> Sign Up
               </TabsTrigger>
             </TabsList>
@@ -129,7 +129,7 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
+                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
                   disabled={isLoggingIn}
                 >
                   {isLoggingIn ? (
@@ -140,18 +140,6 @@ export default function AuthPage() {
                   {isLoggingIn ? "Logging In..." : "Login"}
                 </Button>
               </form>
-              <div className="mt-4 text-center">
-                <span className="text-slate-400 text-sm">
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    className="text-blue-600 font-medium underline"
-                    onClick={() => (document.querySelector('[data-state="signup"]') as HTMLElement)?.click()}
-                  >
-                    Sign up
-                  </button>
-                </span>
-              </div>
             </TabsContent>
             <TabsContent value="signup">
               <form className="w-full space-y-6" onSubmit={handleSignUpSubmit}>
@@ -196,23 +184,7 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="signup-password-confirmation" className="block mb-1 text-slate-700">Confirm Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400"/>
-                    <Input
-                      id="signup-password-confirmation"
-                      type={signupPasswordVisible ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      className="pl-10 pr-10"
-                      autoComplete="new-password"
-                      value={signupPasswordConfirmation}
-                      onChange={(e) => setSignupPasswordConfirmation(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
+                <Button type="submit" className="w-full h-12 mt-2 text-lg rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
                   disabled={isSigningUp}
                 >
                   {isSigningUp ? (
@@ -223,18 +195,6 @@ export default function AuthPage() {
                   {isSigningUp ? "Signing Up..." : "Sign Up"}
                 </Button>
               </form>
-              <div className="mt-4 text-center">
-                <span className="text-slate-400 text-sm">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="text-blue-600 font-medium underline"
-                    onClick={() => (document.querySelector('[data-state="login"]') as HTMLElement)?.click()}
-                  >
-                    Login
-                  </button>
-                </span>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

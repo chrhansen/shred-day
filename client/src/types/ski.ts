@@ -19,7 +19,7 @@ export interface UserCredentials {
 }
 
 export interface UserSignUp extends UserCredentials {
-  password_confirmation: string;
+  // password_confirmation: string; // No longer needed
 }
 
 // Matches the structure returned by the Rails API (excluding password_digest)

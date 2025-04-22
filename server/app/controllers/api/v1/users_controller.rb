@@ -20,6 +20,6 @@ class Api::V1::UsersController < ApplicationController
 
   def user_params
     # Require the user object and permit only the necessary parameters
-    params.require(:user).permit(:email, :password, :password_confirmation)
+    params.require(:user).permit(:email, :password)
   end
 end
