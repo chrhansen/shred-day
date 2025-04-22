@@ -21,6 +21,9 @@ Rails.application.routes.draw do
       # Authentication routes
       resources :users, only: [:create] # POST /api/v1/users (Sign Up)
       resource :session, only: [:create, :destroy] # POST /api/v1/session (Sign In), DELETE /api/v1/session (Sign Out)
+
+      # Ski equipment routes
+      resources :skis, only: [:index, :create, :update, :destroy]
     end
   end
 

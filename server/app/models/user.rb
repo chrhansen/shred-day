@@ -5,6 +5,7 @@ class User < ApplicationRecord
 
   # Associations
   has_many :days, dependent: :destroy
+  has_many :skis, dependent: :destroy
 
   # Validations
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }

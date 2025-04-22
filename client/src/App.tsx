@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import LogDay from "./pages/LogDay";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
+import SettingsPage from "./pages/SettingsPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Loader2 } from 'lucide-react'; // Or your preferred loading spinner
@@ -53,6 +54,10 @@ const App = () => (
             <Route
               path="/log"
               element={<ProtectedRoute><LogDay /></ProtectedRoute>}
+            />
+            <Route
+              path="/settings"
+              element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
             />
 
             {/* Handle root and auth routes based on auth state */}

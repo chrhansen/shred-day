@@ -29,3 +29,12 @@ export interface UserInfo {
   created_at: string; // ISO 8601 date string
   updated_at: string; // ISO 8601 date string
 }
+
+// --- Ski Equipment Type ---
+export interface Ski {
+  id: number;
+  name: string;
+  user_id: number;
+  created_at: string; // ISO 8601 date string
+  updated_at: string; // ISO 8601 date string
+}

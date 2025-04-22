@@ -1,4 +1,4 @@
-import { Plus, LogOut } from "lucide-react";
+import { Plus, LogOut, Settings } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,19 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4 relative">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/settings")}
+          className="h-12 w-12 text-slate-500 hover:bg-slate-100 hover:text-slate-700 flex items-center justify-center"
+        >
+          <Settings style={{ width: '24px', height: '24px' }} />
+          <span className="sr-only">Settings</span>
+        </Button>
+      </div>
+
       <div className="max-w-md mx-auto space-y-8 pt-8">
         <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center">My Ski Journal</h1>
         <div className="grid grid-cols-1 gap-6">
