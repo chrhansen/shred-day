@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft, Loader2, Plus, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -18,6 +19,8 @@ export default function LogDay() {
   const [selectedResort, setSelectedResort] = useState<string>("");
   const [selectedSki, setSelectedSki] = useState<number | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
+  const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
+  const [newInlineSkiName, setNewInlineSkiName] = useState("");
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
@@ -36,6 +39,20 @@ export default function LogDay() {
     },
   });
 
+  const { mutate: addSki, isPending: isAddingSki } = useMutation({
+    mutationFn: skiService.addSki,
+    onSuccess: (newSki) => {
+      queryClient.invalidateQueries({ queryKey: ['skis'] });
+      toast.success(`Ski "${newSki.name}" added successfully!`);
+      setNewInlineSkiName("");
+      setIsAddingSkiInline(false);
+      setSelectedSki(newSki.id);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to add ski");
+    },
+  });
+
   const handleSave = () => {
     if (!selectedResort || selectedSki === null || !selectedActivity) {
       toast.error("Please fill in all fields");
@@ -48,6 +65,14 @@ export default function LogDay() {
       ski_id: selectedSki,
       activity: selectedActivity,
     });
+  };
+
+  const handleSaveInlineSki = () => {
+    if (!newInlineSkiName.trim()) {
+      toast.error("Please enter a ski name.");
+      return;
+    }
+    addSki({ name: newInlineSkiName.trim() });
   };
 
   return (
@@ -89,7 +114,7 @@ export default function LogDay() {
 
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Skis</h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {isLoadingSkis && (
                 <div className="flex items-center text-slate-500 w-full">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading skis...
@@ -100,19 +125,66 @@ export default function LogDay() {
               )}
               {!isLoadingSkis && !skisError && userSkis && (
                 userSkis.length > 0 ? (
-                  userSkis.map((ski) => (
-                    <SelectionPill
-                      key={ski.id}
-                      label={ski.name}
-                      selected={selectedSki === ski.id}
-                      onClick={() => setSelectedSki(ski.id)}
-                    />
-                  ))
+                  <>
+                    {userSkis.map((ski) => (
+                      <SelectionPill
+                        key={ski.id}
+                        label={ski.name}
+                        selected={selectedSki === ski.id}
+                        onClick={() => setSelectedSki(ski.id)}
+                      />
+                    ))}
+                  </>
                 ) : (
-                  <p className="text-sm text-slate-500 w-full">No skis defined. Please add skis in Settings.</p>
+                  null
                 )
               )}
-              {!isLoadingSkis && !skisError && !userSkis && (
+              {!isLoadingSkis && !skisError && !isAddingSkiInline && (
+                 <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-blue-600 hover:bg-blue-50"
+                    onClick={() => setIsAddingSkiInline(true)}
+                    disabled={isAddingSki}
+                 >
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                 </Button>
+              )}
+              {isAddingSkiInline && (
+                <div className="flex gap-2 items-center w-full sm:w-auto">
+                  <Input
+                    type="text"
+                    placeholder="e.g., Volkl Racetiger"
+                    value={newInlineSkiName}
+                    onChange={(e) => setNewInlineSkiName(e.target.value)}
+                    className="h-9 flex-grow"
+                    disabled={isAddingSki}
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveInlineSki()}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-green-600 hover:bg-green-50 flex-shrink-0"
+                    onClick={handleSaveInlineSki}
+                    disabled={isAddingSki || !newInlineSkiName.trim()}
+                  >
+                    {isAddingSki ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    <span className="sr-only">Save Ski</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-500 hover:bg-slate-100 flex-shrink-0"
+                    onClick={() => { setIsAddingSkiInline(false); setNewInlineSkiName(""); }}
+                    disabled={isAddingSki}
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Cancel</span>
+                  </Button>
+                </div>
+              )}
+              {!isLoadingSkis && !skisError && !userSkis && !isAddingSkiInline && (
                   <p className="text-sm text-slate-500 w-full">Could not load skis.</p>
               )}
             </div>
