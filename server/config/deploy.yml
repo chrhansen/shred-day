@@ -50,7 +50,7 @@ env:
 
     # Match this to any external database server to configure Active Record correctly
     # Use server-db for a db accessory server on same machine via local kamal docker network.
-    DB_HOST: 91.99.62.190
+    DB_HOST: server-db
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
@@ -81,8 +81,8 @@ ssh:
 # Use accessory services (secrets come from .kamal/secrets).
 accessories:
   db:
-    image: postgres:16
-    service: postgresql
+    image: postgres:17
+    service: server-db
     host: 91.99.62.190 # Internal Docker network hostname
     port: "127.0.0.1:5432:5432"
     env:
@@ -99,27 +99,3 @@ accessories:
 #     port: 6379
 #     directories:
 #       - data:/data
-
-# Build args passed to Dockerfile ARGs
-# args:
-#   RUBY_VERSION: 3.2.2
-#   NODE_VERSION: '18'
-
-# Build secrets passed to --secret flag (requires BuildKit)
-# secrets:
-#   - GITHUB_TOKEN=~/secrets/github
-#   - VANA_TOKEN=/run/secrets/vana_token
-
-# Configure rolling deploys by setting a wait time between batches.
-# deploy:
-#   strategy: rolling
-#   batch_size: 1
-#   batch_wait: 2 # seconds
-
-# Removed inline hooks block - will use script-based hooks instead
-# hooks:
-#   deploy:
-#     before:
-#       - app: exec -i bin/rails db:migrate
-
-# Add any other top-level config needed below
