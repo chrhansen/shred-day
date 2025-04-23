@@ -7,14 +7,13 @@ class Api::V1::StatsController < ApplicationController
 
     total_days = user_days.count
     unique_resorts = user_days.distinct.count(:resort)
-    # Find the most frequent ski for the current user.
-    most_used_ski_data = user_days.group(:ski).count.max_by { |_ski, count| count }
-    most_used_ski = most_used_ski_data ? most_used_ski_data[0] : "N/A" # Handle cases with no days logged
+    most_used_ski_id = user_days.group(:ski_id).count.max_by { |_ski_id, count| count }
+    most_used_ski = current_user.skis.find_by(id: most_used_ski_id)
 
     render json: {
       totalDays: total_days,
       uniqueResorts: unique_resorts,
-      mostUsedSki: most_used_ski
+      mostUsedSki: most_used_ski&.name || "N/A"
     }
   end
 end
