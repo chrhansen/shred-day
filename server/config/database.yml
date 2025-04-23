@@ -22,7 +22,7 @@ default: &default
 
 development:
   <<: *default
-  database: server_development
+  database: shred_day_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -56,7 +56,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: server_test
+  database: shred_day_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -88,13 +88,13 @@ production:
     port: 5432
   cache:
     <<: *primary_production
-    database: server_production_cache
+    database: shred_day_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: server_production_queue
+    database: shred_day_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: server_production_cable
+    database: shred_day_production_cable
     migrations_paths: db/cable_migrate
