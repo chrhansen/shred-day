@@ -10,18 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_22_142545) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_22_182429) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "days", force: :cascade do |t|
     t.date "date"
     t.string "resort"
-    t.string "ski"
     t.string "activity"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.bigint "ski_id", null: false
+    t.index ["ski_id"], name: "index_days_on_ski_id"
     t.index ["user_id"], name: "index_days_on_user_id"
   end
 
@@ -41,6 +42,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_22_142545) do
     t.index ["email"], name: "index_users_on_email"
   end
 
+  add_foreign_key "days", "skis"
   add_foreign_key "days", "users"
   add_foreign_key "skis", "users"
 end

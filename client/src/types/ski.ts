@@ -2,7 +2,7 @@ export interface SkiDay {
   id?: string;
   date: Date;
   resort: string;
-  ski: string;
+  ski_id: number;
   activity: string;
 }
 

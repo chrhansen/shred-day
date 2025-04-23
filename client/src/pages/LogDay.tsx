@@ -2,14 +2,13 @@ import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { toast } from "sonner";
 
 const RESORTS = ["Stubai", "Kühtai", "Axamer Lizum"];
-const SKIS = ["Fischer RC4 GS", "Atomic G9", "Kästle Twin tip"];
 const ACTIVITIES = ["Friends", "Training"];
 
 export default function LogDay() {
@@ -17,8 +16,13 @@ export default function LogDay() {
   const queryClient = useQueryClient();
   const [date, setDate] = useState<Date>(new Date());
   const [selectedResort, setSelectedResort] = useState<string>("");
-  const [selectedSki, setSelectedSki] = useState<string>("");
+  const [selectedSki, setSelectedSki] = useState<number | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
+
+  const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
+    queryKey: ['skis'],
+    queryFn: skiService.getSkis,
+  });
 
   const { mutate: saveDay, isPending } = useMutation({
     mutationFn: skiService.logDay,
@@ -33,7 +37,7 @@ export default function LogDay() {
   });
 
   const handleSave = () => {
-    if (!selectedResort || !selectedSki || !selectedActivity) {
+    if (!selectedResort || selectedSki === null || !selectedActivity) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -41,7 +45,7 @@ export default function LogDay() {
     saveDay({
       date,
       resort: selectedResort,
-      ski: selectedSki,
+      ski_id: selectedSki,
       activity: selectedActivity,
     });
   };
@@ -86,14 +90,31 @@ export default function LogDay() {
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Skis</h2>
             <div className="flex flex-wrap gap-2">
-              {SKIS.map((ski) => (
-                <SelectionPill
-                  key={ski}
-                  label={ski}
-                  selected={selectedSki === ski}
-                  onClick={() => setSelectedSki(ski)}
-                />
-              ))}
+              {isLoadingSkis && (
+                <div className="flex items-center text-slate-500 w-full">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading skis...
+                </div>
+              )}
+              {skisError && (
+                 <p className="text-red-600 w-full">Error loading skis: {skisError.message}</p>
+              )}
+              {!isLoadingSkis && !skisError && userSkis && (
+                userSkis.length > 0 ? (
+                  userSkis.map((ski) => (
+                    <SelectionPill
+                      key={ski.id}
+                      label={ski.name}
+                      selected={selectedSki === ski.id}
+                      onClick={() => setSelectedSki(ski.id)}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500 w-full">No skis defined. Please add skis in Settings.</p>
+                )
+              )}
+              {!isLoadingSkis && !skisError && !userSkis && (
+                  <p className="text-sm text-slate-500 w-full">Could not load skis.</p>
+              )}
             </div>
           </div>
 

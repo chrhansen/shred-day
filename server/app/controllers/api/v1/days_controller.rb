@@ -16,6 +16,6 @@ class Api::V1::DaysController < ApplicationController
 
   # Strong parameters: only allow permitted attributes
   def day_params
-    params.require(:day).permit(:date, :resort, :ski, :activity)
+    params.require(:day).permit(:date, :resort, :ski_id, :activity)
   end
 end
