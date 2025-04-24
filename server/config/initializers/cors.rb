@@ -7,13 +7,21 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    # Allow requests from the Vite development server
-    origins "http://localhost:8080"
+    # Define allowed origins based on environment
+    allowed_origins = if Rails.env.production?
+                        # Add your production frontend origin(s) here
+                        ["https://www.shred.day", "https://shred.day"]
+                      else
+                        # Development origins
+                        ["http://localhost:8080", "http://127.0.0.1:8080"]
+                      end
+
+    origins allowed_origins
 
     # Allow all standard HTTP methods and headers, and allow credentials
     resource "*",
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head],
-      credentials: true
+      credentials: true # Important for sending session cookies
   end
 end
