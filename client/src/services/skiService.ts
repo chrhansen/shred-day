@@ -9,7 +9,9 @@ export class AuthenticationError extends Error {
 }
 
 // Determine API base URL based on environment
-export const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
+export const API_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:3000'
+  : import.meta.env.VITE_API_BASE_URL || '';
 
 // Default options for fetch requests, including credentials
 export const defaultFetchOptions: RequestInit = {

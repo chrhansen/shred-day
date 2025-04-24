@@ -13,11 +13,10 @@ export interface Resort {
 }
 
 const searchResorts = async (query: string): Promise<Resort[]> => {
-  // Build URL with query parameters
-  const url = new URL(`${API_BASE_URL}/api/v1/resorts`);
-  url.searchParams.append('query', query);
+  // Construct URL string directly, handling potentially empty API_BASE_URL
+  const endpoint = `${API_BASE_URL}/api/v1/resorts?query=${encodeURIComponent(query)}`;
 
-  const response = await fetch(url.toString(), {
+  const response = await fetch(endpoint, {
     ...defaultFetchOptions,
     method: 'GET',
   });
