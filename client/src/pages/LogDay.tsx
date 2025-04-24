@@ -87,35 +87,38 @@ export default function LogDay() {
   const debouncedSearch = useCallback(debounce(fetchResorts, 300), []);
 
   useEffect(() => {
-    if (isSearchingMode && !selectedResort) {
+    if (isSearchingMode) {
       debouncedSearch(resortQuery);
     }
     return () => debouncedSearch.cancel();
-  }, [resortQuery, selectedResort, debouncedSearch, isSearchingMode]);
+  }, [resortQuery, isSearchingMode, debouncedSearch]);
 
   const handleResortInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = event.target.value;
     setResortQuery(newQuery);
   };
 
-  const handleSelectResort = (resort: Resort) => {
-    setSelectedResort(resort);
-    setResortQuery(resort.name);
-    setSearchResults([]);
-    setIsSearchingResorts(false);
-    setIsSearchingMode(false);
+  const handleToggleRecentResort = (resort: Resort) => {
+    if (selectedResort?.id === resort.id) {
+      setSelectedResort(null);
+    } else {
+      setSelectedResort(resort);
+      setIsSearchingMode(false);
+      setResortQuery('');
+      setSearchResults([]);
+    }
   };
 
-  const clearSelectedResort = () => {
-    setSelectedResort(null);
+  const handleSelectResortFromSearch = (resort: Resort) => {
+    setSelectedResort(resort);
+    setIsSearchingMode(false);
     setResortQuery('');
     setSearchResults([]);
-    setIsSearchingMode(true);
   };
 
   const handleSave = () => {
     if (!selectedResort || selectedSki === null || !selectedActivity) {
-      toast.error("Please fill in all fields, including selecting a resort from the search results.");
+      toast.error("Please select a resort, skis, and activity.");
       return;
     }
 
@@ -134,6 +137,9 @@ export default function LogDay() {
     }
     addSki({ name: newInlineSkiName.trim() });
   };
+
+  // Helper derived state to check if selected resort is in the recent list
+  const isSelectedResortRecent = selectedResort && recentResorts?.some(r => r.id === selectedResort.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
@@ -160,80 +166,85 @@ export default function LogDay() {
         <div className="space-y-8">
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Ski Resort</h2>
-            {selectedResort ? (
-              <div className="mt-2 flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-md">
-                <span className="text-sm font-medium text-blue-800">
-                  {selectedResort.name} ({selectedResort.region}, {selectedResort.country})
-                </span>
+            <div className="flex flex-wrap gap-2 items-center">
+              {isLoadingRecentResorts ? (
+                <div className="flex items-center text-slate-500 w-full"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading recent...</div>
+              ) : (
+                recentResorts?.map((resort) => (
+                  <SelectionPill
+                    key={resort.id}
+                    label={resort.name}
+                    selected={selectedResort?.id === resort.id}
+                    onClick={() => handleToggleRecentResort(resort)}
+                  />
+                ))
+              )}
+
+              {selectedResort && !isSelectedResortRecent && !isSearchingMode && (
+                <SelectionPill
+                  key={selectedResort.id}
+                  label={selectedResort.name}
+                  selected={true}
+                  onClick={() => setSelectedResort(null)}
+                />
+              )}
+
+              {isSearchingMode ? (
+                <div className="w-full space-y-2 pt-2">
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Type to search resorts..."
+                      value={resortQuery}
+                      onChange={handleResortInputChange}
+                      className="h-10 pl-8"
+                      disabled={isPending}
+                      autoFocus
+                    />
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    {isSearchingResorts && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
+                    )}
+                  </div>
+                  <div className="relative w-full min-h-[1rem]">
+                    {(!isSearchingResorts && resortQuery.length >= 2) && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {searchResults.length > 0 ? (
+                          searchResults.map((resort) => (
+                            <button
+                              key={resort.id}
+                              className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                              onClick={() => handleSelectResortFromSearch(resort)}
+                            >
+                              {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-500 px-4 py-2">(No resorts match "{resortQuery}")</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setIsSearchingMode(false); setResortQuery(''); setSearchResults([]); }}
+                  >
+                    Cancel Search
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-blue-600 hover:bg-blue-100"
-                  onClick={clearSelectedResort}
-                  disabled={isPending}
+                  size="sm"
+                  className="h-8 px-2 text-blue-600 hover:bg-blue-50 border-dashed border border-transparent hover:border-blue-200"
+                  onClick={() => { setIsSearchingMode(true); setSelectedResort(null); }}
+                  disabled={isLoadingRecentResorts}
                 >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Clear selection</span>
+                  <Search className="h-4 w-4 mr-1" /> Find resort...
                 </Button>
-              </div>
-            ) : isSearchingMode ? (
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Type to search resorts..."
-                  value={resortQuery}
-                  onChange={handleResortInputChange}
-                  className="h-10 pl-8"
-                  disabled={isPending}
-                  autoFocus
-                />
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                {isSearchingResorts && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
-                )}
-                {!isSearchingResorts && searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {searchResults.map((resort) => (
-                      <button
-                        key={resort.id}
-                        className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                        onClick={() => handleSelectResort(resort)}
-                      >
-                        {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {isLoadingRecentResorts ? (
-                  <div className="flex items-center text-slate-500"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading recent...</div>
-                ) : recentResorts && recentResorts.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-sm text-slate-500 self-center mr-1">Recent:</span>
-                    {recentResorts.map((resort) => (
-                      <SelectionPill
-                        key={resort.id}
-                        label={resort.name}
-                        selected={false}
-                        onClick={() => handleSelectResort(resort)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">(No recent resorts found)</p>
-                )}
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-slate-600 border-dashed"
-                  onClick={() => setIsSearchingMode(true)}
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Find specific resort...
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div>
