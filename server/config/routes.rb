@@ -24,6 +24,12 @@ Rails.application.routes.draw do
 
       # Ski equipment routes
       resources :skis, only: [:index, :create, :update, :destroy]
+
+      # Resort routes
+      resources :resorts, only: [:index] # GET /api/v1/resorts?query=... (Search Resorts)
+
+      # Recent Resorts route
+      resources :recent_resorts, only: [:index] # GET /api/v1/recent_resorts
     end
   end
 

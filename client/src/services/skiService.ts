@@ -9,10 +9,10 @@ export class AuthenticationError extends Error {
 }
 
 // Determine API base URL based on environment
-const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
+export const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
 
 // Default options for fetch requests, including credentials
-const defaultFetchOptions: RequestInit = {
+export const defaultFetchOptions: RequestInit = {
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -21,7 +21,7 @@ const defaultFetchOptions: RequestInit = {
 };
 
 // Helper function for handling API errors
-async function handleApiError(response: Response): Promise<void> {
+export async function handleApiError(response: Response): Promise<void> {
   if (response.status === 401) {
     throw new AuthenticationError('User not authenticated');
   }

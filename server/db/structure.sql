@@ -149,7 +149,24 @@ CREATE TABLE public.days (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
-    ski_id character varying NOT NULL
+    ski_id character varying NOT NULL,
+    resort_id character varying NOT NULL
+);
+
+
+--
+-- Name: resorts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resorts (
+    id character varying DEFAULT public.gen_id('re'::text) NOT NULL,
+    name character varying,
+    latitude double precision,
+    longitude double precision,
+    country character varying,
+    region character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -205,6 +222,14 @@ ALTER TABLE ONLY public.days
 
 
 --
+-- Name: resorts resorts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resorts
+    ADD CONSTRAINT resorts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -226,6 +251,13 @@ ALTER TABLE ONLY public.skis
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_days_on_resort_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_days_on_resort_id ON public.days USING btree (resort_id);
 
 
 --
@@ -265,6 +297,14 @@ ALTER TABLE ONLY public.skis
 
 
 --
+-- Name: days fk_rails_0c6a8d09bb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.days
+    ADD CONSTRAINT fk_rails_0c6a8d09bb FOREIGN KEY (resort_id) REFERENCES public.resorts(id);
+
+
+--
 -- Name: days fk_rails_96ca576737; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -287,6 +327,8 @@ ALTER TABLE ONLY public.days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250424133510'),
+('20250424130817'),
 ('20250422182429'),
 ('20250422142545'),
 ('20250421074041'),

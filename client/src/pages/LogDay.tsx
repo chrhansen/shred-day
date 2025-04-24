@@ -1,22 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Loader2, Plus, Check, X } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Check, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
+import { resortService, Resort } from "@/services/resortService";
+import { userService } from "@/services/userService";
 import { toast } from "sonner";
+import debounce from 'lodash.debounce';
 
-const RESORTS = ["Stubai", "Kühtai", "Axamer Lizum"];
 const ACTIVITIES = ["Friends", "Training"];
 
 export default function LogDay() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [date, setDate] = useState<Date>(new Date());
-  const [selectedResort, setSelectedResort] = useState<string>("");
+  const [selectedResort, setSelectedResort] = useState<Resort | null>(null);
+  const [resortQuery, setResortQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Resort[]>([]);
+  const [isSearchingResorts, setIsSearchingResorts] = useState<boolean>(false);
+  const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
   const [selectedSki, setSelectedSki] = useState<number | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
@@ -27,10 +33,16 @@ export default function LogDay() {
     queryFn: skiService.getSkis,
   });
 
+  const { data: recentResorts, isLoading: isLoadingRecentResorts } = useQuery({
+    queryKey: ['recentResorts'],
+    queryFn: userService.getRecentResorts,
+  });
+
   const { mutate: saveDay, isPending } = useMutation({
     mutationFn: skiService.logDay,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
+      queryClient.invalidateQueries({ queryKey: ['recentResorts'] });
       toast.success("Ski day logged successfully!");
       navigate('/dashboard');
     },
@@ -53,15 +65,63 @@ export default function LogDay() {
     },
   });
 
+  const fetchResorts = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      setIsSearchingResorts(false);
+      return;
+    }
+    setIsSearchingResorts(true);
+    try {
+      const results = await resortService.searchResorts(query);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Error searching resorts:", error);
+      toast.error("Failed to search resorts");
+      setSearchResults([]);
+    } finally {
+      setIsSearchingResorts(false);
+    }
+  };
+
+  const debouncedSearch = useCallback(debounce(fetchResorts, 300), []);
+
+  useEffect(() => {
+    if (isSearchingMode && !selectedResort) {
+      debouncedSearch(resortQuery);
+    }
+    return () => debouncedSearch.cancel();
+  }, [resortQuery, selectedResort, debouncedSearch, isSearchingMode]);
+
+  const handleResortInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = event.target.value;
+    setResortQuery(newQuery);
+  };
+
+  const handleSelectResort = (resort: Resort) => {
+    setSelectedResort(resort);
+    setResortQuery(resort.name);
+    setSearchResults([]);
+    setIsSearchingResorts(false);
+    setIsSearchingMode(false);
+  };
+
+  const clearSelectedResort = () => {
+    setSelectedResort(null);
+    setResortQuery('');
+    setSearchResults([]);
+    setIsSearchingMode(true);
+  };
+
   const handleSave = () => {
     if (!selectedResort || selectedSki === null || !selectedActivity) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all fields, including selecting a resort from the search results.");
       return;
     }
 
     saveDay({
       date,
-      resort: selectedResort,
+      resort_id: selectedResort.id,
       ski_id: selectedSki,
       activity: selectedActivity,
     });
@@ -100,16 +160,80 @@ export default function LogDay() {
         <div className="space-y-8">
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Ski Resort</h2>
-            <div className="flex flex-wrap gap-2">
-              {RESORTS.map((resort) => (
-                <SelectionPill
-                  key={resort}
-                  label={resort}
-                  selected={selectedResort === resort}
-                  onClick={() => setSelectedResort(resort)}
+            {selectedResort ? (
+              <div className="mt-2 flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-md">
+                <span className="text-sm font-medium text-blue-800">
+                  {selectedResort.name} ({selectedResort.region}, {selectedResort.country})
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-blue-600 hover:bg-blue-100"
+                  onClick={clearSelectedResort}
+                  disabled={isPending}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Clear selection</span>
+                </Button>
+              </div>
+            ) : isSearchingMode ? (
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Type to search resorts..."
+                  value={resortQuery}
+                  onChange={handleResortInputChange}
+                  className="h-10 pl-8"
+                  disabled={isPending}
+                  autoFocus
                 />
-              ))}
-            </div>
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                {isSearchingResorts && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
+                )}
+                {!isSearchingResorts && searchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {searchResults.map((resort) => (
+                      <button
+                        key={resort.id}
+                        className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                        onClick={() => handleSelectResort(resort)}
+                      >
+                        {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {isLoadingRecentResorts ? (
+                  <div className="flex items-center text-slate-500"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading recent...</div>
+                ) : recentResorts && recentResorts.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm text-slate-500 self-center mr-1">Recent:</span>
+                    {recentResorts.map((resort) => (
+                      <SelectionPill
+                        key={resort.id}
+                        label={resort.name}
+                        selected={false}
+                        onClick={() => handleSelectResort(resort)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">(No recent resorts found)</p>
+                )}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-slate-600 border-dashed"
+                  onClick={() => setIsSearchingMode(true)}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Find specific resort...
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>
@@ -207,7 +331,7 @@ export default function LogDay() {
 
         <Button
           onClick={handleSave}
-          disabled={isPending}
+          disabled={isPending || !selectedResort}
           className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
         >
           {isPending ? "Saving..." : "Save"}
