@@ -48,6 +48,7 @@ declare global {
     interface Chainable {
       createUser(email: string, password?: string): Chainable<Response<any>>
       login(email: string, password?: string): Chainable<void>
+      logDay(dayData: { date: string; resort_id: any; ski_id: any; }): Chainable<Response<any>>
     }
   }
 }
@@ -57,7 +58,7 @@ Cypress.Commands.add('createUser', (email, password = 'password123') => {
   // Default password if not provided
   cy.request({
     method: 'POST',
-    url: 'http://localhost:3000/api/v1/users', // Backend API signup endpoint
+    url: `${Cypress.env('apiUrl')}/api/v1/users`, // Use env var
     body: {
       user: { // Ensure body matches your UsersController expected params
         email: email,
@@ -77,6 +78,19 @@ Cypress.Commands.add('login', (email, password = 'password123') => {
   cy.contains('button', /^Login$/i).click();
   // Add assertion to make sure login succeeded and redirected
   cy.location('pathname').should('eq', '/dashboard');
+});
+
+// Add command to log a day via API
+Cypress.Commands.add('logDay', (dayData) => {
+  // Note: This assumes the user is already logged in via API context (cookie is set)
+  cy.request({
+    method: 'POST',
+    url: `${Cypress.env('apiUrl')}/api/v1/days`, // Use env var
+    body: {
+      day: dayData // Pass the provided data nested under 'day' key
+    },
+    failOnStatusCode: false // Allow checking status manually
+  });
 });
 
 // Add event listener to ignore specific uncaught exceptions

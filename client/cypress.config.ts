@@ -6,6 +6,9 @@
 // import { defineConfig } from "cypress";
 
 module.exports = {
+  env: {
+    apiUrl: 'http://localhost:3000' // Add environment variable for API base URL
+  },
   e2e: {
     baseUrl: 'http://localhost:8080',
     setupNodeEvents(on, config) {
