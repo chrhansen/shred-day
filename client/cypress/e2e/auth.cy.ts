@@ -10,40 +10,48 @@ describe('Authentication Flows', () => {
     beforeEach(() => {
       // Generate a unique email for each test run
       const uniqueEmail = `test-login-${Date.now()}@example.com`;
-      // Create user via API, store email in alias
+      // Create user via API, store email in alias, and clear cookies
       cy.createUser(uniqueEmail, PASSWORD).then(() => {
         cy.wrap(uniqueEmail).as('userEmail');
-        // IMPORTANT: Clear cookies set by the API response before visiting the page
-        cy.clearCookies();
-        // Visit the auth page only after user is created and cookies are cleared
-        cy.visit(AUTH_URL);
+        cy.clearCookies(); // Clear cookies set by API response
+        // No need to visit here anymore, login command handles it
       });
     });
 
-    it('should allow a user to log in with valid credentials', function() { // Use function() to access aliases with `this`
-      // Find form elements and interact using ID selectors
-      cy.get('#login-email').type(this.userEmail); // Use alias
+    it('should allow a user to log in with valid credentials', function() {
+      // Use the login command directly here as well for consistency?
+      // Or keep manual steps as they test the login UI explicitly.
+      // Keeping manual steps for now.
+      cy.visit('/auth'); // Need to visit page for manual login test
+      cy.get('#login-email').type(this.userEmail);
       cy.get('#login-password').type(PASSWORD);
-      cy.contains('button', /^Login$/i).click(); // Match 'Login' exactly, case-insensitive
-
-      // Assertions: Check for successful login
-      // Option 1: Check URL redirection
-      cy.url().should('not.include', AUTH_URL);
-      // Check that the pathname is the expected dashboard path
+      cy.contains('button', /^Login$/i).click();
+      cy.url().should('not.include', '/auth');
       cy.location('pathname').should('eq', '/dashboard');
     });
 
-    it('should show an error message with invalid credentials', function() { // Use function() to access aliases with `this`
-      // Use ID selectors here too
-      cy.get('#login-email').type(this.userEmail); // Use alias
+    it('should show an error message with invalid credentials', function() {
+      cy.visit('/auth'); // Need to visit page for manual login test
+      cy.get('#login-email').type(this.userEmail);
       cy.get('#login-password').type('wrongpassword');
       cy.contains('button', /^Login$/i).click();
-
-      // Assertions: Check for error message and no redirection
-      cy.url().should('include', AUTH_URL);
-      // Check for the specific error message shown by the UI
+      cy.url().should('include', '/auth');
       cy.contains(/User not authenticated/i).should('be.visible');
-      // cy.get('[data-testid="login-error"]').should('contain.text', 'User not authenticated'); // Alternative selector if needed
+    });
+
+    it('should allow a logged-in user to log out', function() {
+      // Use the custom login command to log in first
+      cy.login(this.userEmail, PASSWORD);
+
+      // Now on dashboard, find and click the logout button
+      cy.contains('button', /logout/i).click();
+
+      // Assert redirection to the auth page
+      cy.location('pathname').should('eq', '/auth');
+
+      // Assert visiting a protected route redirects back to auth
+      cy.visit('/dashboard');
+      cy.location('pathname').should('eq', '/auth');
     });
   });
 
