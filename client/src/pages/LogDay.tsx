@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Loader2, Plus, Check, X, Search } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Check, X, Search, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -144,14 +144,25 @@ export default function LogDay() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
       <div className="max-w-md mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          className="mb-4 text-slate-600 hover:text-slate-800"
-          onClick={() => navigate(-1)}
-        >
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+        <div className="flex justify-between items-center mb-4">
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-slate-800"
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-slate-600 hover:text-slate-800"
+            onClick={() => navigate('/settings')}
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
 
         <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-100">
           <h2 className="text-lg font-medium text-slate-800 mb-4">Date</h2>
