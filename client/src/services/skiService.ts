@@ -1,4 +1,4 @@
-import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp, Ski } from '@/types/ski';
+import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry } from '@/types/ski';
 
 // Custom error for authentication issues
 export class AuthenticationError extends Error {
@@ -150,5 +150,15 @@ export const skiService = {
     });
     if (!response.ok) await handleApiError(response); // Use helper
     // No response body expected for DELETE 204 No Content
+  },
+
+  // New function to get all ski days
+  async getDays(): Promise<SkiDayEntry[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
+      ...defaultFetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) await handleApiError(response);
+    return await response.json();
   },
 };

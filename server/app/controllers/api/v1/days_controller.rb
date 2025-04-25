@@ -1,5 +1,11 @@
 class Api::V1::DaysController < ApplicationController
 
+  # GET /api/v1/days
+  def index
+    days = current_user.days.includes(:ski, :resort).order(date: :desc)
+    render json: days, each_serializer: Api::V1::DaySerializer # Use the new serializer
+  end
+
   # POST /api/v1/days
   def create
     # Build the day associated with the current_user

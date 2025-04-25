@@ -38,3 +38,14 @@ export interface Ski {
   created_at: string; // ISO 8601 date string
   updated_at: string; // ISO 8601 date string
 }
+
+// New type for the GET /days endpoint response item
+export interface SkiDayEntry {
+  id: number;
+  date: string; // API returns string, we can parse it later
+  activity: string;
+  ski_name: string;
+  resort_name: string;
+  created_at: string;
+  updated_at: string;
+}

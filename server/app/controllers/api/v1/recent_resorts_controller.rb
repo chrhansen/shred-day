@@ -4,24 +4,12 @@ module Api
     class RecentResortsController < ApplicationController
       # GET /api/v1/recent_resorts
       def index
-        # Fetch the 5 most recently visited unique resorts for the user
-        # directly joining and selecting necessary fields.
-        recent_resorts_data = current_user.days
-                                       .joins(:resort)
-                                       .select(
-                                         'resorts.id',
-                                         'resorts.name',
-                                         'resorts.country',
-                                         'resorts.region',
-                                         'resorts.latitude',
-                                         'resorts.longitude',
-                                         'MAX(days.date) as last_visit_date'
-                                        )
-                                       .group('resorts.id') # Group by resort primary key
-                                       .order('last_visit_date DESC')
-                                       .limit(5)
+        # Use the recent_resorts association defined in the User model
+        # The association handles joining, grouping, selecting, and ordering.
+        # We just need to limit the results here.
+        recent_resorts = current_user.recent_resorts.limit(5)
 
-        render json: recent_resorts_data
+        render json: recent_resorts
       end
     end
   end

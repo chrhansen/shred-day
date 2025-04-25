@@ -32,9 +32,16 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <StatsCard label="Days Skied" value={stats?.totalDays ?? '...'} />
-          <StatsCard label="Resorts Visited" value={stats?.uniqueResorts ?? '...'} />
-          <StatsCard label="Most Used Ski" value={stats?.mostUsedSki ?? '...'} />
+          <button
+            onClick={() => navigate('/days')}
+            className="text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-transform hover:-translate-y-1"
+            aria-label="View all ski days"
+            disabled={isLoading}
+          >
+            <StatsCard label="Days Skied" value={isLoading ? '...' : stats?.totalDays ?? 0} />
+          </button>
+          <StatsCard label="Resorts Visited" value={isLoading ? '...' : stats?.uniqueResorts ?? 0} />
+          <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? 'N/A'} />
         </div>
 
         <Button
