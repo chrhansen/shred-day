@@ -29,8 +29,14 @@ class Api::V1::SkisController < ApplicationController
 
   # DELETE /api/v1/skis/:id
   def destroy
-    @ski.destroy
-    head :no_content # Return 204 No Content on successful deletion
+    # Attempt to destroy the ski. The dependent: :restrict_with_error in the
+    # Ski model will prevent deletion and add errors if associated days exist.
+    if @ski.destroy
+      head :no_content # Return 204 No Content on successful deletion
+    else
+      # Render the validation errors added by restrict_with_error
+      render json: { errors: @ski.errors.full_messages }, status: :unprocessable_entity
+    end
   end
 
   private
