@@ -176,6 +176,7 @@ export default function LogDay() {
                     label={resort.name}
                     selected={selectedResort?.id === resort.id}
                     onClick={() => handleToggleRecentResort(resort)}
+                    data-testid={`recent-resort-${resort.name.toLowerCase().replace(/\s+/g, '-')}`}
                   />
                 ))
               )}
@@ -186,6 +187,7 @@ export default function LogDay() {
                   label={selectedResort.name}
                   selected={true}
                   onClick={() => setSelectedResort(null)}
+                  data-testid={`selected-resort-${selectedResort.name.toLowerCase().replace(/\s+/g, '-')}`}
                 />
               )}
 
@@ -200,6 +202,7 @@ export default function LogDay() {
                       className="h-10 pl-8"
                       disabled={isPending}
                       autoFocus
+                      data-testid="resort-search-input"
                     />
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     {isSearchingResorts && (
@@ -208,13 +211,17 @@ export default function LogDay() {
                   </div>
                   <div className="relative w-full min-h-[1rem]">
                     {(!isSearchingResorts && resortQuery.length >= 2) && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                        data-testid="resort-search-results"
+                      >
                         {searchResults.length > 0 ? (
                           searchResults.map((resort) => (
                             <button
                               key={resort.id}
                               className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                               onClick={() => handleSelectResortFromSearch(resort)}
+                              data-testid={`resort-option-${resort.name.toLowerCase().replace(/\s+/g, '-')}`}
                             >
                               {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
                             </button>
@@ -240,6 +247,7 @@ export default function LogDay() {
                   className="h-8 px-2 text-blue-600 hover:bg-blue-50 border-dashed border border-transparent hover:border-blue-200"
                   onClick={() => { setIsSearchingMode(true); setSelectedResort(null); }}
                   disabled={isLoadingRecentResorts}
+                  data-testid="find-resort-button"
                 >
                   <Search className="h-4 w-4 mr-1" /> Find resort...
                 </Button>
@@ -267,6 +275,7 @@ export default function LogDay() {
                         label={ski.name}
                         selected={selectedSki === ski.id}
                         onClick={() => setSelectedSki(ski.id)}
+                        data-testid={`ski-option-${ski.name.toLowerCase().replace(/\s+/g, '-')}`}
                       />
                     ))}
                   </>
@@ -333,7 +342,8 @@ export default function LogDay() {
                   key={activity}
                   label={activity}
                   selected={selectedActivity === activity}
-                  onClick={() => setSelectedActivity(activity)}
+                  onClick={() => setSelectedActivity(selectedActivity === activity ? "" : activity)}
+                  data-testid={`activity-option-${activity.toLowerCase()}`}
                 />
               ))}
             </div>
@@ -342,10 +352,12 @@ export default function LogDay() {
 
         <Button
           onClick={handleSave}
-          disabled={isPending || !selectedResort}
-          className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
+          disabled={isPending || !selectedResort || selectedSki === null || !selectedActivity}
+          className="w-full h-12 text-lg rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
+          data-testid="log-day-submit-button"
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+          Log This Day
         </Button>
       </div>
     </div>
