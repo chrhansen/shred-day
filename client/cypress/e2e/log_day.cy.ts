@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-/// <reference types="../support/commands" />
 
 describe('Log a Ski Day', () => {
   const PASSWORD = 'password123';
