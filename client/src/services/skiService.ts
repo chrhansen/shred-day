@@ -25,15 +25,37 @@ export const defaultFetchOptions: RequestInit = {
 // Helper function for handling API errors
 export async function handleApiError(response: Response): Promise<void> {
   if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
+    // Handle login/auth failure specifically
+    // Attempt to parse body for a specific error message if backend sends one
+    try {
+      const errorData = await response.json();
+      throw new AuthenticationError(errorData.error || 'User not authenticated');
+    } catch {
+      throw new AuthenticationError('User not authenticated');
+    }
   }
-  // Attempt to parse JSON error response from Rails
+
+  // Handle other errors (like 422 validation)
   try {
     const errorData = await response.json();
-    const errorMessage = errorData.errors?.join(', ') || errorData.error || `Request failed with status ${response.status}`;
-    throw new Error(errorMessage);
+
+    // Check if Rails validation errors object exists
+    if (errorData && typeof errorData.errors === 'object' && errorData.errors !== null) {
+      // Extract messages from the Rails errors object { field: ["msg1", "msg2"], ... }
+      const messages = Object.values(errorData.errors).flat(); // Get all message strings
+      if (messages.length > 0) {
+        throw new Error(messages.join(', ')); // Join all messages
+      }
+    }
+
+    // Fallback for other JSON errors or if errors object is empty/malformed
+    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+
   } catch (e) {
     // Fallback if response is not JSON or parsing fails
+    if (e instanceof Error) {
+      throw e; // Re-throw known errors (like the ones we create above)
+    }
     throw new Error(`Request failed with status ${response.status}`);
   }
 }

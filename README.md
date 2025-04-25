@@ -82,3 +82,53 @@ bin/rails server
   - Configuration: `server/config/deploy.yml`
   - Target: Hetzner VPS with Ubuntu
 - Traefik (Reverse Proxy, managed by Kamal)
+
+## 🧪 Testing
+
+This project uses different testing strategies for the backend and frontend.
+
+### Backend (Rails API - in `/server`)
+
+- **Framework:** RSpec (`rspec-rails`)
+- **Factories:** FactoryBot (`factory_bot_rails`)
+- **Matchers:** Shoulda Matchers (`shoulda-matchers`)
+
+**Running Specs:**
+
+```sh
+# Navigate to the server directory
+cd server
+
+# Run all model specs
+bundle exec rspec spec/models
+
+# Run all request (API endpoint) specs
+bundle exec rspec spec/requests
+
+# Run all specs
+bundle exec rspec
+```
+
+### Frontend (React Client - in `/client`)
+
+- **End-to-End (E2E) Testing:** Cypress
+  - Simulates real user interactions in a browser.
+  - Configuration: `client/cypress.config.ts`
+  - Specs: `client/cypress/e2e/`
+- **Unit/Component Testing:** Vitest + React Testing Library *(Setup Pending)*
+  - For testing individual components and functions in isolation.
+
+**Running E2E Tests:**
+
+Ensure the client development server (`npm run dev`) and the backend server (`bin/rails s`) are running.
+
+```sh
+# Navigate to the client directory
+cd client
+
+# Open the Cypress Test Runner (interactive mode)
+npx cypress open
+
+# Run tests headlessly in the terminal (e.g., for CI)
+# npx cypress run
+```
