@@ -1,6 +1,6 @@
 class Api::V1::SessionsController < ApplicationController
-  # Skip login requirement for sign-in and sign-out actions
-  skip_before_action :require_login, only: [:create, :destroy]
+  # Skip login requirement only for the sign-in action
+  skip_before_action :require_login, only: [:create]
 
   # POST /api/v1/session (Sign In)
   def create

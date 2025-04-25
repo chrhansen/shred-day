@@ -4,26 +4,29 @@ module Api
     class RecentResortsController < ApplicationController
       # GET /api/v1/recent_resorts
       def index
-        # Find the 5 most recently visited unique resort IDs for the user.
+        # Find the 5 most recently visited unique resort IDs for the user based on the actual ski date.
         # 1. Group days by resort_id.
-        # 2. Find the latest created_at (last visit) for each group.
-        # 3. Order the groups by this latest created_at descending.
+        # 2. Find the latest date (last visit) for each group.
+        # 3. Order the groups by this latest date descending.
         # 4. Limit to the top 5.
         # 5. Pluck just the resort_id from these top 5 groups.
         recent_resort_ids = current_user.days
-                                       .select(:resort_id, 'MAX(created_at) as last_visit_time')
+                                       .select(:resort_id, 'MAX(date) as last_visit_date')
                                        .group(:resort_id)
-                                       .order('MAX(created_at) DESC')
+                                       .order('MAX(date) DESC')
                                        .limit(5)
                                        .pluck(:resort_id)
 
         # Fetch the actual Resort objects, preserving the order from the previous query
         if recent_resort_ids.present?
           # We use a CASE statement in ORDER BY to sort by the order in recent_resort_ids
-          # which reflects the order of recent visits.
+          # which reflects the order of recent visits based on date.
           ordering_clause = "CASE id "
           recent_resort_ids.each_with_index do |id, index|
-            ordering_clause << "WHEN '#{ActiveRecord::Base.connection.quote_string(id)}' THEN #{index} "
+            # Ensure id is properly quoted if it's a string (like a UUID)
+            # Use quote_string to prevent SQL injection vulnerabilities
+            quoted_id = ActiveRecord::Base.connection.quote_string(id.to_s)
+            ordering_clause << "WHEN '#{quoted_id}' THEN #{index} "
           end
           ordering_clause << "END"
 

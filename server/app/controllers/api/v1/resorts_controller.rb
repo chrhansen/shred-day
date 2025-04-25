@@ -1,10 +1,6 @@
 module Api
   module V1
     class ResortsController < ApplicationController
-      # Skip the require_login filter for the index action, unless you intend
-      # to require login for search as mentioned in a previous message.
-      # If search requires login, remove the line below.
-      # skip_before_action :require_login, only: [:index]
 
       # GET /api/v1/resorts
       # GET /api/v1/resorts?query=abc

@@ -3,7 +3,6 @@ class Day < ApplicationRecord
   belongs_to :ski
   belongs_to :resort
 
-  # Validations (example)
-  # validates :date, presence: true
-  # validates :resort, presence: true
+  # Validations
+  validates :date, :resort, :ski, :user, presence: true
 end
