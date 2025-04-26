@@ -4,7 +4,7 @@ import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export default function DaysListPage() {
@@ -55,7 +55,11 @@ export default function DaysListPage() {
         {!isLoading && !error && (!days || days.length === 0) && (
           <div className="text-center py-10 text-slate-500">
             <p>No ski days logged yet.</p>
-            <Button onClick={() => navigate('/new')} className="mt-4">
+            <Button
+              onClick={() => navigate('/new')}
+              className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
+            >
+              <Plus className="mr-2 h-5 w-5" />
               Log Your First Day
             </Button>
           </div>
