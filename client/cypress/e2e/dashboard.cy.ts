@@ -64,7 +64,7 @@ describe('Dashboard / Stats', () => {
 
     cy.get('[data-testid="days-skied-value"]').should('contain.text', '0');
     cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '0');
-    cy.get('[data-testid="most-used-ski-value"]').should('contain.text', 'N/A');
+    cy.get('[data-testid="most-used-ski-value"]').should('contain.text', '-');
   });
 
 });

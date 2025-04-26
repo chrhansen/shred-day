@@ -40,7 +40,7 @@ export default function Dashboard() {
              <StatsCard label="Days Skied" value={isLoading ? '...' : stats?.totalDays ?? 0} />
            </div>
            <StatsCard label="Resorts Visited" value={isLoading ? '...' : stats?.uniqueResorts ?? 0} />
-           <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? 'N/A'} />
+           <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? '-'} />
         </div>
 
         <Button

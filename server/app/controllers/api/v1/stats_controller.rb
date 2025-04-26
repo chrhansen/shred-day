@@ -14,7 +14,7 @@ class Api::V1::StatsController < ApplicationController
     render json: {
       totalDays: total_days,
       uniqueResorts: unique_resorts,
-      mostUsedSki: most_used_ski&.name || "N/A"
+      mostUsedSki: most_used_ski&.name || "-"
     }
   end
 end
