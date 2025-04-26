@@ -43,8 +43,18 @@ describe('Authentication Flows', () => {
       // Use the custom login command to log in first
       cy.login(this.userEmail, PASSWORD);
 
-      // Now on dashboard, find and click the logout button
-      cy.contains('button', /logout/i).click();
+      // Navigate to the settings page
+      cy.visit('/settings');
+
+      // Find the logout icon button by its aria-label and click it
+      cy.get('[aria-label="Logout"]').click();
+
+      // Cypress automatically accepts window.confirm by default
+      // If needed, you can handle it explicitly:
+      cy.on('window:confirm', (str) => {
+        expect(str).to.equal('Are you sure you want to log out?')
+        return true; // Or false to cancel
+      });
 
       // Assert redirection to the auth page
       cy.location('pathname').should('eq', '/auth');

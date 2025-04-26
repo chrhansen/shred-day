@@ -1,4 +1,4 @@
-import { Plus, LogOut, Settings } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -49,15 +49,6 @@ export default function Dashboard() {
         >
           <Plus className="mr-2 h-5 w-5" />
           Log a day
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={logout}
-          className="w-full h-12 text-slate-600 border-slate-300 hover:bg-slate-100 hover:text-slate-800"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
         </Button>
 
         {user && (
