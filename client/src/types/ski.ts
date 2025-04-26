@@ -1,9 +1,17 @@
+import { Resort } from "@/services/resortService";
+
 export interface SkiDay {
   id?: string;
   date: Date;
   resort_id: string;
-  ski_id: number;
+  ski_id: string;
   activity: string;
+  user_id?: string; // Assuming user_id might be present
+  created_at?: string;
+  updated_at?: string;
+  // Add nested objects (optional because they might not always be loaded)
+  resort?: Resort;
+  ski?: Ski;
 }
 
 export interface SkiStats {
@@ -24,7 +32,7 @@ export interface UserSignUp extends UserCredentials {
 
 // Matches the structure returned by the Rails API (excluding password_digest)
 export interface UserInfo {
-  id: number;
+  id: string;
   email: string;
   created_at: string; // ISO 8601 date string
   updated_at: string; // ISO 8601 date string
@@ -32,16 +40,16 @@ export interface UserInfo {
 
 // --- Ski Equipment Type ---
 export interface Ski {
-  id: number;
+  id: string;
   name: string;
-  user_id: number;
+  user_id: string;
   created_at: string; // ISO 8601 date string
   updated_at: string; // ISO 8601 date string
 }
 
 // New type for the GET /days endpoint response item
 export interface SkiDayEntry {
-  id: number;
+  id: string;
   date: string; // API returns string, we can parse it later
   activity: string;
   ski_name: string;

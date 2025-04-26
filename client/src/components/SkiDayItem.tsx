@@ -2,12 +2,17 @@ import { format } from "date-fns";
 // Assuming SkiDayEntry is the correct type, adjust if needed
 import { type SkiDayEntry as SkiDay } from "@/types/ski";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface SkiDayItemProps {
   day: SkiDay;
 }
 
 export function SkiDayItem({ day }: SkiDayItemProps) {
+  const navigate = useNavigate();
+
   // Extract initials from resort name
   const initials = day.resort_name
     ? day.resort_name.split(' ').map(word => word[0]).join('')
@@ -29,6 +34,16 @@ export function SkiDayItem({ day }: SkiDayItemProps) {
           {day.activity && <span>{day.activity}</span>}
         </div>
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full"
+        onClick={() => navigate(`/days/${day.id}/edit`)}
+        aria-label="Edit day"
+        data-testid={`edit-day-${day.id}`}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

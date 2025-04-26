@@ -1,4 +1,5 @@
 import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry } from '@/types/ski';
+import { format } from 'date-fns'; // Import format
 
 // Custom error for authentication issues
 export class AuthenticationError extends Error {
@@ -71,13 +72,19 @@ export const skiService = {
   },
 
   async logDay(day: Omit<SkiDay, 'id'>): Promise<SkiDay> {
+    const payload = {
+      ...day,
+      date: format(day.date, 'yyyy-MM-dd'), // Format date as YYYY-MM-DD
+    };
     const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
       ...defaultFetchOptions,
       method: 'POST',
-      body: JSON.stringify({ day }),
+      body: JSON.stringify({ day: payload }), // Send formatted payload
     });
-    if (!response.ok) await handleApiError(response); // Use helper
-    return await response.json();
+    if (!response.ok) await handleApiError(response);
+    const responseData = await response.json();
+    // Convert date string from response back to Date object
+    return { ...responseData, date: new Date(responseData.date.replace(/-/g, '/')) }; // Adjust parsing if backend sends YYYY-MM-DD
   },
 
   async signUp(userData: UserSignUp): Promise<UserInfo> {
@@ -133,26 +140,25 @@ export const skiService = {
     return await response.json();
   },
 
-  async updateSki(skiId: number, skiData: { name: string }): Promise<Ski> {
+  async updateSki(skiId: string, skiData: { name: string }): Promise<Ski> {
     const response = await fetch(`${API_BASE_URL}/api/v1/skis/${skiId}`, {
       ...defaultFetchOptions,
-      method: 'PATCH', // Or PUT
-      body: JSON.stringify({ ski: skiData }), // Nest under 'ski' key
+      method: 'PATCH',
+      body: JSON.stringify({ ski: skiData }),
     });
-    if (!response.ok) await handleApiError(response); // Use helper
+    if (!response.ok) await handleApiError(response);
     return await response.json();
   },
 
-  async deleteSki(skiId: number): Promise<void> {
+  async deleteSki(skiId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/api/v1/skis/${skiId}`, {
       ...defaultFetchOptions,
       method: 'DELETE',
     });
-    if (!response.ok) await handleApiError(response); // Use helper
-    // No response body expected for DELETE 204 No Content
+    if (!response.ok) await handleApiError(response);
   },
 
-  // New function to get all ski days
+  // get all ski days
   async getDays(): Promise<SkiDayEntry[]> {
     const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
       ...defaultFetchOptions,
@@ -160,5 +166,34 @@ export const skiService = {
     });
     if (!response.ok) await handleApiError(response);
     return await response.json();
+  },
+
+  // get a single ski day by ID
+  async getDay(dayId: string): Promise<SkiDay> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
+      ...defaultFetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) await handleApiError(response);
+    const dayData = await response.json();
+    // Assuming the backend sends date as a string, convert it to Date object
+    return { ...dayData, date: new Date(dayData.date) };
+  },
+
+  // to update a ski day
+  async updateDay(dayId: string, dayData: Omit<SkiDay, 'id'>): Promise<SkiDay> {
+     const payload = {
+       ...dayData,
+       date: format(dayData.date, 'yyyy-MM-dd'), // Format date as YYYY-MM-DD
+     };
+    const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
+      ...defaultFetchOptions,
+      method: 'PATCH',
+      body: JSON.stringify({ day: payload }),
+    });
+    if (!response.ok) await handleApiError(response);
+    const updatedDayData = await response.json();
+    // Convert date string from response back to Date object
+    return { ...updatedDayData, date: new Date(updatedDayData.date.replace(/-/g, '/')) }; // Adjust parsing if backend sends YYYY-MM-DD
   },
 };

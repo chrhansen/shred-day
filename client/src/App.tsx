@@ -7,7 +7,6 @@ import Dashboard from "./pages/Dashboard";
 import LogDay from "./pages/LogDay";
 import SettingsPage from "./pages/SettingsPage";
 import DaysListPage from "./pages/DaysListPage";
-import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -46,6 +45,7 @@ const AppRoutes = () => {
         <>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
+          <Route path="/days/:id/edit" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/days" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />

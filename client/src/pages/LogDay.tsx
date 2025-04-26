@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Loader2, Plus, Check, X, Search, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { resortService, Resort } from "@/services/resortService";
@@ -17,13 +17,15 @@ const ACTIVITIES = ["Friends", "Training"];
 export default function LogDay() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { id: dayId } = useParams<{ id?: string }>();
+  const isEditMode = Boolean(dayId);
   const [date, setDate] = useState<Date>(new Date());
   const [selectedResort, setSelectedResort] = useState<Resort | null>(null);
   const [resortQuery, setResortQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Resort[]>([]);
   const [isSearchingResorts, setIsSearchingResorts] = useState<boolean>(false);
   const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
-  const [selectedSki, setSelectedSki] = useState<number | null>(null);
+  const [selectedSki, setSelectedSki] = useState<string | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
@@ -38,7 +40,13 @@ export default function LogDay() {
     queryFn: userService.getRecentResorts,
   });
 
-  const { mutate: saveDay, isPending } = useMutation({
+  const { data: dayToEdit, isLoading: isLoadingDayToEdit, error: dayToEditError } = useQuery({
+    queryKey: ['day', dayId],
+    queryFn: () => skiService.getDay(dayId!),
+    enabled: isEditMode,
+  });
+
+  const { mutate: saveDay, isPending: isSaving } = useMutation({
     mutationFn: skiService.logDay,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -46,8 +54,25 @@ export default function LogDay() {
       toast.success("Ski day logged successfully!");
       navigate('/');
     },
-    onError: () => {
-      toast.error("Failed to log ski day");
+    onError: (error) => {
+      console.error("Log Day error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to log ski day");
+    },
+  });
+
+  const { mutate: updateDay, isPending: isUpdating } = useMutation({
+    mutationFn: (data: { date: Date; resort_id: string; ski_id: string; activity: string }) =>
+      skiService.updateDay(dayId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skiStats'] });
+      queryClient.invalidateQueries({ queryKey: ['days'] });
+      queryClient.invalidateQueries({ queryKey: ['day', dayId] });
+      toast.success("Ski day updated successfully!");
+      navigate('/days');
+    },
+    onError: (error) => {
+      console.error("Update Day error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update ski day");
     },
   });
 
@@ -122,12 +147,18 @@ export default function LogDay() {
       return;
     }
 
-    saveDay({
+    const dayData = {
       date,
       resort_id: selectedResort.id,
       ski_id: selectedSki,
       activity: selectedActivity,
-    });
+    };
+
+    if (isEditMode) {
+      updateDay(dayData);
+    } else {
+      saveDay(dayData);
+    }
   };
 
   const handleSaveInlineSki = () => {
@@ -138,8 +169,51 @@ export default function LogDay() {
     addSki({ name: newInlineSkiName.trim() });
   };
 
-  // Helper derived state to check if selected resort is in the recent list
+  useEffect(() => {
+    if (isEditMode && dayToEdit) {
+      setDate(new Date(dayToEdit.date));
+      setSelectedSki(dayToEdit.ski_id);
+      setSelectedActivity(dayToEdit.activity);
+
+      if (dayToEdit.resort) {
+        setSelectedResort(dayToEdit.resort);
+      } else {
+         console.warn("Day details missing nested resort object");
+         setSelectedResort(null);
+      }
+    }
+    if (!isEditMode) {
+        setDate(new Date());
+        setSelectedResort(null);
+        setSelectedSki(null);
+        setSelectedActivity("");
+        setResortQuery("");
+        setIsSearchingMode(false);
+    }
+  }, [isEditMode, dayId, dayToEdit]);
+
   const isSelectedResortRecent = selectedResort && recentResorts?.some(r => r.id === selectedResort.id);
+
+  const isLoading = isLoadingSkis || isLoadingRecentResorts || (isEditMode && isLoadingDayToEdit);
+  const isProcessing = isSaving || isUpdating || isAddingSki;
+
+  if (isEditMode && isLoadingDayToEdit) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span>Loading day details...</span>
+      </div>
+    );
+  }
+
+  if (isEditMode && dayToEditError) {
+     return (
+       <div className="flex flex-col justify-center items-center min-h-screen text-red-600">
+         <span>Error loading day details.</span>
+         <Button onClick={() => navigate('/days')}>Go Back</Button>
+       </div>
+     );
+   }
 
   return (
     <div className="min-h-screen bg-white p-4 flex justify-center">
@@ -148,7 +222,14 @@ export default function LogDay() {
           <Button
             variant="ghost"
             className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (isEditMode) {
+                navigate('/days');
+              } else {
+                navigate(-1);
+              }
+            }}
+            disabled={isProcessing}
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back
@@ -159,18 +240,24 @@ export default function LogDay() {
             className="text-slate-600 hover:text-slate-800"
             onClick={() => navigate('/settings')}
             aria-label="Settings"
+            disabled={isProcessing}
           >
             <Settings className="h-5 w-5" />
           </Button>
         </div>
 
         <div>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-6 text-center">
+             {isEditMode ? 'Edit Ski Day' : 'Log New Ski Day'}
+           </h1>
           <h2 className="text-lg font-medium text-slate-800 mb-4 text-center">Date</h2>
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(date) => date && setDate(date)}
+            onSelect={(d) => d && setDate(d)}
             className="rounded-lg mx-auto"
+            disabled={isProcessing || isLoading}
+            month={date}
           />
         </div>
 
@@ -188,6 +275,7 @@ export default function LogDay() {
                     selected={selectedResort?.id === resort.id}
                     onClick={() => handleToggleRecentResort(resort)}
                     data-testid={`recent-resort-${resort.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    disabled={isProcessing || isLoading}
                   />
                 ))
               )}
@@ -199,6 +287,7 @@ export default function LogDay() {
                   selected={true}
                   onClick={() => setSelectedResort(null)}
                   data-testid={`selected-resort-${selectedResort.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  disabled={isProcessing || isLoading}
                 />
               )}
 
@@ -211,7 +300,7 @@ export default function LogDay() {
                       value={resortQuery}
                       onChange={handleResortInputChange}
                       className="h-10 pl-8"
-                      disabled={isPending}
+                      disabled={isProcessing || isLoading}
                       autoFocus
                       data-testid="resort-search-input"
                     />
@@ -247,6 +336,7 @@ export default function LogDay() {
                     variant="outline"
                     size="sm"
                     onClick={() => { setIsSearchingMode(false); setResortQuery(''); setSearchResults([]); }}
+                    disabled={isProcessing || isLoading}
                   >
                     Cancel Search
                   </Button>
@@ -257,7 +347,7 @@ export default function LogDay() {
                   size="sm"
                   className="h-8 px-2 text-blue-600 hover:bg-blue-50 border-dashed border border-transparent hover:border-blue-200"
                   onClick={() => { setIsSearchingMode(true); setSelectedResort(null); }}
-                  disabled={isLoadingRecentResorts}
+                  disabled={isProcessing || isLoading}
                   data-testid="find-resort-button"
                 >
                   <Search className="h-4 w-4 mr-1" /> Find resort...
@@ -287,6 +377,7 @@ export default function LogDay() {
                         selected={selectedSki === ski.id}
                         onClick={() => setSelectedSki(ski.id)}
                         data-testid={`ski-option-${ski.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        disabled={isProcessing || isLoading}
                       />
                     ))}
                   </>
@@ -300,7 +391,7 @@ export default function LogDay() {
                     size="sm"
                     className="h-8 px-2 text-blue-600 hover:bg-blue-50"
                     onClick={() => setIsAddingSkiInline(true)}
-                    disabled={isAddingSki}
+                    disabled={isProcessing || isLoading}
                  >
                     <Plus className="h-4 w-4 mr-1" /> Add
                  </Button>
@@ -313,7 +404,7 @@ export default function LogDay() {
                     value={newInlineSkiName}
                     onChange={(e) => setNewInlineSkiName(e.target.value)}
                     className="h-9 flex-grow"
-                    disabled={isAddingSki}
+                    disabled={isProcessing || isLoading}
                     autoFocus
                     onKeyDown={(e) => e.key === 'Enter' && handleSaveInlineSki()}
                   />
@@ -322,9 +413,9 @@ export default function LogDay() {
                     size="icon"
                     className="h-8 w-8 text-green-600 hover:bg-green-50 flex-shrink-0"
                     onClick={handleSaveInlineSki}
-                    disabled={isAddingSki || !newInlineSkiName.trim()}
+                    disabled={isProcessing || isLoading || !newInlineSkiName.trim()}
                   >
-                    {isAddingSki ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     <span className="sr-only">Save Ski</span>
                   </Button>
                   <Button
@@ -332,7 +423,7 @@ export default function LogDay() {
                     size="icon"
                     className="h-8 w-8 text-slate-500 hover:bg-slate-100 flex-shrink-0"
                     onClick={() => { setIsAddingSkiInline(false); setNewInlineSkiName(""); }}
-                    disabled={isAddingSki}
+                    disabled={isProcessing || isLoading}
                   >
                     <X className="h-4 w-4" />
                     <span className="sr-only">Cancel</span>
@@ -355,24 +446,27 @@ export default function LogDay() {
                   selected={selectedActivity === activity}
                   onClick={() => setSelectedActivity(activity)}
                   data-testid={`activity-${activity.toLowerCase()}`}
+                  disabled={isProcessing || isLoading}
                 />
               ))}
             </div>
           </div>
         </div>
 
-        <Button
-          onClick={handleSave}
-          disabled={isPending}
-          className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
-          data-testid="save-button"
-        >
-          {isPending ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
-          ) : (
-            "Save"
-          )}
-        </Button>
+        <div className="pt-4">
+          <Button
+            className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700"
+            onClick={handleSave}
+            disabled={isProcessing || isLoading}
+            data-testid="save-day-button"
+          >
+            {isProcessing ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              isEditMode ? 'Update Day' : 'Save Day'
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

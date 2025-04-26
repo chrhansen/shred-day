@@ -4,14 +4,15 @@ class Api::V1::DaysController < ApplicationController
   # GET /api/v1/days
   def index
     days = current_user.days.includes(:ski, :resort).order(date: :desc)
-    render json: days, each_serializer: Api::V1::DaySerializer # Use the new serializer
+    # Use the specific serializer for the list view
+    render json: days, each_serializer: Api::V1::DayEntrySerializer
   end
 
   # GET /api/v1/days/:id
   def show
     # @day is set by before_action
-    # Render the single day, including associations via serializer
-    render json: @day # Assuming serializer handles associations
+    # Render the single day using the default DaySerializer (includes nested objects)
+    render json: @day
   end
 
   # POST /api/v1/days
@@ -22,7 +23,7 @@ class Api::V1::DaysController < ApplicationController
     day = current_user.days.build(day_params)
 
     if day.save
-      # Return the full day object, which will include associated resort details via the serializer (if configured)
+      # Render created day using the default DaySerializer (includes nested objects)
       render json: day, status: :created # Return created day on success (201)
     else
       # Use a consistent error format { errors: ... }
@@ -34,6 +35,7 @@ class Api::V1::DaysController < ApplicationController
   def update
     # @day is set by before_action
     if @day.update(day_params)
+      # Render updated day using the default DaySerializer (includes nested objects)
       render json: @day # Return updated day on success (200 OK)
     else
       render json: { errors: @day.errors }, status: :unprocessable_entity # Return errors on failure (422)

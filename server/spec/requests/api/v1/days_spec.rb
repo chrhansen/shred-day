@@ -35,15 +35,25 @@ RSpec.describe "Api::V1::Days", type: :request do
           }.to change(user.days, :count).by(1)
         end
 
-        it "returns created status and the created day info" do
+        it "returns created status and the created day info (using DaySerializer)" do
           post api_v1_days_path, params: valid_params
           expect(response).to have_http_status(:created)
-
           json_response = JSON.parse(response.body)
+
+          # Check standard fields
+          expect(json_response['id']).to be_present
           expect(json_response['date']).to eq(Date.today.to_s)
           expect(json_response['resort_id']).to eq(resort.id)
           expect(json_response['ski_id']).to eq(ski.id)
           expect(json_response['user_id']).to eq(user.id)
+          # Check for nested objects
+          expect(json_response).to have_key('resort')
+          expect(json_response['resort']).to include('id' => resort.id, 'name' => resort.name)
+          expect(json_response).to have_key('ski')
+          expect(json_response['ski']).to include('id' => ski.id, 'name' => ski.name)
+          # Check absence of flattened names
+          expect(json_response).not_to have_key('resort_name')
+          expect(json_response).not_to have_key('ski_name')
         end
       end
 
@@ -109,24 +119,25 @@ RSpec.describe "Api::V1::Days", type: :request do
       end
 
       context "when the day exists and belongs to the user" do
-        it "returns the day details including associations" do
+        it "returns the day details including associations (using DaySerializer)" do
           get api_v1_day_path(day)
           expect(response).to have_http_status(:ok)
-
           json_response = JSON.parse(response.body)
+
+          # Check standard fields
           expect(json_response['id']).to eq(day.id)
           expect(json_response['date']).to eq(day.date.to_s)
           expect(json_response['activity']).to eq("Friends")
           expect(json_response['resort_id']).to eq(resort.id)
           expect(json_response['ski_id']).to eq(ski.id)
-
-          # Check for nested serializer data
-          expect(json_response['resort']).to be_present
-          expect(json_response['resort']['id']).to eq(resort.id)
-          expect(json_response['resort']['name']).to eq(resort.name)
-          expect(json_response['ski']).to be_present
-          expect(json_response['ski']['id']).to eq(ski.id)
-          expect(json_response['ski']['name']).to eq(ski.name)
+          # Check for nested objects
+          expect(json_response).to have_key('resort')
+          expect(json_response['resort']).to include('id' => resort.id, 'name' => resort.name)
+          expect(json_response).to have_key('ski')
+          expect(json_response['ski']).to include('id' => ski.id, 'name' => ski.name)
+          # Check absence of flattened names
+          expect(json_response).not_to have_key('resort_name')
+          expect(json_response).not_to have_key('ski_name')
         end
       end
 
@@ -178,17 +189,24 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(day.ski_id).to eq(other_ski.id)
         end
 
-        it "returns ok status and the updated day info" do
+        it "returns ok status and the updated day info (using DaySerializer)" do
           patch api_v1_day_path(day), params: valid_update_params
           expect(response).to have_http_status(:ok)
-
           json_response = JSON.parse(response.body)
+
+          # Check standard fields
           expect(json_response['id']).to eq(day.id)
           expect(json_response['activity']).to eq("Training")
           expect(json_response['ski_id']).to eq(other_ski.id)
-          # Check nested objects are still present
-          expect(json_response['resort']['id']).to eq(resort.id)
-          expect(json_response['ski']['id']).to eq(other_ski.id)
+          # Check for nested objects
+          expect(json_response).to have_key('resort')
+          expect(json_response['resort']['id']).to eq(resort.id) # Resort wasn't changed
+          expect(json_response).to have_key('ski')
+          expect(json_response['ski']['id']).to eq(other_ski.id) # Check updated ski nested object
+          expect(json_response['ski']['name']).to eq(other_ski.name)
+          # Check absence of flattened names
+          expect(json_response).not_to have_key('resort_name')
+          expect(json_response).not_to have_key('ski_name')
         end
       end
 
@@ -235,6 +253,51 @@ RSpec.describe "Api::V1::Days", type: :request do
     context "when not authenticated" do
       it "returns unauthorized status" do
         patch api_v1_day_path(day), params: { day: { activity: "Test" } }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  # --- Add specs for GET /api/v1/days (index) ---
+  describe "GET /api/v1/days" do
+    context "when authenticated" do
+      before do
+        # Ensure the 'day' exists for the list
+        day
+        post api_v1_session_path, params: { email: user.email, password: user.password }
+        expect(response).to have_http_status(:ok)
+        get api_v1_days_path
+      end
+
+      it "returns ok status" do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "returns a list of days with correct structure (using DayEntrySerializer)" do
+        json_response = JSON.parse(response.body)
+        expect(json_response).to be_an(Array)
+        expect(json_response.size).to eq(1)
+        day_entry = json_response.first
+
+        expect(day_entry['id']).to eq(day.id)
+        expect(day_entry).to have_key('date')
+        expect(day_entry).to have_key('activity')
+        # Check for flattened names
+        expect(day_entry).to have_key('resort_name')
+        expect(day_entry['resort_name']).to eq(resort.name)
+        expect(day_entry).to have_key('ski_name')
+        expect(day_entry['ski_name']).to eq(ski.name)
+        # Check absence of nested objects
+        expect(day_entry).not_to have_key('resort')
+        expect(day_entry).not_to have_key('ski')
+        expect(day_entry).not_to have_key('resort_id') # Should not be included by DayEntrySerializer
+        expect(day_entry).not_to have_key('ski_id')    # Should not be included by DayEntrySerializer
+      end
+    end
+
+    context "when not authenticated" do
+      it "returns unauthorized status" do
+        get api_v1_days_path
         expect(response).to have_http_status(:unauthorized)
       end
     end
