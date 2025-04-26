@@ -44,7 +44,7 @@ export default function LogDay() {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       queryClient.invalidateQueries({ queryKey: ['recentResorts'] });
       toast.success("Ski day logged successfully!");
-      navigate('/dashboard');
+      navigate('/');
     },
     onError: () => {
       toast.error("Failed to log ski day");

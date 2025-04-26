@@ -2,8 +2,8 @@
 
 describe('Log a Ski Day', () => {
   const PASSWORD = 'password123';
-  const DASHBOARD_URL = '/dashboard';
-  const LOG_DAY_URL = '/log';
+  const DASHBOARD_URL = '/';
+  const LOG_DAY_URL = '/new';
   // Use known resort names from seeds
   const RESORT_A_NAME = "Le Massif";
   const SKI_NAME = "Test LogDay Ski";

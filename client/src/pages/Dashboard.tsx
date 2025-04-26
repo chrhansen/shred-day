@@ -44,7 +44,7 @@ export default function Dashboard() {
         </div>
 
         <Button
-          onClick={() => navigate("/log")}
+          onClick={() => navigate("/new")}
           className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl"
         >
           <Plus className="mr-2 h-5 w-5" />

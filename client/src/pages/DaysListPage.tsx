@@ -55,7 +55,7 @@ export default function DaysListPage() {
         {!isLoading && !error && (!days || days.length === 0) && (
           <div className="text-center py-10 text-slate-500">
             <p>No ski days logged yet.</p>
-            <Button onClick={() => navigate('/log')} className="mt-4">
+            <Button onClick={() => navigate('/new')} className="mt-4">
               Log Your First Day
             </Button>
           </div>

@@ -27,7 +27,7 @@ describe('Authentication Flows', () => {
       cy.get('#login-password').type(PASSWORD);
       cy.contains('button', /^Login$/i).click();
       cy.url().should('not.include', '/auth');
-      cy.location('pathname').should('eq', '/dashboard');
+      cy.location('pathname').should('eq', '/');
     });
 
     it('should show an error message with invalid credentials', function() {
@@ -50,7 +50,7 @@ describe('Authentication Flows', () => {
       cy.location('pathname').should('eq', '/auth');
 
       // Assert visiting a protected route redirects back to auth
-      cy.visit('/dashboard');
+      cy.visit('/');
       cy.location('pathname').should('eq', '/auth');
     });
   });
@@ -82,7 +82,7 @@ describe('Authentication Flows', () => {
 
       // 4. Assert redirection to dashboard
       cy.url().should('not.include', AUTH_URL);
-      cy.location('pathname').should('eq', '/dashboard');
+      cy.location('pathname').should('eq', '/');
 
       // Optional: Assert that the user is actually logged in (e.g., check for welcome message or specific element)
       // cy.contains(`Welcome, ${uniqueEmail}`).should('be.visible');

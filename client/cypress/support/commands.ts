@@ -77,7 +77,7 @@ Cypress.Commands.add('login', (email, password = 'password123') => {
   cy.get('#login-password').type(password);
   cy.contains('button', /^Login$/i).click();
   // Add assertion to make sure login succeeded and redirected
-  cy.location('pathname').should('eq', '/dashboard');
+  cy.location('pathname').should('eq', '/');
 });
 
 // Add command to log a day via API

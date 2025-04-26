@@ -37,7 +37,7 @@ export default function AuthPage() {
       });
       toast.success(`Welcome, ${user.email}! Sign up successful.`);
       login(user);
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
@@ -56,7 +56,7 @@ export default function AuthPage() {
       });
       toast.success(`Welcome back, ${user.email}!`);
       login(user);
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {

@@ -2,7 +2,7 @@
 
 describe('Settings Page', () => {
   const PASSWORD = 'password123';
-  const DASHBOARD_URL = '/dashboard';
+  const DASHBOARD_URL = '/';
   const SETTINGS_URL = '/settings';
 
   beforeEach(() => {
