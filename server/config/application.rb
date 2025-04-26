@@ -34,7 +34,11 @@ module Server
 
     # === Enable session management ===
     # Use cookie store for sessions (requires ActionDispatch::Cookies)
-    config.session_store :cookie_store, key: '_shred_day_session', same_site: :lax, secure: Rails.env.production?
+    # Add expire_after for 1 month duration
+    config.session_store :cookie_store, key: '_shred_day_session',
+                                      expire_after: 30.days,
+                                      same_site: :lax,
+                                      secure: Rails.env.production?
     # Use ActionDispatch::Cookies to manage cookies
     config.middleware.use ActionDispatch::Cookies
     # Use the session store defined above
