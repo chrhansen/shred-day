@@ -66,7 +66,7 @@ describe('Log a Ski Day', () => {
     cy.contains('button', /Friends/i).click(); // Click "Friends"
 
     // 7. Submit Form
-    cy.get('[data-testid="log-day-submit-button"]').click();
+    cy.get('[data-testid="save-button"]').click();
 
     // --- Assertions ---
     // Verify success: redirect back to dashboard and maybe check stats/toast

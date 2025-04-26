@@ -142,8 +142,8 @@ export default function LogDay() {
   const isSelectedResortRecent = selectedResort && recentResorts?.some(r => r.id === selectedResort.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
-      <div className="max-w-md mx-auto space-y-6">
+    <div className="min-h-screen bg-white p-4 flex justify-center">
+      <div className="w-full max-w-md mx-auto space-y-6">
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
@@ -164,13 +164,13 @@ export default function LogDay() {
           </Button>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-100">
-          <h2 className="text-lg font-medium text-slate-800 mb-4">Date</h2>
+        <div>
+          <h2 className="text-lg font-medium text-slate-800 mb-4 text-center">Date</h2>
           <Calendar
             mode="single"
             selected={date}
             onSelect={(date) => date && setDate(date)}
-            className="rounded-lg border-slate-200"
+            className="rounded-lg mx-auto"
           />
         </div>
 
@@ -353,8 +353,8 @@ export default function LogDay() {
                   key={activity}
                   label={activity}
                   selected={selectedActivity === activity}
-                  onClick={() => setSelectedActivity(selectedActivity === activity ? "" : activity)}
-                  data-testid={`activity-option-${activity.toLowerCase()}`}
+                  onClick={() => setSelectedActivity(activity)}
+                  data-testid={`activity-${activity.toLowerCase()}`}
                 />
               ))}
             </div>
@@ -363,12 +363,15 @@ export default function LogDay() {
 
         <Button
           onClick={handleSave}
-          disabled={isPending || !selectedResort || selectedSki === null || !selectedActivity}
-          className="w-full h-12 text-lg rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-75"
-          data-testid="log-day-submit-button"
+          disabled={isPending}
+          className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
+          data-testid="save-button"
         >
-          {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
-          Log This Day
+          {isPending ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+          ) : (
+            "Save"
+          )}
         </Button>
       </div>
     </div>

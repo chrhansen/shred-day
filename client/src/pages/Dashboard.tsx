@@ -16,32 +16,31 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-md mx-auto space-y-8 pt-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">My Ski Journal</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate('/settings')}
-            aria-label="Settings"
-          >
-            <Settings className="h-6 w-6" />
-          </Button>
-        </div>
+           <h1 className="text-2xl font-bold text-slate-800">My Ski Journal</h1>
+           <Button
+             variant="ghost"
+             size="icon"
+             className="text-slate-600 hover:text-slate-800"
+             onClick={() => navigate('/settings')}
+             aria-label="Settings"
+           >
+             <Settings className="h-6 w-6" />
+           </Button>
+         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <button
-            onClick={() => navigate('/days')}
-            className="text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-transform hover:-translate-y-1"
-            aria-label="View all ski days"
-            disabled={isLoading}
-          >
-            <StatsCard label="Days Skied" value={isLoading ? '...' : stats?.totalDays ?? 0} />
-          </button>
-          <StatsCard label="Resorts Visited" value={isLoading ? '...' : stats?.uniqueResorts ?? 0} />
-          <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? 'N/A'} />
+           <div
+             onClick={() => !isLoading && navigate('/days')}
+             className={`cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 transition-transform'}`}
+             aria-label="View all ski days"
+           >
+             <StatsCard label="Days Skied" value={isLoading ? '...' : stats?.totalDays ?? 0} />
+           </div>
+           <StatsCard label="Resorts Visited" value={isLoading ? '...' : stats?.uniqueResorts ?? 0} />
+           <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? 'N/A'} />
         </div>
 
         <Button
