@@ -2,6 +2,6 @@
 FactoryBot.define do
   factory :ski do
     sequence(:name) { |n| "Test Ski #{n}" }
-    user # Associate with a user factory
+    association :user # Add association to user factory
   end
 end

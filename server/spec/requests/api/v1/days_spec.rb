@@ -7,8 +7,10 @@ RSpec.describe "Api::V1::Days", type: :request do
   let!(:resort) { create(:resort) }
   let!(:ski) { create(:ski, user: user) }
   let!(:other_ski) { create(:ski, user: user) } # For update tests
-  let!(:day) { create(:day, user: user, resort: resort, ski: ski, activity: "Friends") } # Create a day for show/update
+  let!(:day) { create(:day, user: user, resort: resort, ski: ski, activity: "Friends", date: Date.yesterday) } # Create a day for show/update
   let!(:other_day) { create(:day, user: other_user, resort: resort, ski: ski) } # Day belonging to another user
+  let!(:resort_b) { create(:resort) } # For variety
+  let(:target_date) { Date.today } # A specific date for testing limits
 
   describe "POST /api/v1/days" do
     context "when authenticated" do
@@ -82,6 +84,39 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Access errors correctly under the 'errors' key
           expect(json_response['errors']['date']).to include("can't be blank")
           expect(json_response['errors']['ski']).to include("must exist")
+        end
+      end
+
+      context "when the user already has 3 entries for that date" do
+        before do
+          # Create 3 existing days for the target date
+          3.times do |i|
+            create(:day, user: user, date: target_date, resort: resort, ski: ski, activity: "Activity #{i}")
+          end
+        end
+
+        let(:fourth_day_params) do
+          {
+            day: {
+              date: target_date.to_s,
+              resort_id: resort_b.id, # Different resort, same date
+              ski_id: ski.id,
+              activity: "Fourth Entry"
+            }
+          }
+        end
+
+        it "does not create a new day log" do
+          expect {
+            post api_v1_days_path, params: fourth_day_params
+          }.to_not change(Day, :count)
+        end
+
+        it "returns unprocessable_entity status and the specific base error" do
+          post api_v1_days_path, params: fourth_day_params
+          expect(response).to have_http_status(:unprocessable_entity)
+          json_response = JSON.parse(response.body)
+          expect(json_response['errors']['base']).to include("cannot log more than 3 entries for the same date")
         end
       end
     end
@@ -246,6 +281,53 @@ RSpec.describe "Api::V1::Days", type: :request do
         it "returns not found status" do
           patch api_v1_day_path(other_day), params: { day: { activity: "Test" } }
           expect(response).to have_http_status(:not_found)
+        end
+      end
+
+      context "when trying to update to a date that already has 3 entries" do
+        let!(:date_a) { Date.today }
+        let!(:date_b) { Date.today + 1.day }
+        let!(:day_on_date_b) { create(:day, user: user, date: date_b, resort: resort, ski: ski) }
+
+        before do
+          # Create 3 existing days for date_a
+          3.times do |i|
+            create(:day, user: user, date: date_a, resort: resort, ski: ski, activity: "Activity A#{i}")
+          end
+        end
+
+        let(:update_to_full_date_params) do
+          { day: { date: date_a.to_s } } # Try to change date to date_a
+        end
+
+        it "does not update the day log" do
+          expect {
+            patch api_v1_day_path(day_on_date_b), params: update_to_full_date_params
+          }.not_to change { day_on_date_b.reload.date }
+        end
+
+        it "returns unprocessable_entity status and the specific base error" do
+          patch api_v1_day_path(day_on_date_b), params: update_to_full_date_params
+          expect(response).to have_http_status(:unprocessable_entity)
+          json_response = JSON.parse(response.body)
+          expect(json_response['errors']['base']).to include("cannot log more than 3 entries for the same date")
+        end
+      end
+
+      context "when updating an existing day on a date with 3 entries (no date change)" do
+        let!(:date_full) { Date.today }
+        let!(:day1) { create(:day, user: user, date: date_full, resort: resort, ski: ski, activity: "Act 1") }
+        let!(:day2) { create(:day, user: user, date: date_full, resort: resort, ski: other_ski, activity: "Act 2") }
+        let!(:day3) { create(:day, user: user, date: date_full, resort: resort_b, ski: ski, activity: "Act 3") }
+
+        let(:update_params_no_date_change) do
+          { day: { activity: "Updated Act 2" } } # Only change activity
+        end
+
+        it "allows the update" do
+          patch api_v1_day_path(day2), params: update_params_no_date_change
+          expect(response).to have_http_status(:ok)
+          expect(day2.reload.activity).to eq("Updated Act 2")
         end
       end
     end
