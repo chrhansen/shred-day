@@ -384,4 +384,59 @@ RSpec.describe "Api::V1::Days", type: :request do
       end
     end
   end
+
+  describe "DELETE /api/v1/days/:id" do
+    context "when authenticated" do
+      before do
+        post api_v1_session_path, params: { email: user.email, password: user.password }
+        expect(response).to have_http_status(:ok)
+        # Ensure the day exists before trying to delete
+        day
+      end
+
+      context "when the day exists and belongs to the user" do
+        it "deletes the day log" do
+          expect {
+            delete api_v1_day_path(day)
+          }.to change(user.days, :count).by(-1)
+        end
+
+        it "returns no_content status" do
+          delete api_v1_day_path(day)
+          expect(response).to have_http_status(:no_content)
+        end
+      end
+
+      context "when the day does not exist" do
+        it "returns not found status" do
+          delete api_v1_day_path("non_existent_id")
+          expect(response).to have_http_status(:not_found)
+        end
+      end
+
+      context "when the day belongs to another user" do
+        it "does not delete the day" do
+           expect {
+             delete api_v1_day_path(other_day)
+           }.not_to change(Day, :count)
+        end
+        it "returns not found status" do
+          delete api_v1_day_path(other_day)
+          expect(response).to have_http_status(:not_found)
+        end
+      end
+    end
+
+    context "when not authenticated" do
+      it "does not delete the day" do
+        expect {
+          delete api_v1_day_path(day)
+        }.not_to change(Day, :count)
+      end
+      it "returns unauthorized status" do
+        delete api_v1_day_path(day)
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

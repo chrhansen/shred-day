@@ -118,9 +118,12 @@ describe('Log and Edit Ski Day', () => {
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getDaysList');
 
-    // 2. Find the created day and click Edit (wait for dayId alias again)
+    // 2. Find the created day, open dropdown, and click Edit
     cy.get('@dayId').then(dayId => {
+      // Find the trigger button using data-testid and click it to open the menu
       cy.get(`[data-testid="edit-day-${dayId}"]`).should('be.visible').click();
+      // Find the 'Edit' menu item and click it
+      cy.contains('[role="menuitem"]', 'Edit').click();
     });
 
     // 3. Verify navigation (wait for dayId alias again)

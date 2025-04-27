@@ -1,5 +1,5 @@
 class Api::V1::DaysController < ApplicationController
-  before_action :set_day, only: [:show, :update] # Add before_action
+  before_action :set_day, only: [:show, :update, :destroy]
 
   # GET /api/v1/days
   def index
@@ -10,7 +10,6 @@ class Api::V1::DaysController < ApplicationController
 
   # GET /api/v1/days/:id
   def show
-    # @day is set by before_action
     # Render the single day using the default DaySerializer (includes nested objects)
     render json: @day
   end
@@ -33,12 +32,21 @@ class Api::V1::DaysController < ApplicationController
 
   # PATCH /api/v1/days/:id
   def update
-    # @day is set by before_action
     if @day.update(day_params)
       # Render updated day using the default DaySerializer (includes nested objects)
       render json: @day # Return updated day on success (200 OK)
     else
       render json: { errors: @day.errors }, status: :unprocessable_entity # Return errors on failure (422)
+    end
+  end
+
+  # DELETE /api/v1/days/:id
+  def destroy
+    if @day.destroy
+      head :no_content # Return 204 No Content on success
+    else
+      # Handle potential destroy failures (e.g., callbacks preventing destroy)
+      render json: { errors: @day.errors }, status: :unprocessable_entity
     end
   end
 

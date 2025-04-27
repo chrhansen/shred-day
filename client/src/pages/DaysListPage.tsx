@@ -1,18 +1,37 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Loader2, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 export default function DaysListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const { data: days, isLoading, error } = useQuery({
     queryKey: ['days'],
     queryFn: skiService.getDays,
   });
+
+  const { mutate: deleteDay, isPending: isDeleting } = useMutation({
+    mutationFn: skiService.deleteDay,
+    onSuccess: () => {
+      toast.success('Ski day deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['days'] });
+      queryClient.invalidateQueries({ queryKey: ['skiStats'] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete ski day');
+    },
+  });
+
+  const handleDeleteDay = (dayId: string) => {
+    deleteDay(dayId);
+  };
 
   return (
     <div className="min-h-screen bg-white p-4">
@@ -45,7 +64,7 @@ export default function DaysListPage() {
           <div className="bg-white rounded-lg overflow-hidden">
             {days.map((day, index) => (
               <React.Fragment key={day.id}>
-                <SkiDayItem day={day} />
+                <SkiDayItem day={day} onDelete={handleDeleteDay} />
                 {index < days.length - 1 && <Separator className="bg-slate-100" />}
               </React.Fragment>
             ))}
@@ -65,6 +84,11 @@ export default function DaysListPage() {
           </div>
         )}
       </div>
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <Loader2 className="h-8 w-8 text-white animate-spin" />
+        </div>
+      )}
     </div>
   );
 }

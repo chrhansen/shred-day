@@ -196,4 +196,18 @@ export const skiService = {
     // Convert date string from response back to Date object
     return { ...updatedDayData, date: new Date(updatedDayData.date.replace(/-/g, '/')) }; // Adjust parsing if backend sends YYYY-MM-DD
   },
+
+  async deleteDay(dayId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
+      ...defaultFetchOptions,
+      method: 'DELETE',
+    });
+    if (response.status === 204) {
+      return;
+    }
+    if (!response.ok) {
+       await handleApiError(response); // Try standard error handling
+    }
+     console.warn('Unexpected status code after DELETE:', response.status);
+  },
 };

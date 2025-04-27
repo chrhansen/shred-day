@@ -14,7 +14,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :days, only: [:create, :index, :show, :update]
+      resources :days, only: [:create, :index, :show, :update, :destroy]
       resource :stats, only: [:show] # Route for fetching stats (GET /api/v1/stats)
       # We might add: get 'days', to: 'days#index' later
 

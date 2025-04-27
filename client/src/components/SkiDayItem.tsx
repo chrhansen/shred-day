@@ -3,20 +3,33 @@ import { format } from "date-fns";
 import { type SkiDayEntry as SkiDay } from "@/types/ski";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SkiDayItemProps {
   day: SkiDay;
+  onDelete: (dayId: string) => void;
 }
 
-export function SkiDayItem({ day }: SkiDayItemProps) {
+export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
   const navigate = useNavigate();
 
   // Extract initials from resort name
   const initials = day.resort_name
     ? day.resort_name.split(' ').map(word => word[0]).join('')
     : '??';
+
+  const handleDeleteClick = () => {
+    if (window.confirm(`Are you sure you want to delete the entry for ${day.resort_name} on ${format(new Date(day.date), 'MMM d, yyyy')}?`)) {
+      onDelete(day.id);
+    }
+  };
 
   return (
     <div className="flex items-center gap-4 p-4">
@@ -34,16 +47,32 @@ export function SkiDayItem({ day }: SkiDayItemProps) {
           {day.activity && <span>{day.activity}</span>}
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full"
-        onClick={() => navigate(`/days/${day.id}/edit`)}
-        aria-label="Edit day"
-        data-testid={`edit-day-${day.id}`}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-8 w-8 flex-shrink-0"
+            data-testid={`edit-day-${day.id}`}
+          >
+            <MoreVertical className="h-4 w-4" />
+            <span className="sr-only">Actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => navigate(`/days/${day.id}/edit`)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            <span>Edit</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleDeleteClick}
+            className="text-red-600 focus:text-red-700 focus:bg-red-50"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>Delete</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
