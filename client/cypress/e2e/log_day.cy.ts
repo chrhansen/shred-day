@@ -170,4 +170,51 @@ describe('Log and Edit Ski Day', () => {
         .and('contain.text', EDITED_ACTIVITY);
     });
   });
+
+  it('should allow navigating between months in the calendar', function() {
+    // 1. Navigate to Log Day page
+    cy.visit(LOG_DAY_URL);
+    cy.wait('@getSkis');
+    cy.wait('@getRecentResorts');
+
+    const getCurrentMonthYear = () => {
+      // Get current date, set day to 1 to avoid month rollover issues
+      const date = new Date();
+      date.setDate(1);
+      return date;
+    };
+
+    const formatDateForCaption = (date: Date) => {
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    };
+
+    let currentDate = getCurrentMonthYear();
+    const initialMonthYear = formatDateForCaption(currentDate);
+
+    // 2. Check initial month display
+    cy.get('#react-day-picker-1').should('contain.text', initialMonthYear);
+
+    // 3. Click next month
+    cy.get('.absolute.right-1').click();
+
+    // 4. Verify next month is displayed
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    const nextMonthYear = formatDateForCaption(currentDate);
+    cy.get('#react-day-picker-1').should('contain.text', nextMonthYear);
+
+    // 5. Click previous month (back to initial)
+    cy.get('.absolute.left-1').click();
+
+    // 6. Verify initial month is displayed again
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    cy.get('#react-day-picker-1').should('contain.text', initialMonthYear);
+
+    // 7. Click previous month again
+    cy.get('.absolute.left-1').click();
+
+    // 8. Verify previous month is displayed
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    const previousMonthYear = formatDateForCaption(currentDate);
+    cy.get('#react-day-picker-1').should('contain.text', previousMonthYear);
+  });
 });

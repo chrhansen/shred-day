@@ -20,6 +20,7 @@ export default function LogDay() {
   const { id: dayId } = useParams<{ id?: string }>();
   const isEditMode = Boolean(dayId);
   const [date, setDate] = useState<Date>(new Date());
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [selectedResort, setSelectedResort] = useState<Resort | null>(null);
   const [resortQuery, setResortQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Resort[]>([]);
@@ -171,7 +172,9 @@ export default function LogDay() {
 
   useEffect(() => {
     if (isEditMode && dayToEdit) {
-      setDate(new Date(dayToEdit.date));
+      const editDate = new Date(dayToEdit.date);
+      setDate(editDate);
+      setDisplayedMonth(editDate);
       setSelectedSki(dayToEdit.ski_id);
       setSelectedActivity(dayToEdit.activity);
 
@@ -183,7 +186,9 @@ export default function LogDay() {
       }
     }
     if (!isEditMode) {
-        setDate(new Date());
+        const today = new Date();
+        setDate(today);
+        setDisplayedMonth(today);
         setSelectedResort(null);
         setSelectedSki(null);
         setSelectedActivity("");
@@ -257,7 +262,8 @@ export default function LogDay() {
             onSelect={(d) => d && setDate(d)}
             className="rounded-lg mx-auto"
             disabled={isProcessing || isLoading}
-            month={date}
+            month={displayedMonth}
+            onMonthChange={setDisplayedMonth}
           />
         </div>
 
