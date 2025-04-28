@@ -1,0 +1,126 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17 # Match the version in deploy.yml
+        env:
+          POSTGRES_DB: shred_day_test # Match database.yml
+          POSTGRES_USER: rails # Standard user for Rails tests
+          POSTGRES_PASSWORD: password # Simple password for testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3.0' # From server/.ruby-version
+        bundler-cache: true # Runs bundle install in server/ directory by default if Gemfile.lock is there
+        working-directory: server
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # From server/Dockerfile
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
+
+    - name: Install Node dependencies
+      run: npm install
+      working-directory: client
+
+    - name: Build client assets
+      run: npm run build
+      working-directory: client
+      env:
+        NODE_ENV: production # Often needed for production builds
+
+    - name: Setup Test Database
+      working-directory: server
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+      run: |
+        bundle exec rails db:prepare
+
+    - name: Run RSpec tests
+      working-directory: server
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # Needed if tests access encrypted credentials
+      run: bundle exec rspec
+
+    - name: Start Frontend Preview Server for Cypress
+      working-directory: client
+      run: npm run preview & # Run in background
+      env:
+        NODE_ENV: production # Match build environment
+
+    - name: Wait for Frontend Server
+      run: sleep 10 # Simple wait, consider using wait-on or similar for robustness
+
+    - name: Run Cypress tests
+      uses: cypress-io/github-action@v6
+      with:
+        working-directory: client
+        # No build needed, we already built assets
+        # No start needed, we started preview manually
+        # command: npx cypress run # Default command, can omit or customize
+      env:
+        # Add any environment variables Cypress needs, e.g., API base URL if it differs
+        # CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
+        # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+
+  deploy:
+    name: Deploy
+    needs: test # Only run if tests pass
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Only deploy on push to main
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3.0' # Match the version Kamal runs with
+
+    - name: Install Kamal
+      run: gem install kamal -v $(grep -A 1 "kamal" server/Gemfile.lock | tail -n 1 | awk '{print $1}')
+
+    - name: Setup SSH Agent
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to Production
+      env:
+        KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }} # Needed for Kamal env injection potentially
+      # Run from root where config/deploy.yml is expected
+      run: kamal deploy --verbose
