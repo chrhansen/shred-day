@@ -135,7 +135,7 @@ jobs:
         ruby-version: '3.3.0' # Match the version Kamal runs with
 
     - name: Install Kamal
-      run: gem install kamal -v $(grep -A 1 "kamal" server/Gemfile.lock | tail -n 1 | awk '{print $1}')
+      run: gem install kamal -v $(awk '/kamal \(/ { gsub(/.*\(|\).*/, "", $0); print $0 }' server/Gemfile.lock)
 
     - name: Setup SSH Agent
       uses: webfactory/ssh-agent@v0.9.0
