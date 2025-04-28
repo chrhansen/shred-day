@@ -80,7 +80,7 @@ jobs:
         DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         PORT: 3000 # Explicitly set port for test server
-      run: bundle exec rails server &
+      run: bundle exec rails server > ../rails_test_server.log 2>&1 &
 
     - name: Start Frontend Preview Server for Cypress
       working-directory: client
@@ -101,6 +101,10 @@ jobs:
       env:
         CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+
+    - name: Display Rails Test Server Logs on Failure
+      if: failure()
+      run: cat rails_test_server.log
 
   deploy:
     name: Deploy
