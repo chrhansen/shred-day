@@ -91,7 +91,8 @@ jobs:
       working-directory: server
       env:
         RAILS_ENV: test
-        # No DATABASE_URL needed, seeds should use Rails config
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
       run: bundle exec rails db:seed
 
     - name: Start Frontend Preview Server for Cypress
