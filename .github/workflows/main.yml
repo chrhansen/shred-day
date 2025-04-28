@@ -63,7 +63,7 @@ jobs:
         RAILS_ENV: test
         DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
       run: |
-        bundle exec rails db:prepare
+        bundle exec rails db:schema:load # Load schema directly, avoid seeds
 
     - name: Run RSpec tests
       working-directory: server
