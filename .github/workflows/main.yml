@@ -142,9 +142,15 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to Production
+    - name: Prepare Kamal Secrets
+      run: |
+        mkdir -p .kamal
+        echo "KAMAL_REGISTRY_PASSWORD: $KAMAL_REGISTRY_PASSWORD" >> .kamal/secrets.yml
       env:
         KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+
+    - name: Deploy to Production
+      env:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }} # Needed for Kamal env injection potentially
       # Run from root where config/deploy.yml is expected
