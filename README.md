@@ -79,7 +79,7 @@ bin/rails server
 ### Deployment (`/` and `/server`)
 - Docker (Containerization)
 - Kamal (Deployment tool, run from project root)
-  - Configuration: `server/config/deploy.yml`
+  - Configuration: `config/deploy.yml`
   - Target: Hetzner VPS with Ubuntu
 - Traefik (Reverse Proxy, managed by Kamal)
 
