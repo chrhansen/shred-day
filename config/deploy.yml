@@ -93,9 +93,3 @@ accessories:
         - POSTGRES_PASSWORD
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
-#   redis:
-#     image: redis:7.0
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
