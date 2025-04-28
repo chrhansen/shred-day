@@ -106,7 +106,6 @@ jobs:
       env:
         CYPRESS_BASE_URL: http://localhost:8080 # Match preview server port
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
-        DEBUG: "cypress:network:*" # Enable detailed network request logging
 
     - name: Display Rails Test Server Logs on Failure
       if: failure()
