@@ -88,11 +88,10 @@ jobs:
         working-directory: client
         # No build needed, we already built assets
         # No start needed, we started preview manually
-        # command: npx cypress run # Default command, can omit or customize
+        command: npx cypress run # Default command, can omit or customize
       env:
-        # Add any environment variables Cypress needs, e.g., API base URL if it differs
-        # CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
-        # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+        CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
 
   deploy:
     name: Deploy
