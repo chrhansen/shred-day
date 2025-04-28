@@ -73,14 +73,23 @@ jobs:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # Needed if tests access encrypted credentials
       run: bundle exec rspec
 
+    - name: Start Rails Server (Test Env)
+      working-directory: server
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        PORT: 3000 # Explicitly set port for test server
+      run: bundle exec rails server &
+
     - name: Start Frontend Preview Server for Cypress
       working-directory: client
       run: npm run preview & # Run in background
       env:
         NODE_ENV: production # Match build environment
 
-    - name: Wait for Frontend Server
-      run: sleep 10 # Simple wait, consider using wait-on or similar for robustness
+    - name: Wait for Servers
+      run: sleep 15 # Increase wait time slightly for both servers, consider wait-on for robustness
 
     - name: Run Cypress tests
       uses: cypress-io/github-action@v6
