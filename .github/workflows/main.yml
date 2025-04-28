@@ -56,7 +56,7 @@ jobs:
       working-directory: client
       env:
         NODE_ENV: production # Often needed for production builds
-        VITE_API_BASE_URL: http://localhost:3000 # Tell frontend where the test backend is
+        VITE_API_BASE_URL: http://0.0.0.0:3000 # Tell frontend where the test backend is
 
     - name: Setup Test Database
       working-directory: server
