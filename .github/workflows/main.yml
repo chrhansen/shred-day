@@ -150,10 +150,11 @@ jobs:
         echo "POSTGRES_PASSWORD: $POSTGRES_PASSWORD" >> .kamal/secrets
       env:
         KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
     - name: Deploy to Production
       env:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }} # Needed for Kamal env injection potentially
-      # Run from root where config/deploy.yml is expected
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: kamal deploy --verbose
