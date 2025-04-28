@@ -89,7 +89,7 @@ jobs:
 
     - name: Start Frontend Preview Server for Cypress
       working-directory: client
-      run: npm run preview & # Run in background
+      run: npm run preview -- --port 8080 & # Run in background on port 8080
       env:
         NODE_ENV: production # Match build environment
 
@@ -104,7 +104,7 @@ jobs:
         # No start needed, we started preview manually
         # command: npx cypress run # Default command, can omit or customize
       env:
-        CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
+        CYPRESS_BASE_URL: http://localhost:8080 # Match preview server port
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
         DEBUG: "cypress:network:*" # Enable detailed network request logging
 
