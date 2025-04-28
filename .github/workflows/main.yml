@@ -56,6 +56,11 @@ jobs:
       working-directory: client
       env:
         NODE_ENV: production # Often needed for production builds
+        VITE_API_BASE_URL: http://localhost:3000 # Tell frontend where the test backend is
+
+    - name: Verify Client Build Output
+      run: grep -r 'http://localhost:3000' dist/assets || echo "Backend URL not found in build output!"
+      working-directory: client
 
     - name: Setup Test Database
       working-directory: server
@@ -63,7 +68,7 @@ jobs:
         RAILS_ENV: test
         DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
       run: |
-        bundle exec rails db:prepare
+        bundle exec rails db:schema:load # Load schema directly, avoid seeds
 
     - name: Run RSpec tests
       working-directory: server
@@ -73,14 +78,31 @@ jobs:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # Needed if tests access encrypted credentials
       run: bundle exec rspec
 
+    - name: Start Rails Server (Test Env)
+      working-directory: server
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        PORT: 3000 # Explicitly set port for test server
+      run: bundle exec rails server > ../rails_test_server.log 2>&1 &
+
+    - name: Seed Database for Cypress
+      working-directory: server
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      run: bundle exec rails db:seed
+
     - name: Start Frontend Preview Server for Cypress
       working-directory: client
-      run: npm run preview & # Run in background
+      run: npm run preview -- --port 8080 & # Run in background on port 8080
       env:
         NODE_ENV: production # Match build environment
 
-    - name: Wait for Frontend Server
-      run: sleep 10 # Simple wait, consider using wait-on or similar for robustness
+    - name: Wait for Servers
+      run: sleep 15 # Increase wait time slightly for both servers, consider wait-on for robustness
 
     - name: Run Cypress tests
       uses: cypress-io/github-action@v6
@@ -90,9 +112,12 @@ jobs:
         # No start needed, we started preview manually
         # command: npx cypress run # Default command, can omit or customize
       env:
-        # Add any environment variables Cypress needs, e.g., API base URL if it differs
-        # CYPRESS_BASE_URL: http://localhost:4173 # Default Vite preview port, adjust if needed
-        # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+        CYPRESS_BASE_URL: http://localhost:8080 # Match preview server port
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+
+    - name: Display Rails Test Server Logs on Failure
+      if: failure()
+      run: cat rails_test_server.log
 
   deploy:
     name: Deploy
