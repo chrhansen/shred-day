@@ -2,6 +2,7 @@ class Day < ApplicationRecord
   belongs_to :user
   belongs_to :ski
   belongs_to :resort
+  has_many :photos, dependent: :destroy
 
   # Validations
   validates :date, :resort, :ski, :user, presence: true

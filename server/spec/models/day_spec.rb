@@ -8,6 +8,7 @@ RSpec.describe Day, type: :model do
     it { should belong_to(:user) }
     it { should belong_to(:ski) }
     it { should belong_to(:resort) }
+    it { should have_many(:photos).dependent(:destroy) }
   end
 
   describe 'validations' do
@@ -82,6 +83,18 @@ RSpec.describe Day, type: :model do
         expect(day_on_other_date).not_to be_valid
         expect(day_on_other_date.errors[:base]).to include("cannot log more than 3 entries for the same date")
       end
+    end
+  end
+
+  # Add test for dependent: :destroy behavior
+  describe 'dependent destroy for photos' do
+    let!(:user) { create(:user) }
+    let!(:day_with_photos) { create(:day, user: user) }
+    let!(:photo1) { create(:photo, day: day_with_photos) }
+    let!(:photo2) { create(:photo, day: day_with_photos) }
+
+    it 'destroys associated photos when the day is destroyed' do
+      expect { day_with_photos.destroy }.to change { Photo.count }.by(-2)
     end
   end
 end

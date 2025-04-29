@@ -17,16 +17,25 @@ class Api::V1::DaysController < ApplicationController
   # POST /api/v1/days
   def create
     # Build the day associated with the current_user
-    # The 'resort_id' from params will automatically link to the Resort
-    # because of the 'belongs_to :resort' association in the Day model.
-    day = current_user.days.build(day_params)
+    # Exclude photos from initial build, we'll handle them separately
+    day = current_user.days.build(day_params.except(:photos))
 
     if day.save
-      # Render created day using the default DaySerializer (includes nested objects)
-      render json: day, status: :created # Return created day on success (201)
+      # Attach photos if they were provided
+      if day_params[:photos].present?
+        day_params[:photos].each do |photo_file|
+          day.photos.create!(image: photo_file)
+        end
+      end
+
+      # Eager load associations for the response
+      day.reload
+
+      # Render created day using the default DaySerializer
+      render json: day, status: :created
     else
       # Use a consistent error format { errors: ... }
-      render json: { errors: day.errors }, status: :unprocessable_entity # Return errors on failure (422)
+      render json: { errors: day.errors }, status: :unprocessable_entity
     end
   end
 
@@ -61,6 +70,7 @@ class Api::V1::DaysController < ApplicationController
 
   # Strong parameters: permit attributes for create and update
   def day_params
-    params.require(:day).permit(:date, :resort_id, :ski_id, :activity)
+    # Allow an array of photos
+    params.require(:day).permit(:date, :resort_id, :ski_id, :activity, photos: [])
   end
 end

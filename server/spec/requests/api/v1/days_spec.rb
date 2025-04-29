@@ -119,6 +119,66 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['errors']['base']).to include("cannot log more than 3 entries for the same date")
         end
       end
+
+      # --- Test photo upload --- #
+      context "with valid parameters including photos" do
+        let(:photo1) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg') }
+        let(:photo2) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.png'), 'image/png') }
+
+        let(:valid_params_with_photos) do
+          {
+            day: {
+              date: Date.today.to_s,
+              resort_id: resort.id,
+              ski_id: ski.id,
+              activity: 'Photo Day',
+              photos: [photo1, photo2]
+            }
+          }
+        end
+
+        it "creates a new day log and attaches photos" do
+          response_body = nil # Initialize variable to store response
+          expect {
+            post api_v1_days_path, params: valid_params_with_photos, as: :multipart_form
+            response_body = response.body # Capture response body
+          }.to change(user.days, :count).by(1).and change(ActiveStorage::Attachment, :count).by(2)
+
+          # Parse the response to get the ID of the created day
+          expect(response_body).not_to be_nil
+          json_response = JSON.parse(response_body)
+          created_day_id = json_response['id']
+          expect(created_day_id).to be_present
+
+          # Find the created day reliably by its ID
+          created_day = Day.find(created_day_id)
+
+          # Assertions
+          expect(created_day.photos.count).to eq(2)
+          expect(created_day.photos.first.image).to be_attached
+          expect(created_day.photos.last.image).to be_attached
+          expect(created_day.activity).to eq('Photo Day')
+          expect(created_day.user).to eq(user) # sanity check
+        end
+
+        it "returns created status and the day info including photo URLs" do
+          post api_v1_days_path, params: valid_params_with_photos, as: :multipart_form
+          expect(response).to have_http_status(:created)
+          json_response = JSON.parse(response.body)
+
+          expect(json_response['id']).to be_present
+          expect(json_response['photos']).to be_an(Array)
+          expect(json_response['photos'].count).to eq(2)
+
+          # Check structure of photo objects in response
+          expect(json_response['photos'][0]).to include('id', 'url')
+          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # Check if URL seems correct (includes filename)
+          expect(json_response['photos'][1]).to include('id', 'url')
+          expect(json_response['photos'][1]['url']).to include('test_image.png')
+        end
+      end
+      # --- End test photo upload ---
+
     end
 
     context "when not authenticated" do
