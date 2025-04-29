@@ -38,6 +38,7 @@ server/log/*
 !server/log/.keep
 server/storage/*
 !server/storage/.keep
+server/tmp/storage/ # Ignore Active Storage temp files for tests
 server/public/assets
 .bundle/
 config/master.key
