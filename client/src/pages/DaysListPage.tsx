@@ -4,7 +4,7 @@ import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Loader2, Plus } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Settings } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
@@ -45,7 +45,18 @@ export default function DaysListPage() {
           Back
         </Button>
 
-        <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center">Ski Days</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-slate-800">Ski Days</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-slate-600 hover:text-slate-800"
+            onClick={() => navigate('/settings')}
+            aria-label="Settings"
+          >
+            <Settings className="h-6 w-6" />
+          </Button>
+        </div>
 
         {isLoading && (
           <div className="flex justify-center items-center py-10">

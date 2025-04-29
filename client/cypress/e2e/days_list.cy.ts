@@ -131,4 +131,18 @@ describe('Ski Days List Page', () => {
     cy.get(`[data-testid="edit-day-${this.day2Id}"]`).should('be.visible');
   });
 
+  it('should display a settings icon that navigates to the settings page', () => {
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getDaysList');
+
+    // Find the settings button by its aria-label
+    cy.get('[aria-label="Settings"]')
+      .should('be.visible') // Assert it's visible
+      .click();             // Click it
+
+    // Verify navigation to the settings page
+    cy.url().should('include', '/settings');
+    cy.contains('h1', 'Settings').should('be.visible'); // Check for settings page title
+  });
+
 });
