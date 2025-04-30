@@ -40,6 +40,9 @@ jobs:
         bundler-cache: true # Runs bundle install in server/ directory by default if Gemfile.lock is there
         working-directory: server
 
+    - name: Install system dependencies # Add libvips for ruby-vips gem
+      run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libvips
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
