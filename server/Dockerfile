@@ -16,7 +16,11 @@ ARG NODE_VERSION=20
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y software-properties-common && \
+    add-apt-repository -y ppa:strukturag/libde265 && \
+    add-apt-repository -y ppa:tonimelisma/ppa && \
+    apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips libheif-dev postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
