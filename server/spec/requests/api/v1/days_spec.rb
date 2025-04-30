@@ -11,6 +11,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   let!(:other_day) { create(:day, user: other_user, resort: resort, ski: ski) } # Day belonging to another user
   let!(:resort_b) { create(:resort) } # For variety
   let(:target_date) { Date.today } # A specific date for testing limits
+  let!(:photo1_for_day) { create(:photo, day: day, image: fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg')) }
 
   describe "POST /api/v1/days" do
     context "when authenticated" do
@@ -45,8 +46,6 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check standard fields
           expect(json_response['id']).to be_present
           expect(json_response['date']).to eq(Date.today.to_s)
-          expect(json_response['resort_id']).to eq(resort.id)
-          expect(json_response['ski_id']).to eq(ski.id)
           expect(json_response['user_id']).to eq(user.id)
           # Check for nested objects
           expect(json_response).to have_key('resort')
@@ -56,6 +55,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check absence of flattened names
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
+          expect(json_response['photos']).to eq([]) # Expect empty photos array if none uploaded
         end
       end
 
@@ -171,9 +171,12 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['photos'].count).to eq(2)
 
           # Check structure of photo objects in response
-          expect(json_response['photos'][0]).to include('id', 'url')
-          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # Check if URL seems correct (includes filename)
-          expect(json_response['photos'][1]).to include('id', 'url')
+          # PhotoSerializer: id, url, filename
+          expect(json_response['photos'][0]).to include('id', 'url', 'filename')
+          expect(json_response['photos'][0]['filename']).to eq('test_image.jpg')
+          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # URL check is less precise but ok
+          expect(json_response['photos'][1]).to include('id', 'url', 'filename')
+          expect(json_response['photos'][1]['filename']).to eq('test_image.png')
           expect(json_response['photos'][1]['url']).to include('test_image.png')
         end
       end
@@ -223,8 +226,6 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['id']).to eq(day.id)
           expect(json_response['date']).to eq(day.date.to_s)
           expect(json_response['activity']).to eq("Friends")
-          expect(json_response['resort_id']).to eq(resort.id)
-          expect(json_response['ski_id']).to eq(ski.id)
           # Check for nested objects
           expect(json_response).to have_key('resort')
           expect(json_response['resort']).to include('id' => resort.id, 'name' => resort.name)
@@ -233,6 +234,14 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check absence of flattened names
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
+
+          # Check for photos using PhotoSerializer format
+          expect(json_response['photos']).to be_an(Array)
+          expect(json_response['photos'].count).to eq(1)
+          photo_json = json_response['photos'][0]
+          expect(photo_json['id']).to eq(photo1_for_day.id)
+          expect(photo_json['filename']).to eq('test_image.jpg')
+          expect(photo_json['url']).to include('test_image.jpg')
         end
       end
 
@@ -292,7 +301,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check standard fields
           expect(json_response['id']).to eq(day.id)
           expect(json_response['activity']).to eq("Training")
-          expect(json_response['ski_id']).to eq(other_ski.id)
+
           # Check for nested objects
           expect(json_response).to have_key('resort')
           expect(json_response['resort']['id']).to eq(resort.id) # Resort wasn't changed
@@ -302,6 +311,14 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check absence of flattened names
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
+
+          # Check for photos using PhotoSerializer format
+          expect(json_response['photos']).to be_an(Array)
+          expect(json_response['photos'].count).to eq(1)
+          photo_json = json_response['photos'][0]
+          expect(photo_json['id']).to eq(photo1_for_day.id)
+          expect(photo_json['filename']).to eq('test_image.jpg')
+          expect(photo_json['url']).to include('test_image.jpg')
         end
       end
 
@@ -434,6 +451,14 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(day_entry).not_to have_key('ski')
         expect(day_entry).not_to have_key('resort_id') # Should not be included by DayEntrySerializer
         expect(day_entry).not_to have_key('ski_id')    # Should not be included by DayEntrySerializer
+
+        # Check for photos using PhotoSerializer format
+        expect(day_entry['photos']).to be_an(Array)
+        expect(day_entry['photos'].count).to eq(1)
+        photo_json = day_entry['photos'][0]
+        expect(photo_json['id']).to eq(photo1_for_day.id)
+        expect(photo_json['filename']).to eq('test_image.jpg')
+        expect(photo_json['url']).to include('test_image.jpg')
       end
     end
 

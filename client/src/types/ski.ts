@@ -1,17 +1,19 @@
 import { Resort } from "@/services/resortService";
 
-export interface SkiDay {
-  id?: string;
-  date: Date;
-  resort_id: string;
-  ski_id: string;
+// Detailed type for GET /days/:id, POST /days, PATCH /days/:id responses
+export interface SkiDayDetail {
+  id: string;
+  date: string; // Keep as string for consistency with API response
   activity: string;
-  user_id?: string; // Assuming user_id might be present
+  // resort_id and ski_id are removed, access via nested objects
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
-  // Add nested objects (optional because they might not always be loaded)
-  resort?: Resort;
-  ski?: Ski;
+  // Nested objects are included by DaySerializer
+  resort: Resort; // Assuming Resort type is correct and available
+  ski: Ski; // Assuming Ski type is correct and available
+  // Photos included by DaySerializer via PhotoSerializer
+  photos: { id: string; url: string | null; filename: string | null }[];
 }
 
 export interface SkiStats {
@@ -56,4 +58,5 @@ export interface SkiDayEntry {
   resort_name: string;
   created_at: string;
   updated_at: string;
+  photos?: { id: string; url: string | null; filename: string | null }[];
 }

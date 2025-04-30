@@ -1,4 +1,4 @@
-import { SkiDay, SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry } from '@/types/ski';
+import { SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry, SkiDayDetail } from '@/types/ski';
 import { format } from 'date-fns'; // Import format
 
 // Custom error for authentication issues
@@ -71,20 +71,26 @@ export const skiService = {
     return await response.json();
   },
 
-  async logDay(day: Omit<SkiDay, 'id'>): Promise<SkiDay> {
-    const payload = {
-      ...day,
-      date: format(day.date, 'yyyy-MM-dd'), // Format date as YYYY-MM-DD
-    };
-    const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
+  // Accept FormData directly
+  async logDay(formData: FormData): Promise<SkiDayDetail> {
+    // No need to format date or stringify, FormData handles it
+    // Create specific options for this request, removing Content-Type header
+    const requestOptions: RequestInit = {
       ...defaultFetchOptions,
       method: 'POST',
-      body: JSON.stringify({ day: payload }), // Send formatted payload
-    });
+      headers: {
+        // Remove Content-Type, browser will set it to multipart/form-data
+        'Accept': 'application/json',
+      },
+      body: formData,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/days`, requestOptions);
+
     if (!response.ok) await handleApiError(response);
     const responseData = await response.json();
-    // Convert date string from response back to Date object
-    return { ...responseData, date: new Date(responseData.date.replace(/-/g, '/')) }; // Adjust parsing if backend sends YYYY-MM-DD
+    // Return the raw response matching SkiDayDetail (no date conversion needed here as type uses string)
+    return responseData;
   },
 
   async signUp(userData: UserSignUp): Promise<UserInfo> {
@@ -169,23 +175,30 @@ export const skiService = {
   },
 
   // get a single ski day by ID
-  async getDay(dayId: string): Promise<SkiDay> {
+  async getDay(dayId: string): Promise<SkiDayDetail> {
     const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
       ...defaultFetchOptions,
       method: 'GET',
     });
     if (!response.ok) await handleApiError(response);
     const dayData = await response.json();
-    // Assuming the backend sends date as a string, convert it to Date object
-    return { ...dayData, date: new Date(dayData.date) };
+    // Return the raw response matching SkiDayDetail
+    return dayData;
   },
 
   // to update a ski day
-  async updateDay(dayId: string, dayData: Omit<SkiDay, 'id'>): Promise<SkiDay> {
-     const payload = {
-       ...dayData,
-       date: format(dayData.date, 'yyyy-MM-dd'), // Format date as YYYY-MM-DD
-     };
+  // Accept partial data for update
+  async updateDay(dayId: string, dayData: Partial<Omit<SkiDayDetail, 'id' | 'photos' | 'resort' | 'ski'>> & { resort_id?: string; ski_id?: string }): Promise<SkiDayDetail> {
+     // Prepare payload - format date if present, include IDs
+     const payload: Record<string, any> = { ...dayData };
+     if (dayData.date) {
+       // Expecting a string or Date object? Assuming string for now based on previous code
+       // If date is already string 'yyyy-MM-dd', no formatting needed
+       // If it's a Date object, format it:
+       // payload.date = format(new Date(dayData.date), 'yyyy-MM-dd');
+       payload.date = dayData.date; // Assuming it's already 'yyyy-MM-dd'
+     }
+
     const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
       ...defaultFetchOptions,
       method: 'PATCH',
@@ -193,8 +206,8 @@ export const skiService = {
     });
     if (!response.ok) await handleApiError(response);
     const updatedDayData = await response.json();
-    // Convert date string from response back to Date object
-    return { ...updatedDayData, date: new Date(updatedDayData.date.replace(/-/g, '/')) }; // Adjust parsing if backend sends YYYY-MM-DD
+    // Return the raw response matching SkiDayDetail
+    return updatedDayData;
   },
 
   async deleteDay(dayId: string): Promise<void> {

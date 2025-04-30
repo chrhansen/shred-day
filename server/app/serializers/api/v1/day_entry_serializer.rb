@@ -12,6 +12,9 @@ module Api
       attribute :resort_name do
         object.resort&.name
       end
+
+      # Use has_many with the dedicated PhotoSerializer
+      has_many :photos, serializer: Api::V1::PhotoSerializer
     end
   end
 end

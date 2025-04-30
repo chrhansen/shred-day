@@ -3,7 +3,8 @@ class Api::V1::DaysController < ApplicationController
 
   # GET /api/v1/days
   def index
-    days = current_user.days.includes(:ski, :resort).order(date: :desc)
+    # Preload associations (:ski, :resort) and photos with their attached image blobs
+    days = current_user.days.includes(:ski, :resort, photos: { image_attachment: :blob }).order(date: :desc)
     # Use the specific serializer for the list view
     render json: days, each_serializer: Api::V1::DayEntrySerializer
   end
@@ -28,8 +29,8 @@ class Api::V1::DaysController < ApplicationController
         end
       end
 
-      # Eager load associations for the response
-      day.reload
+      # Eager load associations for the response, including photos and their images
+      day.reload(include: [:ski, :resort, photos: { image_attachment: :blob }])
 
       # Render created day using the default DaySerializer
       render json: day, status: :created
@@ -63,7 +64,8 @@ class Api::V1::DaysController < ApplicationController
 
   # Add set_day method to find the day and handle not found
   def set_day
-    @day = current_user.days.includes(:ski, :resort).find(params[:id])
+    # Preload associations and photo images
+    @day = current_user.days.includes(:ski, :resort, photos: { image_attachment: :blob }).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Day not found' }, status: :not_found
   end

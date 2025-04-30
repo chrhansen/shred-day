@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Loader2, Plus, Check, X, Search, Settings } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Check, X, Search, Settings, ImagePlus } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -11,6 +11,8 @@ import { resortService, Resort } from "@/services/resortService";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import debounce from 'lodash.debounce';
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
 
 const ACTIVITIES = ["Friends", "Training"];
 
@@ -30,6 +32,7 @@ export default function LogDay() {
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
@@ -62,7 +65,7 @@ export default function LogDay() {
   });
 
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
-    mutationFn: (data: { date: Date; resort_id: string; ski_id: string; activity: string }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string }) =>
       skiService.updateDay(dayId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -148,17 +151,38 @@ export default function LogDay() {
       return;
     }
 
-    const dayData = {
-      date,
-      resort_id: selectedResort.id,
-      ski_id: selectedSki,
-      activity: selectedActivity,
-    };
+    // Format the date correctly using date-fns, ignoring timezone conversion issues
+    const formattedDate = format(date, 'yyyy-MM-dd');
 
+    // Create FormData
+    const formData = new FormData();
+
+    // Append day data, ensuring keys match Rails strong params expectations (day[attribute])
+    formData.append('day[date]', formattedDate); // Use formatted date
+    formData.append('day[resort_id]', selectedResort.id);
+    formData.append('day[ski_id]', selectedSki);
+    formData.append('day[activity]', selectedActivity);
+
+    // Append photos
+    photos.forEach((photo) => {
+      formData.append('day[photos][]', photo);
+    });
+
+    // Call the appropriate mutation with FormData
     if (isEditMode) {
-      updateDay(dayData);
+      // TODO: Implement photo handling for update mutation if needed
+      console.warn("Photo updates not yet implemented for edit mode.");
+      // Currently just sending non-photo data for update
+      // Format date to string for updateDay service function
+      updateDay({
+        date: formattedDate, // Use formatted date
+        resort_id: selectedResort.id,
+        ski_id: selectedSki,
+        activity: selectedActivity,
+       });
     } else {
-      saveDay(dayData);
+      // Pass FormData to the saveDay mutation
+      saveDay(formData);
     }
   };
 
@@ -170,20 +194,34 @@ export default function LogDay() {
     addSki({ name: newInlineSkiName.trim() });
   };
 
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const filesArray = Array.from(event.target.files);
+      setPhotos(prev => {
+        const updatedPhotos = [...prev, ...filesArray];
+        return updatedPhotos;
+      });
+      event.target.value = '';
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     if (isEditMode && dayToEdit) {
-      const editDate = new Date(dayToEdit.date);
+      // date comes as string from API, parse it
+      const editDate = new Date(dayToEdit.date.replace(/-/g, '/')); // Adjust parsing if needed
       setDate(editDate);
       setDisplayedMonth(editDate);
-      setSelectedSki(dayToEdit.ski_id);
+      // Access ID from nested ski object
+      setSelectedSki(dayToEdit.ski.id);
       setSelectedActivity(dayToEdit.activity);
-
-      if (dayToEdit.resort) {
-        setSelectedResort(dayToEdit.resort);
-      } else {
-         console.warn("Day details missing nested resort object");
-         setSelectedResort(null);
-      }
+      // Use nested resort object (already checked)
+      setSelectedResort(dayToEdit.resort);
+      // TODO: Populate existing photos for editing/viewing
+      setPhotos([]); // Clear any existing photos for now
     }
     if (!isEditMode) {
         const today = new Date();
@@ -456,6 +494,53 @@ export default function LogDay() {
                 />
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="photo-upload" className="text-slate-700 font-medium">Add Photos (optional)</Label>
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="photo-upload"
+                className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-colors"
+              >
+                <div className="text-center text-slate-500">
+                  <ImagePlus className="mx-auto h-8 w-8" />
+                  <span>Click or drag to upload</span>
+                </div>
+                <Input
+                  id="photo-upload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handlePhotoChange}
+                  disabled={isProcessing}
+                />
+              </Label>
+            </div>
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                {photos.map((file, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`preview ${index}`}
+                      className="w-full h-20 object-cover rounded-md"
+                      onLoad={() => URL.revokeObjectURL(URL.createObjectURL(file))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-75 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove photo"
+                      disabled={isProcessing}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

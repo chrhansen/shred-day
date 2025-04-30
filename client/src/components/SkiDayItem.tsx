@@ -26,7 +26,7 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
     : '??';
 
   const handleDeleteClick = () => {
-    if (window.confirm(`Are you sure you want to delete the entry for ${day.resort_name} on ${format(new Date(day.date), 'MMM d, yyyy')}?`)) {
+    if (window.confirm(`Are you sure you want to delete the entry for ${day.resort_name} on ${format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}?`)) {
       onDelete(day.id);
     }
   };
@@ -34,13 +34,21 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
   return (
     <div className="flex items-center gap-4 p-4">
       <Avatar className="h-20 w-20 rounded-lg shadow-md">
-        <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-lg">
-          {initials}
-        </AvatarFallback>
+        {day.photos && day.photos.length > 0 ? (
+          <img
+            src={day.photos[0].url}
+            alt={`${day.resort_name} photo`}
+            className="h-full w-full object-cover rounded-lg"
+          />
+        ) : (
+          <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-lg">
+            {initials}
+          </AvatarFallback>
+        )}
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-slate-800 truncate">{day.resort_name}</div>
-        <div className="text-sm text-slate-500">{format(new Date(day.date), 'MMM d, yyyy')}</div>
+        <div className="text-sm text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}</div>
         <div className="text-sm text-slate-500 flex items-center gap-2 flex-wrap">
           {day.ski_name && <span>{day.ski_name}</span>}
           {day.ski_name && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
