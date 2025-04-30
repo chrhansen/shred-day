@@ -41,7 +41,7 @@ jobs:
         working-directory: server
 
     - name: Install system dependencies # Add libvips for ruby-vips gem
-      run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libvips
+      run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libvips libheif-dev
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
