@@ -13,8 +13,15 @@ import { toast } from "sonner";
 import debounce from 'lodash.debounce';
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import heic2any from 'heic2any';
 
 const ACTIVITIES = ["Friends", "Training"];
+
+// Define the new state structure for photos
+interface PhotoPreview {
+  originalFile: File;
+  previewUrl: string | null;
+}
 
 export default function LogDay() {
   const navigate = useNavigate();
@@ -32,7 +39,8 @@ export default function LogDay() {
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [photos, setPhotos] = useState<PhotoPreview[]>([]);
+  const [isConvertingPhoto, setIsConvertingPhoto] = useState<boolean>(false);
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
@@ -165,7 +173,7 @@ export default function LogDay() {
 
     // Append photos
     photos.forEach((photo) => {
-      formData.append('day[photos][]', photo);
+      formData.append('day[photos][]', photo.originalFile);
     });
 
     // Call the appropriate mutation with FormData
@@ -194,19 +202,67 @@ export default function LogDay() {
     addSki({ name: newInlineSkiName.trim() });
   };
 
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Make async to handle potential conversion
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
+      setIsConvertingPhoto(true);
       const filesArray = Array.from(event.target.files);
+      const newPhotoPreviews: PhotoPreview[] = [];
+
+      for (const file of filesArray) {
+        let previewUrl: string | null = null;
+        let conversionSuccessful = false;
+
+        try {
+          // Check if it's HEIC/HEIF
+          if (file.type === 'image/heic' || file.type === 'image/heif' || /\.heic$/i.test(file.name)) {
+            console.log(`Converting ${file.name}...`);
+            const convertedBlob = await heic2any({
+              blob: file,
+              toType: "image/jpeg",
+              quality: 0.8, // Adjust quality as needed
+            }) as Blob;
+            previewUrl = URL.createObjectURL(convertedBlob);
+            console.log(`Conversion complete for ${file.name}`);
+            conversionSuccessful = true;
+          } else {
+            // For other types, use the original file directly
+            previewUrl = URL.createObjectURL(file);
+            conversionSuccessful = true;
+          }
+
+        } catch (conversionError) {
+          console.error("Error converting photo:", conversionError);
+          toast.error(`Failed to generate preview for: ${file.name}`);
+          // Ensure previewUrl is null if conversion failed
+          previewUrl = null;
+        }
+
+        // Always add the photo, marking preview URL as null on failure
+        newPhotoPreviews.push({ originalFile: file, previewUrl: previewUrl });
+      }
+
       setPhotos(prev => {
-        const updatedPhotos = [...prev, ...filesArray];
-        return updatedPhotos;
+        // Before adding new previews, revoke URLs of existing previews to prevent memory leaks
+        prev.forEach(p => URL.revokeObjectURL(p.previewUrl));
+        // Combine existing previews (if needed, or just replace)
+        // return [...prev, ...newPhotoPreviews]; // Append
+        return newPhotoPreviews; // Replace current selection
       });
-      event.target.value = '';
+
+      setIsConvertingPhoto(false);
+      event.target.value = ''; // Reset file input
     }
   };
 
   const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos(prev => {
+      const photoToRemove = prev[index];
+      if (photoToRemove) {
+        URL.revokeObjectURL(photoToRemove.previewUrl); // Revoke URL on removal
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   useEffect(() => {
@@ -514,26 +570,32 @@ export default function LogDay() {
                   accept="image/*"
                   className="sr-only"
                   onChange={handlePhotoChange}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isConvertingPhoto}
                 />
               </Label>
             </div>
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2 pt-2">
-                {photos.map((file, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`preview ${index}`}
-                      className="w-full h-20 object-cover rounded-md"
-                      onLoad={() => URL.revokeObjectURL(URL.createObjectURL(file))}
-                    />
+                {photos.map((photo, index) => (
+                  <div key={index} className="relative group" data-testid="photo-preview">
+                    {photo.previewUrl ? (
+                      <img
+                        src={photo.previewUrl}
+                        alt={`preview ${index}`}
+                        className="w-full h-20 object-cover rounded-md"
+                        onLoad={() => URL.revokeObjectURL(photo.previewUrl!)}
+                      />
+                    ) : (
+                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-500 p-1">
+                        <span className="break-words">Preview not available yet</span>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => removePhoto(index)}
                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-75 group-hover:opacity-100 transition-opacity"
                       aria-label="Remove photo"
-                      disabled={isProcessing}
+                      disabled={isProcessing || isConvertingPhoto}
                     >
                       <X className="h-3 w-3" />
                     </button>

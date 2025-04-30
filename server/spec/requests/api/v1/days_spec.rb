@@ -142,7 +142,10 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect {
             post api_v1_days_path, params: valid_params_with_photos, as: :multipart_form
             response_body = response.body # Capture response body
-          }.to change(user.days, :count).by(1).and change(ActiveStorage::Attachment, :count).by(2)
+          }.to change(user.days, :count).by(1)
+           .and change(Photo, :count).by(2) # Check Photo records are created
+           .and change(ActiveStorage::Attachment, :count).by(4) # Expect 4: 2 originals + 2 variants
+           .and change(ActiveStorage::VariantRecord, :count).by(2) # Expect 2 variant records
 
           # Parse the response to get the ID of the created day
           expect(response_body).not_to be_nil
@@ -174,7 +177,10 @@ RSpec.describe "Api::V1::Days", type: :request do
           # PhotoSerializer: id, url, filename
           expect(json_response['photos'][0]).to include('id', 'url', 'filename')
           expect(json_response['photos'][0]['filename']).to eq('test_image.jpg')
-          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # URL check is less precise but ok
+          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # Check if URL seems correct (includes filename)
+          # Check that the URL likely points to a variant using the redirect path
+          expect(json_response['photos'][0]['url']).to include('/rails/active_storage/representations/redirect/')
+
           expect(json_response['photos'][1]).to include('id', 'url', 'filename')
           expect(json_response['photos'][1]['filename']).to eq('test_image.png')
           expect(json_response['photos'][1]['url']).to include('test_image.png')

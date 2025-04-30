@@ -11,7 +11,14 @@ module Api
 
       def url
         # Generate the URL only if the image is attached
-        url_for(object.image) if object.image.attached?
+        # Return the URL for the pre-processed :preview variant
+        if object.image.attached?
+          # Get the variant; this will return the processed variant if preprocessed: true
+          variant = object.image.variant(:preview)
+          # Ensure the variant processed correctly before generating URL (optional but safer)
+          # variant.processed
+          url_for(variant)
+        end
       end
     end
   end

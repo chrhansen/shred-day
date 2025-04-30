@@ -63,4 +63,22 @@ RSpec.describe Photo, type: :model do
       expect(downloaded_content.length).to eq(retrieved_photo.image.byte_size)
     end
   end
+
+  describe 'image variants' do # Group variant tests
+    it "defines a preview variant for the image" do
+      photo = build(:photo) # Use build as we only need the instance definition
+
+      # Check that calling variant with the name works without error
+      # We need an attached image first for this check
+      photo.image.attach(
+        io: StringIO.new(""), # Dummy IO
+        filename: 'dummy.jpg',
+        content_type: 'image/jpeg'
+      )
+      expect { photo.image.variant(:preview) }.not_to raise_error
+    end
+  end
+
+  # Example of testing validation (if you uncomment the validation in the model)
+  # context "validations" do
 end
