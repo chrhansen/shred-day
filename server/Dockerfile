@@ -78,9 +78,7 @@ COPY --from=build-node /app/dist /rails/server/public/
 # Ensure ownership and permissions are correct for runtime, adjusting for server/ subdir
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
-    # mkdir -p /rails/server/tmp/storage && \
     # Now chown all required directories, including the correct storage path
-    # No need to list tmp/storage explicitly as tmp is already covered recursively
     chown -R rails:rails /rails/server/db /rails/server/log /rails/server/tmp /rails/server/public
 USER 1000:1000
 

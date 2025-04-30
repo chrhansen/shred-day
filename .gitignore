@@ -42,7 +42,6 @@ server/tmp/storage/ # Ignore Active Storage temp files for tests
 server/public/assets
 .bundle/
 config/master.key
-config/credentials.yml.enc
 
 # Kamal secrets and potentially large build cache
 .kamal/*
