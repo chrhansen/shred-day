@@ -52,7 +52,7 @@ jobs:
     - name: RSpec
       uses: addnab/docker-run-action@v3
       with:
-        image: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"   # <── quote it
+        image: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
         options: |
           --network host
           -e RAILS_ENV=test
