@@ -37,11 +37,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # create a buildx builder that uses the container driver (supports cache export)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver: docker-container          # default, but explicit
+
     #---------------------------------------------------------------
     # 1️⃣ Build the production image (cached)
     - name: Build Docker image
       uses: docker/build-push-action@v5
       with:
+        builder: ${{ steps.buildx.outputs.name }}
         context: .
         file: Dockerfile                     # default, but explicit
         push: false                          # don’t publish from PRs
