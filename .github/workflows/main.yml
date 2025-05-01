@@ -51,7 +51,7 @@ jobs:
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: .
-        file: Dockerfile                     # default, but explicit
+        file: ./server/Dockerfile             # default, but explicit
         push: false                          # don’t publish from PRs
         tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
         cache-from: type=gha
