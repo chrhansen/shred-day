@@ -43,9 +43,9 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./server/Dockerfile             # default, but explicit
-        push: false                          # don’t publish from PRs
-        load: true                 # <── makes the image usable later
+        file: ./server/Dockerfile
+        push: false
+        load: true
         tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     # 2️⃣ Run RSpec inside the image
@@ -58,7 +58,7 @@ jobs:
           -e RAILS_ENV=test
           -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test
           -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
-          -e BUNDLE_WITHOUT=          # <-- clear the prod-only exclusion
+          -e BUNDLE_WITHOUT=
         run: |
           cd /rails/server
           bundle install --with test --quiet
