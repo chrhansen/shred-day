@@ -37,33 +37,39 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    #---------------------------------------------------------------
-    # 1️⃣ Build the production image (cached)
-    - name: Build Docker image
+    # 1️⃣ build both targets ───────────────────────────────────────
+    - name: Build Docker images (prod & ci)
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./server/Dockerfile
         push: false
         load: true
-        tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        tags: |
+          ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          ${{ env.IMAGE_NAME }}:ci
+        # first tag is from default (=final) stage
+        # second tag comes from the build stage:
+        #   --target build --tag shred-day:ci
+        build-args: |
+          RUBY_VERSION=3.3.0
+          NODE_VERSION=20
+        target: final,build                                   # build BOTH stages
 
-    # 2️⃣ Run RSpec inside the image
+    # ── 2️⃣ run RSpec in the *ci* image (=build stage) ───────────────
     - name: RSpec
       uses: addnab/docker-run-action@v3
       with:
-        image: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+        image: shred-day:ci              # ← tool-chain available here
         options: --user 0
         run: |
           cd /rails/server
-          bundle install --with test --quiet
           bundle exec rails db:prepare
           bundle exec rspec
       env:
         RAILS_ENV: test
         DATABASE_URL: postgres://rails:password@localhost:5432/shred_day_test
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        BUNDLE_WITHOUT: ""
 
     # 3️⃣ Start Rails container for Cypress
     - name: Launch app container (detached)
