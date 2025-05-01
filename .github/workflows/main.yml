@@ -37,24 +37,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 1️⃣ build both targets ───────────────────────────────────────
-    - name: Build Docker images (prod & ci)
+    # 1️⃣ build the *ci* image (build-stage → has gcc/make/headers)
+    - name: Build CI image (build stage)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./server/Dockerfile        # keep this path
+        target: build                    # <- the stage that still has tool-chain
+        push: false
+        load: true                       # import into runner’s docker engine
+        tags: ${{ env.IMAGE_NAME }}:ci   # eg. shred-day:ci
+
+    # 2️⃣ build the slim *production* image (default final stage)
+    - name: Build production image
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./server/Dockerfile
         push: false
         load: true
-        tags: |
-          ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          ${{ env.IMAGE_NAME }}:ci
-        # first tag is from default (=final) stage
-        # second tag comes from the build stage:
-        #   --target build --tag shred-day:ci
-        build-args: |
-          RUBY_VERSION=3.3.0
-          NODE_VERSION=20
-        target: final,build                                   # build BOTH stages
+        tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     # ── 2️⃣ run RSpec in the *ci* image (=build stage) ───────────────
     - name: RSpec
