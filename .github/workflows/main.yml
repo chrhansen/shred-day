@@ -53,17 +53,17 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-        options: |
-          --network host
-          -e RAILS_ENV=test
-          -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test
-          -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
-          -e BUNDLE_WITHOUT=
+        options: --network host
         run: |
           cd /rails/server
           bundle install --with test --quiet
           bundle exec rails db:prepare
           bundle exec rspec
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://rails:password@localhost:5432/shred_day_test
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        BUNDLE_WITHOUT: ""
 
     # 3️⃣ Start Rails container for Cypress
     - name: Launch app container (detached)
