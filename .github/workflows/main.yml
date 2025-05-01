@@ -53,7 +53,6 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-        options: --network host
         run: |
           cd /rails/server
           bundle install --with test --quiet
