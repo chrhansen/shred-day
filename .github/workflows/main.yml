@@ -1,28 +1,31 @@
-name: CI/CD
+name: CI / CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
 
+env:
+  IMAGE_NAME: shred-day
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
+#────────────────────── BUILD + TEST ────────────────────────────
   test:
-    name: Test
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:17 # Match the version in deploy.yml
+        image: postgres:17
         env:
-          POSTGRES_DB: shred_day_test # Match database.yml
-          POSTGRES_USER: rails # Standard user for Rails tests
-          POSTGRES_PASSWORD: password # Simple password for testing
-        ports:
-          - 5432:5432
+          POSTGRES_DB: shred_day_test
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+        ports: [5432:5432]
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -30,139 +33,109 @@ jobs:
           --health-retries 5
 
     steps:
-    - name: Checkout code
+    #---------------------------------------------------------------
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
+    #---------------------------------------------------------------
+    # 1️⃣ Build the production image (cached)
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
       with:
-        ruby-version: '3.3.0' # From server/.ruby-version
-        bundler-cache: true # Runs bundle install in server/ directory by default if Gemfile.lock is there
-        working-directory: server
+        context: .
+        file: Dockerfile                     # default, but explicit
+        push: false                          # don’t publish from PRs
+        tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        cache-from: type=gha
+        cache-to:   type=gha,mode=max
 
-    - name: Install system dependencies # Add libvips for ruby-vips gem
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends software-properties-common
-        sudo add-apt-repository -y universe
-        sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends libvips libheif-dev libde265-dev
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
+    # 2️⃣ Run RSpec inside the image
+    - name: RSpec
+      uses: addnab/docker-run-action@v3
       with:
-        node-version: '20' # From server/Dockerfile
-        cache: 'npm'
-        cache-dependency-path: client/package-lock.json
+        image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        options: |
+          --network host
+          -e RAILS_ENV=test
+          -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test
+          -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
+          -e BUNDLE_WITHOUT=          # <-- clear the prod-only exclusion
+        run: |
+          cd /rails/server
+          bundle install --with test --quiet
+          bundle exec rails db:prepare
+          bundle exec rspec
 
-    - name: Install Node dependencies
-      run: npm install
-      working-directory: client
-
-    - name: Build client assets
-      run: npm run build
-      working-directory: client
-      env:
-        NODE_ENV: production # Often needed for production builds
-        VITE_API_BASE_URL: http://localhost:3000 # Tell frontend where the test backend is
-
-    - name: Verify Client Build Output
-      run: grep -r 'http://localhost:3000' dist/assets || echo "Backend URL not found in build output!"
-      working-directory: client
-
-    - name: Setup Test Database
-      working-directory: server
-      env:
-        RAILS_ENV: test
-        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
+    # 3️⃣ Start Rails container for Cypress
+    - name: Launch app container (detached)
       run: |
-        bundle exec rails db:schema:load # Load schema directly, avoid seeds
+        docker run -d --name shredday-ci \
+          --network host \
+          -e PORT=3000 \
+          -e RAILS_ENV=test \
+          -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test \
+          -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
+          ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-    - name: Run RSpec tests
-      working-directory: server
-      env:
-        RAILS_ENV: test
-        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # Needed if tests access encrypted credentials
-      run: bundle exec rspec
+    # Seed DB so Cypress has data to click on
+    - name: Seed database
+      run: docker exec shredday-ci bundle exec rails db:seed
 
-    - name: Start Rails Server (Test Env)
-      working-directory: server
-      env:
-        RAILS_ENV: test
-        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        PORT: 3000 # Explicitly set port for test server
-      run: bundle exec rails server > ../rails_test_server.log 2>&1 &
+    - name: Wait for Rails to boot
+      run: sleep 15
 
-    - name: Seed Database for Cypress
-      working-directory: server
-      env:
-        RAILS_ENV: test
-        DATABASE_URL: "postgres://rails:password@localhost:5432/shred_day_test" # Match service config
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-      run: bundle exec rails db:seed
-
-    - name: Start Frontend Preview Server for Cypress
-      working-directory: client
-      run: npm run preview -- --port 8080 & # Run in background on port 8080
-      env:
-        NODE_ENV: production # Match build environment
-
-    - name: Wait for Servers
-      run: sleep 15 # Increase wait time slightly for both servers, consider wait-on for robustness
-
-    - name: Run Cypress tests
+    #---------------------------------------------------------------
+    # 4️⃣ Run Cypress in its own container against http://localhost:3000
+    - name: Cypress
       uses: cypress-io/github-action@v6
       with:
         working-directory: client
-        # No build needed, we already built assets
-        # No start needed, we started preview manually
-        # command: npx cypress run # Default command, can omit or customize
       env:
-        CYPRESS_BASE_URL: http://localhost:8080 # Match preview server port
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }} # If Cypress interacts with backend needing this
+        CYPRESS_baseUrl: http://localhost:3000
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
-    - name: Display Rails Test Server Logs on Failure
+    # Show Rails logs if anything fails
+    - name: Dump Rails log on failure
       if: failure()
-      run: cat rails_test_server.log
+      run: docker logs shredday-ci || true
 
+#──────────────────────── DEPLOY ────────────────────────────────
   deploy:
     name: Deploy
-    needs: test # Only run if tests pass
+    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Only deploy on push to main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
+    - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.3.0' # Match the version Kamal runs with
+        ruby-version: '3.3.0'
 
     - name: Install Kamal
       run: gem install kamal -v $(awk '/kamal \(/ { gsub(/.*\(|\).*/, "", $0); print $0 }' server/Gemfile.lock)
 
-    - name: Setup SSH Agent
+    - name: Setup SSH agent
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Prepare Kamal Secrets
+    - name: Prepare Kamal secrets
       run: |
         mkdir -p .kamal
-        echo "KAMAL_REGISTRY_PASSWORD: $KAMAL_REGISTRY_PASSWORD" >> .kamal/secrets
-        echo "RAILS_MASTER_KEY: $RAILS_MASTER_KEY" >> .kamal/secrets
-        echo "POSTGRES_PASSWORD: $POSTGRES_PASSWORD" >> .kamal/secrets
+        {
+          echo "KAMAL_REGISTRY_PASSWORD: $KAMAL_REGISTRY_PASSWORD"
+          echo "RAILS_MASTER_KEY: $RAILS_MASTER_KEY"
+          echo "POSTGRES_PASSWORD: $POSTGRES_PASSWORD"
+        } >> .kamal/secrets
       env:
         KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        RAILS_MASTER_KEY:       ${{ secrets.RAILS_MASTER_KEY }}
+        POSTGRES_PASSWORD:      ${{ secrets.POSTGRES_PASSWORD }}
 
-    - name: Deploy to Production
+    - name: Deploy
       env:
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        RAILS_MASTER_KEY:  ${{ secrets.RAILS_MASTER_KEY }}
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: kamal deploy --verbose
