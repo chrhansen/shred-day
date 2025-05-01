@@ -37,26 +37,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # create a buildx builder that uses the container driver (supports cache export)
-    - name: Set up Docker Buildx
-      id: buildx                          # 👈 add an id so we can reference it
-      uses: docker/setup-buildx-action@v3
-      with:
-        driver: docker-container          # default, but explicit
-
     #---------------------------------------------------------------
     # 1️⃣ Build the production image (cached)
     - name: Build Docker image
       uses: docker/build-push-action@v5
       with:
-        builder: ${{ steps.buildx.outputs.name }}
         context: .
         file: ./server/Dockerfile             # default, but explicit
         push: false                          # don’t publish from PRs
         load: true                 # <── makes the image usable later
         tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-        cache-from: type=gha
-        cache-to:   type=gha,mode=max
 
     # 2️⃣ Run RSpec inside the image
     - name: RSpec
