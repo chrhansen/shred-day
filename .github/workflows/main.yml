@@ -65,7 +65,6 @@ jobs:
         image: shred-day:ci
         options: |
           --user 0
-          --network host
           -e RAILS_ENV
           -e DATABASE_URL
           -e RAILS_MASTER_KEY
@@ -78,7 +77,7 @@ jobs:
           bundle exec rspec
       env:
         RAILS_ENV: test
-        DATABASE_URL: postgres://rails:password@localhost:5432/shred_day_test
+        DATABASE_URL: postgres://rails:password@postgres:5432/shred_day_test
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     # 3️⃣ Start Rails container for Cypress
