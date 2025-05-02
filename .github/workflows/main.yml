@@ -65,6 +65,7 @@ jobs:
         image: shred-day:ci
         options: |
           --user 0
+          --network host
           -e RAILS_ENV
           -e DATABASE_URL
           -e RAILS_MASTER_KEY
