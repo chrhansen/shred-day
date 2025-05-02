@@ -89,7 +89,8 @@ jobs:
           -e RAILS_ENV=test \
           -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test \
           -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
-          ${{ env.IMAGE_NAME }}:ci
+          ${{ env.IMAGE_NAME }}:ci \
+          bash -lc "bundle exec rails server -b 0.0.0.0 -p \$PORT"
 
 
     # 🔍 NEW: show status/logs before we try to exec
