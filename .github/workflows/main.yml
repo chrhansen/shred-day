@@ -81,7 +81,7 @@ jobs:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     # 3️⃣ Start Rails container for Cypress
-    - name: RSpec
+    - name: Rails Backend for Cypress
       uses: addnab/docker-run-action@v3
       with:
         image: shred-day:ci
@@ -91,6 +91,8 @@ jobs:
           -e DATABASE_URL
           -e RAILS_MASTER_KEY
           -e PORT
+          -p 3000:3000
+          --detach
         run: |
           cd /rails/server
           printf '%s' "$RAILS_MASTER_KEY" > config/master.key
