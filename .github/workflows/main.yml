@@ -89,7 +89,7 @@ jobs:
           -e RAILS_ENV=test \
           -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test \
           -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
-          ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          ${{ env.IMAGE_NAME }}:ci
 
     # Seed DB so Cypress has data to click on
     - name: Seed database
