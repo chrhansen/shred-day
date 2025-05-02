@@ -73,7 +73,7 @@ jobs:
           printf '%s' "$RAILS_MASTER_KEY" > config/master.key
           chmod 600 config/master.key
           bundle install --with test --quiet
-          bundle exec rails db:prepare
+          bundle exec rails db:create db:migrate
           bundle exec rspec
       env:
         RAILS_ENV: test
