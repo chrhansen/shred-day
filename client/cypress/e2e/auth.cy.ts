@@ -14,7 +14,6 @@ describe('Authentication Flows', () => {
       cy.createUser(uniqueEmail, PASSWORD).then(() => {
         cy.wrap(uniqueEmail).as('userEmail');
         cy.clearCookies(); // Clear cookies set by API response
-        // No need to visit here anymore, login command handles it
       });
     });
 

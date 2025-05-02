@@ -88,6 +88,7 @@ jobs:
           --network host \
           -e PORT=3000 \
           -e RAILS_ENV=production \
+          -e RAILS_FORCE_SSL=false \
           -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test \
           -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
           ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
