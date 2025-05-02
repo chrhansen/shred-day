@@ -4,6 +4,7 @@ class ApplicationController < ActionController::API
 
   # Apply require_login globally to all inheriting controllers
   before_action :require_login
+  before_action :log_request
 
   # Helper method to find the current user based on session
   def current_user
@@ -21,5 +22,11 @@ class ApplicationController < ActionController::API
     unless logged_in?
       render json: { error: 'You must be logged in to access this section' }, status: :unauthorized
     end
+  end
+
+  private
+
+  def log_request
+    Rails.logger.info("***** Request ******: #{request.method} #{request.path} #{request.headers['User-Agent']} #{request.headers['Referer']}")
   end
 end

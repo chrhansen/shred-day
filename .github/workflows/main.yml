@@ -75,46 +75,37 @@ jobs:
           bundle install --with test --quiet
           bundle exec rails db:create db:migrate
           bundle exec rspec
-          bundle exec rails db:prepare db:seed
       env:
         RAILS_ENV: test
         DATABASE_URL: postgres://rails:password@postgres:5432/shred_day_test
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
 
     # 3️⃣ Start Rails container for Cypress
-    - name: Launch app container (detached)
-      run: |
-        docker run -d --name shredday-ci \
-          --network host \
-          -e PORT=3000 \
-          -e RAILS_ENV=production \
-          -e RAILS_FORCE_SSL=false \
-          -e DATABASE_URL=postgres://rails:password@localhost:5432/shred_day_test \
-          -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
-          ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-          bash -lc "bundle exec rails server -b 0.0.0.0 -p \$PORT"
-
-    # 🔍 NEW: show status/logs before we try to exec
-    - name: Show shredday‑ci status
-      run: |
-        echo "== docker ps -a =="
-        docker ps -a
-        echo
-        echo "== inspect =="
-        docker inspect \
-          --format='State={{.State.Status}}  ExitCode={{.State.ExitCode}}  OOMKilled={{.State.OOMKilled}}' \
-          shredday-ci || true
-        echo
-        echo "== last 50 log lines =="
-        docker logs --tail 50 shredday-ci || true
-
-
-    # # Seed DB so Cypress has data to click on
-    # - name: Seed database
-    #   run: docker exec shredday-ci bundle exec rails db:seed RAILS_ENV=production
+    - name: RSpec
+      uses: addnab/docker-run-action@v3
+      with:
+        image: shred-day:ci
+        options: |
+          --user 0
+          -e RAILS_ENV
+          -e DATABASE_URL
+          -e RAILS_MASTER_KEY
+          -e PORT
+        run: |
+          cd /rails/server
+          printf '%s' "$RAILS_MASTER_KEY" > config/master.key
+          chmod 600 config/master.key
+          bundle install --with test --quiet
+          bundle exec rails db:seed
+          bundle exec rails server -b 0.0.0.0 -p 3000
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://rails:password@postgres:5432/shred_day_test
+        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        PORT: 3000
 
     - name: Wait for Rails to boot
-      run: sleep 15
+      run: sleep 5
 
     #---------------------------------------------------------------
     # 4️⃣ Run Cypress in its own container against http://localhost:3000
