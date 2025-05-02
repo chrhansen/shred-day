@@ -84,8 +84,10 @@ jobs:
     - name: Rails Backend for Cypress
       uses: addnab/docker-run-action@v3
       with:
+        name: rails-backend-cypress
         image: shred-day:ci
         options: |
+          --name rails-backend-cypress
           --user 0
           -e RAILS_ENV
           -e DATABASE_URL
@@ -106,8 +108,23 @@ jobs:
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         PORT: 3000
 
-    - name: Wait for Rails to boot
-      run: sleep 5
+    # Add a robust wait step that checks a health endpoint (adjust URL if needed)
+    - name: Wait for Rails server
+      run: |
+        echo "Waiting for Rails server at http://localhost:3000..."
+        # Use timeout and curl to wait for the server to respond with HTTP 2xx/3xx
+        # If no health check endpoint, consider 'until nc -z localhost 3000' as a simpler check
+        timeout 60s bash -c ' \
+          until curl -s -f -o /dev/null http://localhost:3000/up; do \
+            echo "Waiting for Rails (curl)..."; \
+            sleep 2; \
+          done \
+        ' || (echo "Rails server failed to start!" && docker logs rails-backend-cypress && exit 1)
+        echo "Rails server is up!"
+
+    # Optional: Check container status before Cypress runs
+    - name: Check Rails container status
+      run: docker ps --filter name=rails-backend-cypress
 
     #---------------------------------------------------------------
     # 4️⃣ Run Cypress in its own container against http://localhost:3000
@@ -117,13 +134,12 @@ jobs:
         working-directory: client
       env:
         CYPRESS_baseUrl: http://localhost:3000
-        RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         VITE_API_BASE_URL: http://localhost:3000
 
     # Show Rails logs if anything fails
     - name: Dump Rails log on failure
       if: failure()
-      run: docker logs shredday-ci || true
+      run: docker logs rails-backend-cypress || true
 
 #──────────────────────── DEPLOY ────────────────────────────────
   deploy:
