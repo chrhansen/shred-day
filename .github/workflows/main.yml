@@ -62,16 +62,16 @@ jobs:
     - name: RSpec
       uses: addnab/docker-run-action@v3
       with:
-        image: shred-day:ci              # ← tool-chain available here
-        options: --user 0
+        image: shred-day:ci
+        options: |
+          --user 0
+          -e RAILS_ENV
+          -e DATABASE_URL
+          -e RAILS_MASTER_KEY
         run: |
           cd /rails/server
           printf '%s' "$RAILS_MASTER_KEY" > config/master.key
           chmod 600 config/master.key
-          # ── debug: show byte-count, not contents ─────────────
-          echo "master.key bytes → $(wc -c < config/master.key)"
-          echo "master.key lines → $(wc -l < config/master.key)"
-          # ────────────────────────────────────────────────────
           bundle install --with test --quiet
           bundle exec rails db:prepare
           bundle exec rspec
