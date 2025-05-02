@@ -91,6 +91,22 @@ jobs:
           -e RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }} \
           ${{ env.IMAGE_NAME }}:ci
 
+
+    # 🔍 NEW: show status/logs before we try to exec
+    - name: Show shredday‑ci status
+      run: |
+        echo "== docker ps -a =="
+        docker ps -a
+        echo
+        echo "== inspect =="
+        docker inspect \
+          --format='State={{.State.Status}}  ExitCode={{.State.ExitCode}}  OOMKilled={{.State.OOMKilled}}' \
+          shredday-ci || true
+        echo
+        echo "== last 50 log lines =="
+        docker logs --tail 50 shredday-ci || true
+
+
     # Seed DB so Cypress has data to click on
     - name: Seed database
       run: docker exec shredday-ci bundle exec rails db:seed
