@@ -45,7 +45,7 @@ jobs:
         file: ./server/Dockerfile        # keep this path
         target: build                    # <- the stage that still has tool-chain
         push: false
-        load: true                       # import into runner’s docker engine
+        load: true                       # import into runner's docker engine
         tags: ${{ env.IMAGE_NAME }}:ci   # eg. shred-day:ci
 
     # 2️⃣ build the slim *production* image (default final stage)
@@ -59,6 +59,20 @@ jobs:
         tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     # ── 2️⃣ run RSpec in the *ci* image (=build stage) ───────────────
+    - name: Check RAILS_MASTER_KEY Length
+      env:
+        # Pass the secret to an environment variable for the script
+        TEST_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      run: |
+        KEY_LENGTH=$(echo -n "$TEST_KEY" | wc -c)
+        echo "RAILS_MASTER_KEY byte length: $KEY_LENGTH"
+        if [ "$KEY_LENGTH" -eq 0 ]; then
+          echo "::error::RAILS_MASTER_KEY is empty or not set!"
+          exit 1 # Optional: fail the workflow if the key is missing
+        else
+          echo "RAILS_MASTER_KEY appears to be set (length > 0)."
+        fi
+
     - name: RSpec
       uses: addnab/docker-run-action@v3
       with:
