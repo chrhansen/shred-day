@@ -51,3 +51,6 @@ config/master.key
 !.kamal/hooks/pre-deploy
 # Also specifically ignore the env file if it exists
 .kamal/*.env
+
+# Secrets for GitHub Actions, act-tool, https://github.com/nektos/act/discussions/1439#discussioncomment-4210726
+.github/workflows/.secrets
