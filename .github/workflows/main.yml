@@ -48,6 +48,10 @@ jobs:
         load: true                       # import into runner’s docker engine
         tags: ${{ env.IMAGE_NAME }}:ci   # eg. shred-day:ci
 
+    - uses: actions/checkout@v4
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     # 2️⃣ build the slim *production* image (default final stage)
     - name: Build production image
       uses: docker/build-push-action@v5
