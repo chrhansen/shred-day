@@ -1,11 +1,10 @@
 /// <reference types="cypress" />
 /// <reference types="cypress-file-upload" />
 
-describe('Log and Edit Ski Day', () => {
+describe('Create and Edit a Ski Day', () => {
   const PASSWORD = 'password123';
-  const DASHBOARD_URL = '/';
   const LOG_DAY_URL = '/new';
-  const DAYS_LIST_URL = '/days';
+  const DAYS_LIST_URL = '/';
   // Use known resort names from seeds
   const RESORT_A_NAME = "Le Massif";
   const SKI_A_NAME = "Test Ski Alpha";
@@ -36,7 +35,7 @@ describe('Log and Edit Ski Day', () => {
     });
 
     // --- Visit page AFTER login to establish browser session ---
-    cy.visit(DASHBOARD_URL);
+    cy.visit(DAYS_LIST_URL);
     cy.wait('@getStats');
 
     // --- Perform COMMON data setup AFTER visiting ---
@@ -52,10 +51,10 @@ describe('Log and Edit Ski Day', () => {
   });
 
   it('should navigate to log day form, fill it, and submit successfully', function() {
-    // Already on dashboard, stats likely loaded during beforeEach
+    // Already on days list page
 
-    // 1. Click Log a day button
-    cy.contains('button', /Log a day/i).click();
+    // 1. Click New Day button
+    cy.contains('button', /New Day/i).click();
     cy.location('pathname').should('eq', LOG_DAY_URL);
 
     // Wait for LogDay page data to load
@@ -82,11 +81,22 @@ describe('Log and Edit Ski Day', () => {
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
     cy.wait('@logDay').its('response.statusCode').should('eq', 201);
-    cy.location('pathname').should('eq', DASHBOARD_URL);
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
 
-    // Verify stats updated on dashboard
-    cy.get('[data-testid="days-skied-value"]').should('contain.text', '1');
+    // --- Verify the new day appears in the list ---
+
+    // Wait for the list to potentially refresh after redirect/invalidation
+    cy.wait('@getDaysList');
+
+    // Get the selected date (15th of current month) and format it
+    const selectedDate = new Date();
+    selectedDate.setDate(15);
+    const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 15, 2025"
+
+    // Check that an item with the correct resort and date exists
+    cy.contains('.flex.items-center.gap-4.p-4', RESORT_A_NAME)
+      .should('contain.text', formattedDate);
   });
 
   it('should allow editing an existing ski day', function() {
@@ -251,7 +261,7 @@ describe('Log and Edit Ski Day', () => {
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
     cy.wait('@logDay').its('response.statusCode').should('eq', 201);
-    cy.location('pathname').should('eq', DASHBOARD_URL);
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 
@@ -288,7 +298,7 @@ describe('Log and Edit Ski Day', () => {
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
     cy.wait('@logDay').its('response.statusCode').should('eq', 201);
-    cy.location('pathname').should('eq', DASHBOARD_URL);
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 
@@ -328,7 +338,7 @@ describe('Log and Edit Ski Day', () => {
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
     cy.wait('@logDay').its('response.statusCode').should('eq', 201);
-    cy.location('pathname').should('eq', DASHBOARD_URL);
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 });

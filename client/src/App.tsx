@@ -43,11 +43,11 @@ const AppRoutes = () => {
     <Routes>
       {isAuthenticated ? (
         <>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/stats" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/days/:id/edit" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-          <Route path="/days" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       ) : (

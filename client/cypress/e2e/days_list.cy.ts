@@ -2,7 +2,7 @@
 
 describe('Ski Days List Page', () => {
   const PASSWORD = 'password123';
-  const DAYS_LIST_URL = '/days';
+  const DAYS_LIST_URL = '/';
   const RESORT_NAME = "DaysList Resort";
   const SKI_A_NAME = "Test Ski A";
   const SKI_B_NAME = "Test Ski B";
@@ -143,6 +143,20 @@ describe('Ski Days List Page', () => {
     // Verify navigation to the settings page
     cy.url().should('include', '/settings');
     cy.contains('h1', 'Settings').should('be.visible'); // Check for settings page title
+  });
+
+  it('should display a New Day button that navigates to the log day page', () => {
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getDaysList');
+
+    // Find the "New Day" button and click it
+    cy.contains('button', 'New Day')
+      .should('be.visible')
+      .click();
+
+    // Verify navigation to the new day page
+    cy.location('pathname').should('eq', '/new');
+    cy.contains('h1', 'Log New Ski Day').should('be.visible');
   });
 
 });

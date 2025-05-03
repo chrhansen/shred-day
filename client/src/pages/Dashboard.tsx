@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['skiStats'],
@@ -33,7 +32,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-6">
            <div
-             onClick={() => !isLoading && navigate('/days')}
+             onClick={() => !isLoading && navigate('/')}
              className={`cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 transition-transform'}`}
              aria-label="View all ski days"
            >
@@ -47,13 +46,9 @@ export default function Dashboard() {
           onClick={() => navigate("/new")}
           className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl"
         >
-          <Plus className="mr-2 h-5 w-5" />
-          Log a day
+          <Plus className="mr-0 h-5 w-5" />
+          New Day
         </Button>
-
-        {user && (
-          <p className="text-center text-sm text-slate-500 mt-4">Logged in as {user.email}</p>
-        )}
       </div>
     </div>
   );

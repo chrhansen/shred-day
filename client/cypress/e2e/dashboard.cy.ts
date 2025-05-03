@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-describe('Dashboard / Stats', () => {
+describe('Stats Page', () => {
   const PASSWORD = 'password123';
 
   beforeEach(() => {
@@ -43,8 +43,8 @@ describe('Dashboard / Stats', () => {
     cy.logDay({ date: '2024-01-11', resort_id: this.resortLeMassifId, ski_id: this.ski1Id }); // Same resort & ski
     cy.logDay({ date: '2024-01-12', resort_id: this.resortMaikoId, ski_id: this.ski2Id }); // Different resort & ski
 
-    // Visit the dashboard page
-    cy.visit('/');
+    // Visit the stats page (formerly dashboard)
+    cy.visit('/stats');
 
     // Assertions for Stats using data-testid
 
@@ -60,7 +60,7 @@ describe('Dashboard / Stats', () => {
 
   it('should display zero stats for a new user with no days', function() {
     // Test setup happens in beforeEach, but we don't log days here.
-    cy.visit('/');
+    cy.visit('/stats');
 
     cy.get('[data-testid="days-skied-value"]').should('contain.text', '0');
     cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '0');

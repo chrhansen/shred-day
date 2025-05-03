@@ -36,26 +36,27 @@ export default function DaysListPage() {
   return (
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto">
-        <Button
-          variant="ghost"
-          className="mb-4 text-slate-600 hover:text-slate-800"
-          onClick={() => navigate(-1)}
-        >
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-slate-800">Ski Days</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate('/settings')}
-            aria-label="Settings"
-          >
-            <Settings className="h-6 w-6" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => navigate("/new")}
+              size="sm"
+              className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+            >
+              <Plus className="mr-1.0 h-4 w-4" />
+              New Day
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-slate-600 hover:text-slate-800"
+              onClick={() => navigate('/settings')}
+              aria-label="Settings"
+            >
+              <Settings className="h-6 w-6" />
+            </Button>
+          </div>
         </div>
 
         {isLoading && (
@@ -90,7 +91,7 @@ export default function DaysListPage() {
               className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl mt-8"
             >
               <Plus className="mr-2 h-5 w-5" />
-              Log Your First Day
+              Add Your First Day
             </Button>
           </div>
         )}
