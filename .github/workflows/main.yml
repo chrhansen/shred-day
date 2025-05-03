@@ -48,10 +48,6 @@ jobs:
         load: true                       # import into runner’s docker engine
         tags: ${{ env.IMAGE_NAME }}:ci   # eg. shred-day:ci
 
-    - uses: actions/checkout@v4
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-
     # 2️⃣ build the slim *production* image (default final stage)
     - name: Build production image
       uses: docker/build-push-action@v5
@@ -111,6 +107,10 @@ jobs:
         DATABASE_URL: postgres://rails:password@postgres:5432/shred_day_test
         RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         PORT: 3000
+
+    - uses: actions/checkout@v4
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
 
     # Add a robust wait step that checks a health endpoint (adjust URL if needed)
     - name: Wait for Rails server
