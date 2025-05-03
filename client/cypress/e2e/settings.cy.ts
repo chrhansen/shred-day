@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
 describe('Settings Page', () => {
+  const ROOT_URL = '/';
   const PASSWORD = 'password123';
-  const DASHBOARD_URL = '/';
   const SETTINGS_URL = '/settings';
 
   beforeEach(() => {
@@ -22,10 +22,10 @@ describe('Settings Page', () => {
     // No need to visit here, each test will navigate as needed
   });
 
-  it('should navigate to the settings page when clicking the settings icon on the dashboard', () => {
-    cy.visit(DASHBOARD_URL);
+  it('should navigate to the settings page when clicking the settings icon on the Days List page', () => {
+    cy.visit(ROOT_URL);
     // Find the settings button using its aria-label and click it
-    cy.get('[aria-label="Settings"]').click();
+    cy.get('[aria-label="Settings"]').should('be.visible').click();
 
     // Verify navigation to the settings page
     cy.location('pathname').should('eq', SETTINGS_URL);

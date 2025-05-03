@@ -90,7 +90,7 @@ describe('Authentication Flows', () => {
       // For now, assume clicking the button text after filling the form works
       cy.contains('button', /^Sign Up$/i).click();
 
-      // 4. Assert redirection to dashboard
+      // 4. Assert redirection to main page (/)
       cy.url().should('not.include', AUTH_URL);
       cy.location('pathname').should('eq', '/');
 

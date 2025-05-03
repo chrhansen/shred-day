@@ -5,7 +5,7 @@ describe('Stats Page', () => {
 
   beforeEach(() => {
     // Create a unique user for each test
-    const userEmail = `test-dash-${Date.now()}@example.com`;
+    const userEmail = `test-stats-${Date.now()}@example.com`;
     cy.createUser(userEmail, PASSWORD).as('userData');
 
     // Log in via API to get session cookie set for subsequent requests

@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function Dashboard() {
+export default function StatsPage() {
   const navigate = useNavigate();
 
   const { data: stats, isLoading } = useQuery({
@@ -18,7 +18,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-md mx-auto space-y-8 pt-8">
         <div className="flex justify-between items-center mb-8">
-           <h1 className="text-2xl font-bold text-slate-800">My Ski Journal</h1>
+           <h1 className="text-2xl font-bold text-slate-800">Stats</h1>
            <Button
              variant="ghost"
              size="icon"
@@ -42,13 +42,6 @@ export default function Dashboard() {
            <StatsCard label="Most Used Ski" value={isLoading ? '...' : stats?.mostUsedSki ?? '-'} />
         </div>
 
-        <Button
-          onClick={() => navigate("/new")}
-          className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl"
-        >
-          <Plus className="mr-0 h-5 w-5" />
-          New Day
-        </Button>
       </div>
     </div>
   );

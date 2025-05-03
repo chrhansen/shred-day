@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
+import StatsPage from "./pages/StatsPage";
 import LogDay from "./pages/LogDay";
 import SettingsPage from "./pages/SettingsPage";
 import DaysListPage from "./pages/DaysListPage";
@@ -43,7 +43,7 @@ const AppRoutes = () => {
     <Routes>
       {isAuthenticated ? (
         <>
-          <Route path="/stats" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/days/:id/edit" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
