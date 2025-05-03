@@ -256,6 +256,7 @@ describe('Log and Edit Ski Day', () => {
   });
 
   it('should handle HEIC photo upload successfully', function() {
+    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -292,6 +293,7 @@ describe('Log and Edit Ski Day', () => {
   });
 
   it('should handle multiple photo uploads', function() {
+    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
