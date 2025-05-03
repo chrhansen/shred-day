@@ -32,24 +32,27 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 p-4">
-      <Avatar className="h-20 w-20 rounded-lg shadow-md">
+    <div
+      className="flex items-center gap-3 pb-3 pt-3"
+      data-testid={`ski-day-item-${day.id}`}
+    >
+      <Avatar className="h-24 w-24 rounded-sm shadow-md flex-shrink-0">
         {day.photos && day.photos.length > 0 ? (
           <img
             src={day.photos[0].url}
             alt={`${day.resort_name} photo`}
-            className="h-full w-full object-cover rounded-lg"
+            className="h-full w-full object-cover rounded-sm"
           />
         ) : (
-          <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-lg">
+          <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-sm">
             {initials}
           </AvatarFallback>
         )}
       </Avatar>
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-slate-800 truncate">{day.resort_name}</div>
-        <div className="text-sm text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}</div>
-        <div className="text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+      <div className="flex-1 min-w-0 ml-1">
+        <div className="text-lg font-medium text-slate-800 truncate">{day.resort_name}</div>
+        <div className="text-base text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}</div>
+        <div className="text-base text-slate-500 flex items-center gap-2 flex-wrap">
           {day.ski_name && <span>{day.ski_name}</span>}
           {day.ski_name && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
           {day.activity && <span>{day.activity}</span>}

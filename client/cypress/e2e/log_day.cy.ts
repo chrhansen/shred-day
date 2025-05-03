@@ -80,13 +80,21 @@ describe('Create and Edit a Ski Day', () => {
     // Submit Form
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
-    cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+
+    // Wait for the request and get the new day's ID from the response body
+    let newDayId: string;
+    cy.wait('@logDay').then((interception) => {
+      expect(interception.response.statusCode).to.eq(201);
+      // Assuming your API returns the created day object with an 'id' field
+      expect(interception.response?.body?.id).to.exist;
+      newDayId = interception.response?.body?.id;
+    });
+
+    // Verify redirection and toast
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
 
-    // --- Verify the new day appears in the list ---
-
-    // Wait for the list to potentially refresh after redirect/invalidation
+    // Wait for the list to potentially refresh
     cy.wait('@getDaysList');
 
     // Get the selected date (15th of current month) and format it
@@ -94,9 +102,13 @@ describe('Create and Edit a Ski Day', () => {
     selectedDate.setDate(15);
     const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 15, 2025"
 
-    // Check that an item with the correct resort and date exists
-    cy.contains('.flex.items-center.gap-4.p-4', RESORT_A_NAME)
-      .should('contain.text', formattedDate);
+    // Check that the specific item with the new ID contains the correct resort and date
+    // Use cy.then to ensure newDayId is available after the wait
+    cy.then(() => {
+        cy.get(`[data-testid="ski-day-item-${newDayId}"]`)
+          .should('contain.text', RESORT_A_NAME)
+          .and('contain.text', formattedDate);
+    })
   });
 
   it('should allow editing an existing ski day', function() {
@@ -175,7 +187,8 @@ describe('Create and Edit a Ski Day', () => {
     // 9. Verify changes are reflected in the list (wait for dayId alias)
     cy.wait('@getDaysList');
     cy.get('@dayId').then(dayId => {
-      cy.get(`[data-testid="edit-day-${dayId}"]`).closest('.flex.items-center.gap-4.p-4')
+      // Use the new data-testid selector
+      cy.get(`[data-testid="ski-day-item-${dayId}"]`)
         .should('contain.text', 'Mar 20, 2025')
         .and('contain.text', SKI_B_NAME)
         .and('contain.text', EDITED_ACTIVITY);
