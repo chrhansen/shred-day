@@ -41,6 +41,8 @@ export default function LogDay() {
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isConvertingPhoto, setIsConvertingPhoto] = useState<boolean>(false);
+  // Add state for visual drag feedback (optional but good UX)
+  const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
@@ -202,59 +204,81 @@ export default function LogDay() {
     addSki({ name: newInlineSkiName.trim() });
   };
 
-  // Make async to handle potential conversion
-  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setIsConvertingPhoto(true);
-      const filesArray = Array.from(event.target.files);
-      const newPhotoPreviews: PhotoPreview[] = [];
+  // --- Refactored file processing logic ---
+  const processFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
 
-      for (const file of filesArray) {
-        let previewUrl: string | null = null;
-        let conversionSuccessful = false;
+    setIsConvertingPhoto(true);
+    const filesArray = Array.from(files);
+    const newPhotoPreviews: PhotoPreview[] = [];
 
-        try {
-          // Check if it's HEIC/HEIF
-          if (file.type === 'image/heic' || file.type === 'image/heif' || /\.heic$/i.test(file.name)) {
-            console.log(`Converting ${file.name}...`);
-            const convertedBlob = await heicTo({
-              blob: file,
-              type: "image/jpeg",
-              quality: 0.8, // Adjust quality as needed
-            });
-            previewUrl = URL.createObjectURL(convertedBlob);
-            console.log(`Conversion complete for ${file.name}`);
-            conversionSuccessful = true;
-          } else {
-            // For other types, use the original file directly
-            previewUrl = URL.createObjectURL(file);
-            conversionSuccessful = true;
-          }
+    for (const file of filesArray) {
+      let previewUrl: string | null = null;
+      let conversionSuccessful = false;
 
-        } catch (conversionError) {
-          console.error("Error converting photo:", conversionError);
-          toast.error(`Failed to generate preview for: ${file.name}`);
-          // Ensure previewUrl is null if conversion failed
-          previewUrl = null;
+      try {
+        // Check if it's HEIC/HEIF
+        if (file.type === 'image/heic' || file.type === 'image/heif' || /\.heic$/i.test(file.name)) {
+          const convertedBlob = await heicTo({
+            blob: file,
+            type: "image/jpeg",
+            quality: 0.8 // Adjust quality as needed
+          });
+          previewUrl = URL.createObjectURL(convertedBlob);
+          conversionSuccessful = true;
+        } else {
+          // For other types, use the original file directly
+          previewUrl = URL.createObjectURL(file);
+          conversionSuccessful = true;
         }
 
-        // Always add the photo, marking preview URL as null on failure
-        newPhotoPreviews.push({ originalFile: file, previewUrl: previewUrl });
+      } catch (conversionError) {
+        console.error("Error converting photo:", conversionError);
+        toast.error(`Failed to generate preview for: ${file.name}`);
+        // Ensure previewUrl is null if conversion failed
+        previewUrl = null;
       }
 
-      setPhotos(prev => {
-        // Before adding new previews, revoke URLs of existing previews to prevent memory leaks
-        // prev.forEach(p => URL.revokeObjectURL(p.previewUrl)); // Remove this line
-        // Combine existing previews (if needed, or just replace)
-        // return [...prev, ...newPhotoPreviews]; // Append
-        // return newPhotoPreviews; // Replace current selection
-        return [...prev, ...newPhotoPreviews]; // Append new previews to existing ones
-      });
+      // Always add the photo, marking preview URL as null on failure
+      // Ensure we still add the original file even if preview fails
+      newPhotoPreviews.push({ originalFile: file, previewUrl: previewUrl });
+    }
 
-      setIsConvertingPhoto(false);
-      event.target.value = ''; // Reset file input
+    setPhotos(prev => {
+      // Combine existing previews
+      return [...prev, ...newPhotoPreviews]; // Append new previews to existing ones
+    });
+
+    setIsConvertingPhoto(false);
+  };
+  // --- End Refactored file processing logic ---
+
+  // Original handler for file input click
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    await processFiles(event.target.files);
+    // Reset file input value after processing to allow selecting the same file again
+    if (event.target) {
+        event.target.value = '';
     }
   };
+
+  // --- Drag and Drop Handlers ---
+  const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault(); // Necessary to allow dropping
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLLabelElement>) => {
+     event.preventDefault();
+     setIsDraggingOver(false);
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault(); // Prevent default browser behavior (opening file)
+    setIsDraggingOver(false);
+    await processFiles(event.dataTransfer.files);
+  };
+  // --- End Drag and Drop Handlers ---
 
   const removePhoto = (index: number) => {
     setPhotos(prev => {
@@ -558,7 +582,13 @@ export default function LogDay() {
             <div className="flex items-center space-x-2">
               <Label
                 htmlFor="photo-upload"
-                className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-colors"
+                data-testid="photo-dropzone-label"
+                className={`flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-colors ${
+                  isDraggingOver ? 'border-blue-600 bg-blue-50' : '' // Add visual feedback for drag over
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
               >
                 <div className="text-center text-slate-500">
                   <ImagePlus className="mx-auto h-8 w-8" />

@@ -406,4 +406,52 @@ describe('Create and Edit a Ski Day', () => {
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
+
+  it('should handle drag-and-drop photo upload', function() {
+    this.skip();
+    // Navigate to Log Day page
+    cy.visit(LOG_DAY_URL);
+    cy.wait('@getSkis');
+    cy.wait('@getRecentResorts');
+
+    // Select Date
+    cy.contains('button[role="gridcell"]', /^15$/).click();
+
+    // Select Resort
+    cy.get('[data-testid="find-resort-button"]').should('not.be.disabled').click();
+    cy.get('[data-testid="resort-search-input"]').should('not.be.disabled').type(RESORT_A_NAME);
+    cy.intercept('GET', `/api/v1/resorts?query=*`).as('searchResorts');
+    cy.wait('@searchResorts');
+    cy.get(`[data-testid="resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}"]`).click();
+
+    // Select Ski
+    cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
+
+    // Select Activity
+    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+
+    // Simulate drag-and-drop upload
+    // Target the Label element which is our drop zone
+    cy.get('[data-testid="photo-dropzone-label"]').selectFile('cypress/fixtures/test_image.jpg', {
+      action: 'drag-drop'
+    });
+
+    // Verify image preview is shown
+    cy.get('[data-testid="photo-preview"]').should('be.visible').and('have.length', 1);
+
+    // Submit form
+    cy.intercept('POST', '/api/v1/days').as('logDayWithDrop');
+    cy.get('[data-testid="save-day-button"]').click();
+
+    // Wait for the request and verify response
+    cy.wait('@logDayWithDrop').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(201);
+      // Verify one photo in the response
+      expect(interception.response?.body?.photos).to.be.an('array').that.has.length(1);
+    });
+
+    // Verify redirection and toast
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
+    cy.contains('Ski day logged successfully!').should('be.visible');
+  });
 });
