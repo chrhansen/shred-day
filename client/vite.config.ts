@@ -20,6 +20,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['heic-to']
+    include: ['heic-to']
   }
 }));
