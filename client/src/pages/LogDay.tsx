@@ -19,8 +19,10 @@ const ACTIVITIES = ["Friends", "Training"];
 
 // Define the new state structure for photos
 interface PhotoPreview {
+  id: string; // Unique ID for React key and updates
   originalFile: File;
   previewUrl: string | null;
+  error?: boolean; // Flag for conversion/preview errors
 }
 
 export default function LogDay() {
@@ -208,13 +210,25 @@ export default function LogDay() {
   const processFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    setIsConvertingPhoto(true);
     const filesArray = Array.from(files);
-    const newPhotoPreviews: PhotoPreview[] = [];
+    // Create initial placeholder entries with unique IDs
+    const initialPreviews: PhotoPreview[] = filesArray.map(file => ({
+      id: crypto.randomUUID(),
+      originalFile: file,
+      previewUrl: null,
+      error: false,
+    }));
 
-    for (const file of filesArray) {
+    // Immediately add placeholders to the state
+    setPhotos(prev => [...prev, ...initialPreviews]);
+    // Keep track if any conversion is happening (optional for global spinner, maybe remove later)
+    setIsConvertingPhoto(true);
+
+    // Process each file asynchronously
+    const processingPromises = initialPreviews.map(async (initialPreview) => {
       let previewUrl: string | null = null;
-      let conversionSuccessful = false;
+      let error = false;
+      const file = initialPreview.originalFile; // Get file from the placeholder
 
       try {
         // Check if it's HEIC/HEIF
@@ -225,31 +239,34 @@ export default function LogDay() {
             quality: 0.8 // Adjust quality as needed
           });
           previewUrl = URL.createObjectURL(convertedBlob);
-          conversionSuccessful = true;
         } else {
           // For other types, use the original file directly
           previewUrl = URL.createObjectURL(file);
-          conversionSuccessful = true;
         }
-
       } catch (conversionError) {
         console.error("Error converting photo:", conversionError);
         toast.error(`Failed to generate preview for: ${file.name}`);
-        // Ensure previewUrl is null if conversion failed
-        previewUrl = null;
+        error = true; // Mark this specific photo as errored
       }
 
-      // Always add the photo, marking preview URL as null on failure
-      // Ensure we still add the original file even if preview fails
-      newPhotoPreviews.push({ originalFile: file, previewUrl: previewUrl });
-    }
-
-    setPhotos(prev => {
-      // Combine existing previews
-      return [...prev, ...newPhotoPreviews]; // Append new previews to existing ones
+      // Update the specific photo's state once processing is done
+      setPhotos(currentPhotos =>
+        currentPhotos.map(p =>
+          p.id === initialPreview.id
+            ? { ...p, previewUrl: previewUrl, error: error }
+            : p
+        )
+      );
     });
 
-    setIsConvertingPhoto(false);
+    // Wait for all processing to attempt completion
+    // Note: This doesn't guarantee all previews are ready, just that async ops finished
+    try {
+        await Promise.all(processingPromises);
+    } finally {
+        // Set overall converting state to false once all attempts are done
+        setIsConvertingPhoto(false);
+    }
   };
   // --- End Refactored file processing logic ---
 
@@ -283,8 +300,8 @@ export default function LogDay() {
   const removePhoto = (index: number) => {
     setPhotos(prev => {
       const photoToRemove = prev[index];
-      if (photoToRemove) {
-        URL.revokeObjectURL(photoToRemove.previewUrl); // Revoke URL on removal
+      if (photoToRemove && photoToRemove.previewUrl) { // Only revoke if URL exists
+        URL.revokeObjectURL(photoToRemove.previewUrl);
       }
       return prev.filter((_, i) => i !== index);
     });
@@ -608,16 +625,23 @@ export default function LogDay() {
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {photos.map((photo, index) => (
-                  <div key={index} className="relative group" data-testid="photo-preview">
+                  <div key={photo.id} className="relative group" data-testid="photo-preview">
                     {photo.previewUrl ? (
                       <img
                         src={photo.previewUrl}
                         alt={`preview ${index}`}
                         className="w-full h-20 object-cover rounded-md"
                       />
+                    ) : photo.error ? (
+                      // Error State
+                      <div className="w-full h-20 bg-red-100 rounded-md flex items-center justify-center text-center text-xs text-red-600 p-1 font-medium">
+                        <span className="break-words">Preview Failed</span>
+                      </div>
                     ) : (
-                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-500 p-1">
-                        <span className="break-words">Preview not available yet</span>
+                      // Loading Placeholder State
+                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-400 p-1 animate-pulse">
+                        {/* Optional: Add a spinner icon here */}
+                        <span>Processing...</span>
                       </div>
                     )}
                     <button

@@ -267,8 +267,8 @@ describe('Create and Edit a Ski Day', () => {
     // Upload JPEG image
     cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
-    // Verify image preview is shown
-    cy.get('[data-testid="photo-preview"]').should('be.visible');
+    // Verify image preview is shown (this waits for the placeholder to be replaced)
+    cy.get('[data-testid="photo-preview"] img').should('be.visible');
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDay');
@@ -304,8 +304,11 @@ describe('Create and Edit a Ski Day', () => {
     // Upload HEIC image
     cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.heic', { force: true });
 
+    // Verify placeholder is shown immediately (more reliable to catch with slower HEIC conversion)
+    cy.get('[data-testid="photo-preview"]').contains('Processing...').should('be.visible');
+
     // Verify image preview is shown
-    cy.get('[data-testid="photo-preview"]').should('be.visible');
+    cy.get('[data-testid="photo-preview"] img').should('be.visible');
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDay');
