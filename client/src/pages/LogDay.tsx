@@ -244,10 +244,11 @@ export default function LogDay() {
 
       setPhotos(prev => {
         // Before adding new previews, revoke URLs of existing previews to prevent memory leaks
-        prev.forEach(p => URL.revokeObjectURL(p.previewUrl));
+        // prev.forEach(p => URL.revokeObjectURL(p.previewUrl)); // Remove this line
         // Combine existing previews (if needed, or just replace)
         // return [...prev, ...newPhotoPreviews]; // Append
-        return newPhotoPreviews; // Replace current selection
+        // return newPhotoPreviews; // Replace current selection
+        return [...prev, ...newPhotoPreviews]; // Append new previews to existing ones
       });
 
       setIsConvertingPhoto(false);
@@ -583,7 +584,6 @@ export default function LogDay() {
                         src={photo.previewUrl}
                         alt={`preview ${index}`}
                         className="w-full h-20 object-cover rounded-md"
-                        onLoad={() => URL.revokeObjectURL(photo.previewUrl!)}
                       />
                     ) : (
                       <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-500 p-1">

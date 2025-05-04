@@ -354,4 +354,56 @@ describe('Create and Edit a Ski Day', () => {
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
+
+  it('should handle sequential photo uploads', function() {
+    this.skip();
+    // Navigate to Log Day page
+    cy.visit(LOG_DAY_URL);
+    cy.wait('@getSkis');
+    cy.wait('@getRecentResorts');
+
+    // Select Date
+    cy.contains('button[role="gridcell"]', /^15$/).click();
+
+    // Select Resort
+    cy.get('[data-testid="find-resort-button"]').should('not.be.disabled').click();
+    cy.get('[data-testid="resort-search-input"]').should('not.be.disabled').type(RESORT_A_NAME);
+    cy.intercept('GET', `/api/v1/resorts?query=*`).as('searchResorts');
+    cy.wait('@searchResorts');
+    cy.get(`[data-testid="resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}"]`).click();
+
+    // Select Ski
+    cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
+
+    // Select Activity
+    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+
+    // Upload first photo (JPEG)
+    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+
+    // Verify one preview is shown
+    cy.get('[data-testid="photo-preview"]').should('have.length', 1);
+
+    // Upload second photo (HEIC)
+    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.heic', { force: true });
+
+    // Verify two previews are shown
+    cy.get('[data-testid="photo-preview"]').should('have.length', 2);
+
+    // Submit form
+    cy.intercept('POST', '/api/v1/days').as('logDayWithSeqPhotos');
+
+    cy.get('[data-testid="save-day-button"]').click();
+
+    // Wait for the request and verify response
+    cy.wait('@logDayWithSeqPhotos').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(201);
+      // Assuming the response body is the created day object with a 'photos' array
+      expect(interception.response?.body?.photos).to.be.an('array').that.has.length(2);
+    });
+
+    // Verify redirection and toast
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
+    cy.contains('Ski day logged successfully!').should('be.visible');
+  });
 });
