@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import debounce from 'lodash.debounce';
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import heic2any from 'heic2any';
+import { heicTo } from "heic-to";
 
 const ACTIVITIES = ["Friends", "Training"];
 
@@ -217,11 +217,11 @@ export default function LogDay() {
           // Check if it's HEIC/HEIF
           if (file.type === 'image/heic' || file.type === 'image/heif' || /\.heic$/i.test(file.name)) {
             console.log(`Converting ${file.name}...`);
-            const convertedBlob = await heic2any({
+            const convertedBlob = await heicTo({
               blob: file,
-              toType: "image/jpeg",
+              type: "image/jpeg",
               quality: 0.8, // Adjust quality as needed
-            }) as Blob;
+            });
             previewUrl = URL.createObjectURL(convertedBlob);
             console.log(`Conversion complete for ${file.name}`);
             conversionSuccessful = true;
