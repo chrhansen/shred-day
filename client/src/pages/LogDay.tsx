@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import debounce from 'lodash.debounce';
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { heicTo } from "heic-to";
 
 const ACTIVITIES = ["Friends", "Training"];
 
@@ -22,7 +21,6 @@ interface PhotoPreview {
   id: string; // Unique ID for React key and updates
   originalFile: File;
   previewUrl: string | null;
-  error?: boolean; // Flag for conversion/preview errors
 }
 
 export default function LogDay() {
@@ -216,7 +214,6 @@ export default function LogDay() {
       id: crypto.randomUUID(),
       originalFile: file,
       previewUrl: null,
-      error: false,
     }));
 
     // Immediately add placeholders to the state
@@ -227,33 +224,33 @@ export default function LogDay() {
     // Process each file asynchronously
     const processingPromises = initialPreviews.map(async (initialPreview) => {
       let previewUrl: string | null = null;
-      let error = false;
-      const file = initialPreview.originalFile; // Get file from the placeholder
+      const file = initialPreview.originalFile;
 
       try {
-        // Check if it's HEIC/HEIF
-        if (file.type === 'image/heic' || file.type === 'image/heif' || /\.heic$/i.test(file.name)) {
-          const convertedBlob = await heicTo({
-            blob: file,
-            type: "image/jpeg",
-            quality: 0.8 // Adjust quality as needed
-          });
-          previewUrl = URL.createObjectURL(convertedBlob);
+        // Simply try to create an object URL directly for all image types
+        // Remove all HEIC-specific checks and canvas conversion
+        if (file.type.startsWith('image/')) {
+            previewUrl = URL.createObjectURL(file);
         } else {
-          // For other types, use the original file directly
-          previewUrl = URL.createObjectURL(file);
+            console.warn(`File ${file.name} is not an image type, skipping preview.`);
+            // Optionally mark as error or leave previewUrl null
         }
-      } catch (conversionError) {
-        console.error("Error converting photo:", conversionError);
+
+        // Remove HEIC specific logic:
+        // if (file.type === 'image/heic' || ...) { ... canvas logic ... }
+
+      } catch (previewError) {
+        // Error creating the object URL (less common, but possible)
+        console.error("Error creating object URL:", previewError);
         toast.error(`Failed to generate preview for: ${file.name}`);
-        error = true; // Mark this specific photo as errored
+        // error = true; // Remove error flag setting
       }
 
       // Update the specific photo's state once processing is done
       setPhotos(currentPhotos =>
         currentPhotos.map(p =>
           p.id === initialPreview.id
-            ? { ...p, previewUrl: previewUrl, error: error }
+            ? { ...p, previewUrl: previewUrl /*, error: error*/ } // Remove error update
             : p
         )
       );
@@ -632,16 +629,11 @@ export default function LogDay() {
                         alt={`preview ${index}`}
                         className="w-full h-20 object-cover rounded-md"
                       />
-                    ) : photo.error ? (
-                      // Error State
-                      <div className="w-full h-20 bg-red-100 rounded-md flex items-center justify-center text-center text-xs text-red-600 p-1 font-medium">
-                        <span className="break-words">Preview Failed</span>
-                      </div>
                     ) : (
-                      // Loading Placeholder State
-                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-400 p-1 animate-pulse">
-                        {/* Optional: Add a spinner icon here */}
-                        <span>Processing...</span>
+                      // Simplified Placeholder/Fallback State
+                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-500 p-1">
+                        {/* Remove processing text and animation */}
+                        <span>Preview N/A</span>
                       </div>
                     )}
                     <button
