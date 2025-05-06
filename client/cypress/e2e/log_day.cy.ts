@@ -52,7 +52,6 @@ describe('Create and Edit a Ski Day', () => {
 
   it('should navigate to log day form, fill it, and submit successfully', function() {
     // Already on days list page
-
     // 1. Click New Day button
     cy.contains('button', /New Day/i).click();
     cy.location('pathname').should('eq', LOG_DAY_URL);
@@ -112,6 +111,7 @@ describe('Create and Edit a Ski Day', () => {
   });
 
   it('should allow editing an existing ski day', function() {
+
     // --- Test-specific setup: Create the day to edit ---
     // We need to access aliases set in beforeEach (resortAId, skiAId)
     cy.get('@resortAId').then(resortAId => {
@@ -196,6 +196,7 @@ describe('Create and Edit a Ski Day', () => {
   });
 
   it('should allow navigating between months in the calendar', function() {
+
     // 1. Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -243,6 +244,7 @@ describe('Create and Edit a Ski Day', () => {
   });
 
   it('should handle JPEG photo upload successfully', function() {
+
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -264,22 +266,44 @@ describe('Create and Edit a Ski Day', () => {
     // Select Activity
     cy.contains('button', /Friends/i).should('not.be.disabled').click();
 
+    // Intercept the photo upload request
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
+
     // Upload JPEG image
     cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
-    // Verify image preview is shown (this waits for the placeholder to be replaced)
-    cy.get('[data-testid="photo-preview"] img').should('be.visible');
+    // Verify loading state (spinner)
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
+
+    // Wait for the upload to complete and verify spinner disappears
+    cy.wait('@uploadPhoto');
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
+
+    // Verify image preview is shown (check for img tag)
+    cy.get('[data-testid="photo-preview"] img')
+      .should('be.visible')
+      .and('have.attr', 'src') // Check src attribute exists
+      .and('not.be.empty'); // Check src is not empty
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
-    cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+
+    // Wait for the request and verify response includes photo data
+    // cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+    cy.wait('@logDay').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(201);
+      expect(interception.response?.body?.photos).to.be.an('array').that.has.length(1);
+      expect(interception.response?.body?.photos[0]?.filename).to.eq('test_image.jpg');
+      // Store the created photo ID if needed for cleanup or further tests
+      // cy.wrap(interception.response?.body?.photos[0]?.id).as('createdPhotoId');
+    });
+
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 
   it('should handle HEIC photo upload successfully', function() {
-    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -301,25 +325,47 @@ describe('Create and Edit a Ski Day', () => {
     // Select Activity
     cy.contains('button', /Friends/i).should('not.be.disabled').click();
 
+    // Intercept photo upload
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
+
     // Upload HEIC image
     cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.heic', { force: true });
 
-    // Verify placeholder is shown immediately (more reliable to catch with slower HEIC conversion)
-    // cy.get('[data-testid="photo-preview"]').contains('Processing...').should('be.visible');
+    // Verify loading state
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
 
-    // Verify image preview is shown
-    cy.get('[data-testid="photo-preview"] img').should('be.visible');
+    // Wait for upload and verify final state
+    cy.wait('@uploadPhoto');
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
+
+    // Verify image preview or fallback is shown.
+    // HEIC might not render via temp_preview_url, so check for either img or fallback text.
+    cy.get('[data-testid="photo-preview"]').within(() => {
+      // Check if either the image OR the fallback text exists
+      cy.root().should(($el) => {
+        const hasImage = $el.find('img[src]').length > 0;
+        const hasFallback = $el.text().includes('Preview N/A');
+        expect(hasImage || hasFallback).to.be.true;
+      });
+    });
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
-    cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+
+    // Verify day is created with the photo associated
+    // cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+    cy.wait('@logDay').then((interception) => {
+        expect(interception.response?.statusCode).to.eq(201);
+        expect(interception.response?.body?.photos).to.be.an('array').that.has.length(1);
+        expect(interception.response?.body?.photos[0]?.filename).to.eq('test_image.heic');
+    });
+
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 
   it('should handle multiple photo uploads', function() {
-    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -340,6 +386,9 @@ describe('Create and Edit a Ski Day', () => {
 
     // Select Activity
     cy.contains('button', /Friends/i).should('not.be.disabled').click();
+
+    // Intercept photo uploads (allow multiple calls)
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload both JPEG and HEIC images
     cy.get('#photo-upload').selectFile([
@@ -347,19 +396,40 @@ describe('Create and Edit a Ski Day', () => {
       'cypress/fixtures/test_image.heic'
     ], { force: true });
 
-    // Verify multiple image previews are shown
+    // Verify two loading spinners are shown initially
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 2);
+
+    // Wait for both uploads to complete
+    cy.wait('@uploadPhoto');
+    cy.wait('@uploadPhoto');
+
+    // Verify spinners disappear
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
+
+    // Verify two previews are shown (check count, specific checks are harder)
     cy.get('[data-testid="photo-preview"]').should('have.length', 2);
+    // Check that at least one img tag is present (for the JPEG)
+    cy.get('[data-testid="photo-preview"] img[src]').should('have.length.at.least', 1);
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDay');
     cy.get('[data-testid="save-day-button"]').click();
-    cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+
+    // Verify day is created with both photos
+    // cy.wait('@logDay').its('response.statusCode').should('eq', 201);
+    cy.wait('@logDay').then((interception) => {
+        expect(interception.response?.statusCode).to.eq(201);
+        expect(interception.response?.body?.photos).to.be.an('array').that.has.length(2);
+        // Optional: Check filenames if order is predictable
+        const filenames = interception.response?.body?.photos.map((p: any) => p.filename).sort();
+        expect(filenames).to.deep.equal(['test_image.heic', 'test_image.jpg']);
+    });
+
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
 
   it('should handle sequential photo uploads', function() {
-    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -381,28 +451,52 @@ describe('Create and Edit a Ski Day', () => {
     // Select Activity
     cy.contains('button', /Friends/i).should('not.be.disabled').click();
 
+    // Intercept photo uploads
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
+
     // Upload first photo (JPEG)
     cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
-    // Verify one preview is shown
-    cy.get('[data-testid="photo-preview"]').should('have.length', 1);
+    // Verify one spinner, wait, check it's gone, check preview
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 1);
+    cy.wait('@uploadPhoto');
+    cy.get('[data-testid="photo-preview"]').first().find('svg.animate-spin').should('not.exist');
+    cy.get('[data-testid="photo-preview"] img[src]').should('have.length', 1);
 
-    // Upload second photo (HEIC)
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.heic', { force: true });
+    // Upload second photo (PNG)
+    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.png', { force: true });
 
-    // Verify two previews are shown
+    // Verify two previews exist now, one still loading (spinner)
     cy.get('[data-testid="photo-preview"]').should('have.length', 2);
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 1);
+
+    // Wait for second upload
+    cy.wait('@uploadPhoto');
+
+    // Verify both previews are settled (no spinners)
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
+    cy.get('[data-testid="photo-preview"]').should('have.length', 2);
+    // Check first is still img, second is img OR fallback
+    cy.get('[data-testid="photo-preview"] img[src]').should('have.length.at.least', 1);
+    cy.get('[data-testid="photo-preview"]').eq(1).within(() => {
+       cy.root().should(($el) => {
+         const hasImage = $el.find('img[src]').length > 0;
+         const hasFallback = $el.text().includes('Preview N/A');
+         expect(hasImage || hasFallback).to.be.true;
+       });
+    });
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDayWithSeqPhotos');
-
     cy.get('[data-testid="save-day-button"]').click();
 
-    // Wait for the request and verify response
+    // Wait for the request and verify response has 2 photos
     cy.wait('@logDayWithSeqPhotos').then((interception) => {
       expect(interception.response?.statusCode).to.eq(201);
-      // Assuming the response body is the created day object with a 'photos' array
       expect(interception.response?.body?.photos).to.be.an('array').that.has.length(2);
+      // Optional: check filenames
+      const filenames = interception.response?.body?.photos.map((p: any) => p.filename).sort();
+      expect(filenames).to.deep.equal(['test_image.jpg', 'test_image.png']);
     });
 
     // Verify redirection and toast
@@ -411,7 +505,6 @@ describe('Create and Edit a Ski Day', () => {
   });
 
   it('should handle drag-and-drop photo upload', function() {
-    this.skip();
     // Navigate to Log Day page
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
@@ -433,27 +526,97 @@ describe('Create and Edit a Ski Day', () => {
     // Select Activity
     cy.contains('button', /Friends/i).should('not.be.disabled').click();
 
+    // Intercept photo upload
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
+
     // Simulate drag-and-drop upload
-    // Target the Label element which is our drop zone
     cy.get('[data-testid="photo-dropzone-label"]').selectFile('cypress/fixtures/test_image.jpg', {
       action: 'drag-drop'
     });
 
-    // Verify image preview is shown
-    cy.get('[data-testid="photo-preview"]').should('be.visible').and('have.length', 1);
+    // Verify loading state
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
+
+    // Wait for upload and check final state
+    cy.wait('@uploadPhoto');
+    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
+    cy.get('[data-testid="photo-preview"] img').should('be.visible');
 
     // Submit form
     cy.intercept('POST', '/api/v1/days').as('logDayWithDrop');
     cy.get('[data-testid="save-day-button"]').click();
 
-    // Wait for the request and verify response
+    // Wait for the request and verify response includes photo
     cy.wait('@logDayWithDrop').then((interception) => {
       expect(interception.response?.statusCode).to.eq(201);
-      // Verify one photo in the response
       expect(interception.response?.body?.photos).to.be.an('array').that.has.length(1);
+      expect(interception.response?.body?.photos[0]?.filename).to.eq('test_image.jpg');
     });
 
     // Verify redirection and toast
+    cy.location('pathname').should('eq', DAYS_LIST_URL);
+    cy.contains('Ski day logged successfully!').should('be.visible');
+  });
+
+  it('should allow removing an uploaded photo', function() {
+    // Navigate to Log Day page
+    cy.visit(LOG_DAY_URL);
+    cy.wait('@getSkis');
+    cy.wait('@getRecentResorts');
+
+    // Select Date, Resort, Ski, Activity
+    cy.contains('button[role="gridcell"]', /^15$/).click();
+    cy.get('[data-testid="find-resort-button"]').click();
+    cy.get('[data-testid="resort-search-input"]').type(RESORT_A_NAME);
+    cy.intercept('GET', `/api/v1/resorts?query=*`).as('searchResorts');
+    cy.wait('@searchResorts');
+    cy.get(`[data-testid="resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}"]`).click();
+    cy.contains('button', SKI_A_NAME).click();
+    cy.contains('button', /Friends/i).click();
+
+    // Intercept photo upload and store the server ID
+    let uploadedPhotoServerId: string | null = null;
+    cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
+
+    // Upload a photo
+    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+
+    // Wait for upload and capture server ID
+    cy.wait('@uploadPhoto').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(201);
+      uploadedPhotoServerId = interception.response?.body?.id;
+      expect(uploadedPhotoServerId).to.be.a('string');
+    });
+
+    // Verify preview is shown
+    cy.get('[data-testid="photo-preview"] img').should('be.visible');
+
+    // Intercept the DELETE request using the captured ID
+    // Use cy.then to ensure the ID is available when setting up intercept
+    cy.then(() => {
+      cy.intercept('DELETE', `/api/v1/photos/${uploadedPhotoServerId}`).as('deletePhoto');
+    });
+
+    // Find the remove button within the preview and click it
+    cy.get('[data-testid="photo-preview"]').find('button[aria-label="Remove photo"]').click();
+
+    // Verify the preview element is removed
+    cy.get('[data-testid="photo-preview"]').should('not.exist');
+
+    // Verify the DELETE request was made
+    cy.wait('@deletePhoto').its('response.statusCode').should('eq', 204); // Expect No Content
+
+    // Submit the day form
+    cy.intercept('POST', '/api/v1/days').as('logDay');
+    cy.get('[data-testid="save-day-button"]').click();
+
+    // Verify the day is created successfully without the removed photo
+    cy.wait('@logDay').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(201);
+      expect(interception.response?.body?.photos).to.be.an('array').that.is.empty;
+    });
+
+    // Verify redirection
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
