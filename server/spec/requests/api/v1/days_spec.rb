@@ -122,50 +122,50 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       # --- Test photo upload --- #
       context "with valid parameters including photos" do
-        let(:photo1) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg') }
-        let(:photo2) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.png'), 'image/png') }
+        # Remove photo file fixtures from params definition
+        # let(:photo1) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg') }
+        # let(:photo2) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.png'), 'image/png') }
 
-        let(:valid_params_with_photos) do
+        # Define base valid params without photos here
+        let(:base_valid_params) do
           {
             day: {
               date: Date.today.to_s,
               resort_id: resort.id,
               ski_id: ski.id,
-              activity: 'Photo Day',
-              photos: [photo1, photo2]
+              activity: 'Photo Day'
             }
           }
         end
 
-        it "creates a new day log and attaches photos" do
-          response_body = nil # Initialize variable to store response
+        # Pre-create photos before the request
+        let!(:pre_created_photo1) { create(:photo, user: user, image: fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg')) }
+        let!(:pre_created_photo2) { create(:photo, user: user, image: fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.png'), 'image/png')) }
+        let(:photo_ids) { [pre_created_photo1.id, pre_created_photo2.id] }
+
+        # Update params to include photo_ids
+        let(:params_with_photo_ids) { base_valid_params.deep_merge(day: { photo_ids: photo_ids }) }
+
+        it "creates a new day log and associates the pre-created photos" do
+          expect(pre_created_photo1.day_id).to be_nil
+          expect(pre_created_photo2.day_id).to be_nil
+
+          # Only check for Day count change
           expect {
-            post api_v1_days_path, params: valid_params_with_photos, as: :multipart_form
-            response_body = response.body # Capture response body
+            post api_v1_days_path, params: params_with_photo_ids
           }.to change(user.days, :count).by(1)
-           .and change(Photo, :count).by(2) # Check Photo records are created
-           .and change(ActiveStorage::Attachment, :count).by(4) # Expect 4: 2 originals + 2 variants
-           .and change(ActiveStorage::VariantRecord, :count).by(2) # Expect 2 variant records
 
-          # Parse the response to get the ID of the created day
-          expect(response_body).not_to be_nil
-          json_response = JSON.parse(response_body)
-          created_day_id = json_response['id']
-          expect(created_day_id).to be_present
-
-          # Find the created day reliably by its ID
-          created_day = Day.find(created_day_id)
-
-          # Assertions
+          # Check that the pre-created photos are now associated
+          expect(pre_created_photo1.reload.day_id).not_to be_nil
+          expect(pre_created_photo2.reload.day_id).not_to be_nil
+          created_day = Day.find(JSON.parse(response.body)['id'])
+          expect(pre_created_photo1.day).to eq(created_day)
+          expect(pre_created_photo2.day).to eq(created_day)
           expect(created_day.photos.count).to eq(2)
-          expect(created_day.photos.first.image).to be_attached
-          expect(created_day.photos.last.image).to be_attached
-          expect(created_day.activity).to eq('Photo Day')
-          expect(created_day.user).to eq(user) # sanity check
         end
 
-        it "returns created status and the day info including photo URLs" do
-          post api_v1_days_path, params: valid_params_with_photos, as: :multipart_form
+        it "returns created status and the day info including associated photo URLs" do
+          post api_v1_days_path, params: params_with_photo_ids
           expect(response).to have_http_status(:created)
           json_response = JSON.parse(response.body)
 
@@ -173,17 +173,18 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['photos']).to be_an(Array)
           expect(json_response['photos'].count).to eq(2)
 
-          # Check structure of photo objects in response
-          # PhotoSerializer: id, url, filename
-          expect(json_response['photos'][0]).to include('id', 'url', 'filename')
+          # Check structure of photo objects in response (IDs should match pre-created)
+          expect(json_response['photos'][0]['id']).to eq(pre_created_photo1.id)
+          expect(json_response['photos'][0]).to include('filename', 'preview_url', 'full_url')
           expect(json_response['photos'][0]['filename']).to eq('test_image.jpg')
-          expect(json_response['photos'][0]['url']).to include('test_image.jpg') # Check if URL seems correct (includes filename)
-          # Check that the URL likely points to a variant using the redirect path
-          expect(json_response['photos'][0]['url']).to include('/rails/active_storage/representations/redirect/')
+          expect(json_response['photos'][0]['preview_url']).to include('test_image.jpg')
+          expect(json_response['photos'][0]['full_url']).to include('test_image.jpg')
 
-          expect(json_response['photos'][1]).to include('id', 'url', 'filename')
+          expect(json_response['photos'][1]['id']).to eq(pre_created_photo2.id)
+          expect(json_response['photos'][1]).to include('filename', 'preview_url', 'full_url')
           expect(json_response['photos'][1]['filename']).to eq('test_image.png')
-          expect(json_response['photos'][1]['url']).to include('test_image.png')
+          expect(json_response['photos'][1]['preview_url']).to include('test_image.png')
+          expect(json_response['photos'][1]['full_url']).to include('test_image.png')
         end
       end
       # --- End test photo upload ---
@@ -214,7 +215,7 @@ RSpec.describe "Api::V1::Days", type: :request do
     end
   end
 
-  # --- NEW: GET /api/v1/days/:id (show) ---
+  # --- GET /api/v1/days/:id (show) ---
   describe "GET /api/v1/days/:id" do
     context "when authenticated" do
       before do
@@ -247,7 +248,8 @@ RSpec.describe "Api::V1::Days", type: :request do
           photo_json = json_response['photos'][0]
           expect(photo_json['id']).to eq(photo1_for_day.id)
           expect(photo_json['filename']).to eq('test_image.jpg')
-          expect(photo_json['url']).to include('test_image.jpg')
+          expect(photo_json['preview_url']).to include('test_image.jpg')
+          expect(photo_json['full_url']).to include('test_image.jpg')
         end
       end
 
@@ -324,7 +326,8 @@ RSpec.describe "Api::V1::Days", type: :request do
           photo_json = json_response['photos'][0]
           expect(photo_json['id']).to eq(photo1_for_day.id)
           expect(photo_json['filename']).to eq('test_image.jpg')
-          expect(photo_json['url']).to include('test_image.jpg')
+          expect(photo_json['preview_url']).to include('test_image.jpg')
+          expect(photo_json['full_url']).to include('test_image.jpg')
         end
       end
 
@@ -413,6 +416,66 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(day2.reload.activity).to eq("Updated Act 2")
         end
       end
+
+      # --- Add context for testing photo updates --- #
+      context "when updating photos" do
+        let!(:day_to_update) { create(:day, user: user, resort: resort, ski: ski) }
+        let!(:initial_photo) { create(:photo, user: user, day: day_to_update, image: fixture_file_upload('spec/fixtures/files/test_image.jpg', 'image/jpeg')) }
+        let!(:photo_to_add1) { create(:photo, user: user, image: fixture_file_upload('spec/fixtures/files/test_image.heic', 'image/heic')) }
+        let!(:photo_to_add2) { create(:photo, user: user, image: fixture_file_upload('spec/fixtures/files/test_image.jpg', 'image/jpeg')) }
+        let!(:unrelated_photo) { create(:photo, user: user) } # Should not be affected
+
+        let(:update_params_with_photos) do
+          {
+            day: {
+              # We only need photo_ids for this test context
+              photo_ids: [photo_to_add1.id, photo_to_add2.id]
+              # This implies initial_photo should be removed/destroyed
+            }
+          }
+        end
+
+        it "synchronizes associated photos, removing old and adding new" do
+          # Expect the initial photo to be destroyed
+          expect {
+            patch api_v1_day_path(day_to_update), params: update_params_with_photos
+          }.to change(Photo, :count).by(-1)
+
+          expect(response).to have_http_status(:ok)
+          day_to_update.reload
+
+          expect(day_to_update.photos.count).to eq(2)
+          expect(day_to_update.photos).to include(photo_to_add1, photo_to_add2)
+          expect(day_to_update.photos).not_to include(initial_photo)
+          expect(Photo.exists?(initial_photo.id)).to be_falsey # Verify destruction
+          expect(unrelated_photo.reload.day_id).to be_nil # Verify unrelated photo is untouched
+        end
+
+        it "removes all photos if photo_ids is an empty array" do
+          expect {
+            patch api_v1_day_path(day_to_update), params: { day: { photo_ids: [] } }
+          }.to change(Photo, :count).by(-1)
+
+          expect(response).to have_http_status(:ok)
+          day_to_update.reload
+          expect(day_to_update.photos.count).to eq(0)
+          expect(Photo.exists?(initial_photo.id)).to be_falsey
+        end
+
+        it "does not change photos if photo_ids parameter is not provided" do
+          # Expect no photos to be destroyed
+          expect {
+            patch api_v1_day_path(day_to_update), params: { day: { activity: "New Activity" } } # No photo_ids key
+          }.to_not change(Photo, :count)
+
+          expect(response).to have_http_status(:ok)
+          day_to_update.reload
+          expect(day_to_update.photos.count).to eq(1)
+          expect(day_to_update.photos).to include(initial_photo)
+        end
+      end
+      # --- End context for photo updates --- #
+
     end
 
     context "when not authenticated" do
@@ -464,7 +527,8 @@ RSpec.describe "Api::V1::Days", type: :request do
         photo_json = day_entry['photos'][0]
         expect(photo_json['id']).to eq(photo1_for_day.id)
         expect(photo_json['filename']).to eq('test_image.jpg')
-        expect(photo_json['url']).to include('test_image.jpg')
+        expect(photo_json['preview_url']).to include('test_image.jpg')
+        expect(photo_json['full_url']).to include('test_image.jpg')
       end
     end
 

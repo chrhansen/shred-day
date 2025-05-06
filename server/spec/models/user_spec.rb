@@ -7,6 +7,7 @@ RSpec.describe User, type: :model do
   describe 'associations' do
     it { should have_many(:days).dependent(:destroy) }
     it { should have_many(:skis).dependent(:destroy) }
+    it { should have_many(:photos).dependent(:destroy) }
     it { should have_many(:recent_resorts).through(:days).source(:resort) }
   end
 

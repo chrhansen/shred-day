@@ -6,9 +6,8 @@ class User < ApplicationRecord
   # Associations
   has_many :days, dependent: :destroy
   has_many :skis, dependent: :destroy
+  has_many :photos, dependent: :destroy
 
-  # Refined scope for recent resorts: select resorts.* and MAX(days.date),
-  # group by resort columns, and order by MAX(days.date)
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")
       .group("resorts.id") # Group by primary key is usually sufficient

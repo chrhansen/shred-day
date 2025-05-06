@@ -17,20 +17,14 @@ class Api::V1::DaysController < ApplicationController
 
   # POST /api/v1/days
   def create
-    # Build the day associated with the current_user
-    # Exclude photos from initial build, we'll handle them separately
-    day = current_user.days.build(day_params.except(:photos))
+    # Exclude photo_ids from initial build, handle association later
+    day = current_user.days.build(day_params.except(:photo_ids))
 
     if day.save
-      # Attach photos if they were provided
-      if day_params[:photos].present?
-        day_params[:photos].each do |photo_file|
-          day.photos.create!(image: photo_file)
-        end
-      end
+      sync_photos(day, day_params[:photo_ids] || [])
 
-      # Eager load associations for the response, including photos and their images
-      day.reload(include: [:ski, :resort, photos: { image_attachment: :blob }])
+      # Eager load associations for the response, including photos and their blobs
+      day.reload(include: [:ski, :resort, :photos])
 
       # Render created day using the default DaySerializer
       render json: day, status: :created
@@ -42,12 +36,21 @@ class Api::V1::DaysController < ApplicationController
 
   # PATCH /api/v1/days/:id
   def update
-    if @day.update(day_params)
-      # Render updated day using the default DaySerializer (includes nested objects)
-      render json: @day # Return updated day on success (200 OK)
-    else
-      render json: { errors: @day.errors }, status: :unprocessable_entity # Return errors on failure (422)
+    # Update day attributes first (excluding photo_ids)
+    unless @day.update(day_params.except(:photo_ids))
+      render json: { errors: @day.errors }, status: :unprocessable_entity
+      return # Stop execution if day update fails
     end
+
+    # Synchronize photos if photo_ids parameter is provided
+    if params[:day].key?(:photo_ids)
+      sync_photos(@day, day_params[:photo_ids] || [])
+    end
+
+    # If update was successful (or photo sync happened without error)
+    # Eager load for response
+    @day.reload(include: [:ski, :resort, :photos])
+    render json: @day # Return updated day on success (200 OK)
   end
 
   # DELETE /api/v1/days/:id
@@ -62,17 +65,41 @@ class Api::V1::DaysController < ApplicationController
 
   private
 
-  # Add set_day method to find the day and handle not found
   def set_day
-    # Preload associations and photo images
-    @day = current_user.days.includes(:ski, :resort, photos: { image_attachment: :blob }).find(params[:id])
+    @day = current_user.days.includes(:ski, :resort, :photos).find(params[:id])
+    # Preload associations and photo attachments
+    # Use attachment names for eager loading
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Day not found' }, status: :not_found
   end
 
   # Strong parameters: permit attributes for create and update
   def day_params
-    # Allow an array of photos
-    params.require(:day).permit(:date, :resort_id, :ski_id, :activity, photos: [])
+    # Allow an array of photo_ids instead of photo files
+    params.require(:day).permit(
+      :date, :resort_id, :ski_id, :activity, photo_ids: []
+    )
+  end
+
+  # Helper method to synchronize photos (used by update and create)
+  def sync_photos(day, incoming_photo_ids)
+    incoming_photo_ids = Array(incoming_photo_ids).compact.map(&:to_s) # Ensure array of strings
+    current_photo_ids = day.photos.pluck(:id).map(&:to_s)
+
+    ids_to_add = incoming_photo_ids - current_photo_ids
+    ids_to_remove = current_photo_ids - incoming_photo_ids
+
+    if ids_to_add.present?
+      photos_to_add = current_user.photos.where(id: ids_to_add, day_id: nil)
+      photos_to_add.update_all(day_id: day.id)
+    end
+
+    if ids_to_remove.present?
+      # Ensure we only destroy photos currently associated with *this* day
+      # And also ensure they belong to the current user for security
+      photos_to_destroy = day.photos.where(id: ids_to_remove).where(user_id: current_user.id)
+      # Destroy the records and their attachments
+      photos_to_destroy.destroy_all
+    end
   end
 end

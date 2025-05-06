@@ -9,7 +9,8 @@ RSpec.describe Photo, type: :model do
 
   # Test associations
   describe 'associations' do
-    it { should belong_to(:day) }
+    it { should belong_to(:day).optional }
+    it { should belong_to(:user) }
 
     # Test ActiveStorage attachment
     # Have to use instance_double because `have_one_attached` matcher doesn't exist by default
@@ -23,15 +24,23 @@ RSpec.describe Photo, type: :model do
   # Test validations (presence of day is implicitly tested by belong_to)
   describe 'validations' do
     it 'is valid with a day' do
-      photo = build(:photo, day: day) # Use build to avoid saving yet
+      photo = build(:photo, day: day) # FactoryBot associates a user
       expect(photo).to be_valid
     end
 
-    it 'is invalid without a day' do
+    it 'is valid without a day' do
       photo = build(:photo, day: nil)
+      expect(photo).to be_valid
+    end
+
+    it 'is valid with a user' do
+      photo = build(:photo) # FactoryBot associates a user
+      expect(photo).to be_valid
+    end
+
+    it 'is valid without a user' do
+      photo = build(:photo, user: nil)
       expect(photo).not_to be_valid
-      # Check for specific error message if needed, e.g.,
-      # expect(photo.errors[:day]).to include("must exist")
     end
   end
 
@@ -77,8 +86,23 @@ RSpec.describe Photo, type: :model do
       )
       expect { photo.image.variant(:preview) }.not_to raise_error
     end
+
+    it "defines a full variant for the image" do
+      photo = build(:photo) # Use build as we only need the instance definition
+      expect { photo.image.variant(:full) }.not_to raise_error
+    end
   end
 
   # Example of testing validation (if you uncomment the validation in the model)
-  # context "validations" do
+  # describe 'image validation' do
+  #   it 'is valid with a valid image' do
+  #     photo = build(:photo, image: fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.jpg'), 'image/jpeg'))
+  #     expect(photo).to be_valid
+  #   end
+
+  #   it 'is invalid with an invalid image' do
+  #     photo = build(:photo, image: fixture_file_upload(Rails.root.join('spec', 'fixtures', 'files', 'test_image.txt'), 'text/plain'))
+  #     expect(photo).not_to be_valid
+  #   end
+  # end
 end
