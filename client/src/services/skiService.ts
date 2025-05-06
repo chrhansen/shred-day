@@ -71,25 +71,20 @@ export const skiService = {
     return await response.json();
   },
 
-  // Accept FormData directly
-  async logDay(formData: FormData): Promise<SkiDayDetail> {
-    // No need to format date or stringify, FormData handles it
-    // Create specific options for this request, removing Content-Type header
-    const requestOptions: RequestInit = {
-      ...defaultFetchOptions,
-      method: 'POST',
-      headers: {
-        // Remove Content-Type, browser will set it to multipart/form-data
-        'Accept': 'application/json',
-      },
-      body: formData,
-    };
+  // Accept plain object now, not FormData
+  // async logDay(formData: FormData): Promise<SkiDayDetail> {
+  async logDay(dayData: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }): Promise<SkiDayDetail> {
+    // Send as JSON, using default options
+    // const requestOptions: RequestInit = { ... }; // Remove custom options
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/days`, requestOptions);
+    const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
+      ...defaultFetchOptions, // Use defaults (includes Content-Type: application/json)
+      method: 'POST',
+      body: JSON.stringify({ day: dayData }), // Nest under 'day' key
+    });
 
     if (!response.ok) await handleApiError(response);
     const responseData = await response.json();
-    // Return the raw response matching SkiDayDetail (no date conversion needed here as type uses string)
     return responseData;
   },
 
@@ -187,17 +182,9 @@ export const skiService = {
   },
 
   // to update a ski day
-  // Accept partial data for update
-  async updateDay(dayId: string, dayData: Partial<Omit<SkiDayDetail, 'id' | 'photos' | 'resort' | 'ski'>> & { resort_id?: string; ski_id?: string }): Promise<SkiDayDetail> {
-     // Prepare payload - format date if present, include IDs
-     const payload: Record<string, any> = { ...dayData };
-     if (dayData.date) {
-       // Expecting a string or Date object? Assuming string for now based on previous code
-       // If date is already string 'yyyy-MM-dd', no formatting needed
-       // If it's a Date object, format it:
-       // payload.date = format(new Date(dayData.date), 'yyyy-MM-dd');
-       payload.date = dayData.date; // Assuming it's already 'yyyy-MM-dd'
-     }
+  // Accept plain object including optional photo_ids
+  async updateDay(dayId: string, dayData: Partial<Omit<SkiDayDetail, 'id' | 'resort' | 'ski' | 'photos'>> & { resort_id?: string; ski_id?: string; photo_ids?: string[] }): Promise<SkiDayDetail> {
+     const payload = dayData;
 
     const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
       ...defaultFetchOptions,
@@ -206,7 +193,6 @@ export const skiService = {
     });
     if (!response.ok) await handleApiError(response);
     const updatedDayData = await response.json();
-    // Return the raw response matching SkiDayDetail
     return updatedDayData;
   },
 
@@ -223,4 +209,54 @@ export const skiService = {
     }
      console.warn('Unexpected status code after DELETE:', response.status);
   },
+
+  // --- NEW Photo Service Methods ---
+
+  async uploadPhoto(file: File): Promise<{ id: string; preview_url: string | null; full_url: string | null; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Use custom RequestInit for this multipart/form-data request
+    const requestOptions: RequestInit = {
+      // Inherit credentials if needed, but override headers
+      credentials: defaultFetchOptions.credentials,
+      method: 'POST',
+      headers: {
+        // Remove Content-Type, let browser set it for FormData
+        'Accept': 'application/json',
+        // TODO: Add Auth/CSRF headers if required by backend
+      },
+      body: formData,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/photos`, requestOptions);
+    if (!response.ok) await handleApiError(response); // Use standard error handler
+    return await response.json(); // Return the serialized photo data
+  },
+
+  async deletePhoto(photoId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/photos/${photoId}`, {
+      ...defaultFetchOptions, // Use default options (like credentials)
+      headers: {
+          // Override default Content-Type if needed, but usually not for DELETE
+          'Accept': 'application/json',
+          // TODO: Add Auth/CSRF headers if required
+      },
+      method: 'DELETE',
+    });
+    // Check for 204 No Content explicitly for success
+    if (response.status === 204) {
+      return; // Success
+    }
+    // Handle other errors (including 404, 401, etc.)
+    if (!response.ok) {
+      await handleApiError(response);
+    }
+    // Log unexpected statuses if needed
+    console.warn('Unexpected status code after DELETE photo:', response.status);
+    // Optionally throw an error for unexpected non-error statuses?
+    // throw new Error(`Unexpected status ${response.status} deleting photo`);
+  },
+  // --- END NEW Photo Service Methods ---
+
 };

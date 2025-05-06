@@ -18,9 +18,11 @@ const ACTIVITIES = ["Friends", "Training"];
 
 // Define the new state structure for photos
 interface PhotoPreview {
-  id: string; // Unique ID for React key and updates
-  originalFile: File;
-  previewUrl: string | null;
+  id: string; // Client-side unique ID for React key and updates
+  originalFile: File | null; // Keep original file ref for potential retry, null for existing photos
+  previewUrl: string | null; // URL for display (from backend response)
+  serverId: string | null; // ID from backend after successful upload
+  uploadStatus: 'pending' | 'uploading' | 'completed' | 'failed'; // Upload tracking
 }
 
 export default function LogDay() {
@@ -40,8 +42,7 @@ export default function LogDay() {
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
-  const [isConvertingPhoto, setIsConvertingPhoto] = useState<boolean>(false);
-  // Add state for visual drag feedback (optional but good UX)
+  const [isUploading, setIsUploading] = useState<boolean>(false); // General upload tracking state
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
@@ -54,39 +55,47 @@ export default function LogDay() {
     queryFn: userService.getRecentResorts,
   });
 
+  // Fetch day details for editing
   const { data: dayToEdit, isLoading: isLoadingDayToEdit, error: dayToEditError } = useQuery({
     queryKey: ['day', dayId],
+    // Assuming skiService.getDay includes photo data with id, preview_url, full_url
     queryFn: () => skiService.getDay(dayId!),
     enabled: isEditMode,
   });
 
   const { mutate: saveDay, isPending: isSaving } = useMutation({
-    mutationFn: skiService.logDay,
+    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }) =>
+      skiService.logDay(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       queryClient.invalidateQueries({ queryKey: ['recentResorts'] });
+      queryClient.invalidateQueries({ queryKey: ['days'] }); // Invalidate days list
       toast.success("Ski day logged successfully!");
       navigate('/');
     },
     onError: (error) => {
       console.error("Log Day error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to log ski day");
+      const message = error instanceof Error ? error.message : "Failed to log ski day";
+      // TODO: Parse backend validation errors if possible
+      toast.error(message);
     },
   });
 
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string }) =>
-      skiService.updateDay(dayId!, data),
+    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }) =>
+        skiService.updateDay(dayId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       queryClient.invalidateQueries({ queryKey: ['day', dayId] });
       toast.success("Ski day updated successfully!");
-      navigate('/days');
+      navigate('/'); // Navigate to list view after update
     },
     onError: (error) => {
       console.error("Update Day error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update ski day");
+      const message = error instanceof Error ? error.message : "Failed to update ski day";
+      // TODO: Parse backend validation errors if possible
+      toast.error(message);
     },
   });
 
@@ -155,124 +164,77 @@ export default function LogDay() {
     setSearchResults([]);
   };
 
-  const handleSave = () => {
-    if (!selectedResort || selectedSki === null || !selectedActivity) {
-      toast.error("Please select a resort, skis, and activity.");
-      return;
-    }
+  // --- Upload Photo Function (Now calls service) ---
+  const uploadPhoto = async (clientSideId: string, file: File) => {
+    setPhotos(currentPhotos =>
+      currentPhotos.map(p =>
+        p.id === clientSideId ? { ...p, uploadStatus: 'uploading' } : p
+      )
+    );
 
-    // Format the date correctly using date-fns, ignoring timezone conversion issues
-    const formattedDate = format(date, 'yyyy-MM-dd');
+    try {
+      // Call the service function
+      const result = await skiService.uploadPhoto(file);
 
-    // Create FormData
-    const formData = new FormData();
+      // Update photo state with server ID and preview URL from service response
+      setPhotos(currentPhotos =>
+        currentPhotos.map(p =>
+          p.id === clientSideId
+            ? { ...p, uploadStatus: 'completed', serverId: result.id, previewUrl: result.preview_url }
+            : p
+        )
+      );
 
-    // Append day data, ensuring keys match Rails strong params expectations (day[attribute])
-    formData.append('day[date]', formattedDate); // Use formatted date
-    formData.append('day[resort_id]', selectedResort.id);
-    formData.append('day[ski_id]', selectedSki);
-    formData.append('day[activity]', selectedActivity);
-
-    // Append photos
-    photos.forEach((photo) => {
-      formData.append('day[photos][]', photo.originalFile);
-    });
-
-    // Call the appropriate mutation with FormData
-    if (isEditMode) {
-      // TODO: Implement photo handling for update mutation if needed
-      console.warn("Photo updates not yet implemented for edit mode.");
-      // Currently just sending non-photo data for update
-      // Format date to string for updateDay service function
-      updateDay({
-        date: formattedDate, // Use formatted date
-        resort_id: selectedResort.id,
-        ski_id: selectedSki,
-        activity: selectedActivity,
-       });
-    } else {
-      // Pass FormData to the saveDay mutation
-      saveDay(formData);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setPhotos(currentPhotos =>
+        currentPhotos.map(p =>
+          p.id === clientSideId ? { ...p, uploadStatus: 'failed' } : p
+        )
+      );
     }
   };
+  // --- End Upload Photo Function ---
 
-  const handleSaveInlineSki = () => {
-    if (!newInlineSkiName.trim()) {
-      toast.error("Please enter a ski name.");
-      return;
-    }
-    addSki({ name: newInlineSkiName.trim() });
-  };
-
-  // --- Refactored file processing logic ---
+  // --- Process Selected Files (Input/Drop) ---
   const processFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     const filesArray = Array.from(files);
-    // Create initial placeholder entries with unique IDs
     const initialPreviews: PhotoPreview[] = filesArray.map(file => ({
       id: crypto.randomUUID(),
       originalFile: file,
       previewUrl: null,
+      serverId: null,
+      uploadStatus: 'pending',
     }));
 
-    // Immediately add placeholders to the state
     setPhotos(prev => [...prev, ...initialPreviews]);
-    // Keep track if any conversion is happening (optional for global spinner, maybe remove later)
-    setIsConvertingPhoto(true);
+    // isUploading state will be set by useEffect
 
-    // Process each file asynchronously
-    const processingPromises = initialPreviews.map(async (initialPreview) => {
-      let previewUrl: string | null = null;
-      const file = initialPreview.originalFile;
+    // Trigger uploads
+    const uploadPromises = initialPreviews.map(preview =>
+      uploadPhoto(preview.id, preview.originalFile)
+    );
 
-      try {
-        // Simply try to create an object URL directly for all image types
-        // Remove all HEIC-specific checks and canvas conversion
-        if (file.type.startsWith('image/')) {
-            previewUrl = URL.createObjectURL(file);
-        } else {
-            console.warn(`File ${file.name} is not an image type, skipping preview.`);
-            // Optionally mark as error or leave previewUrl null
-        }
-
-        // Remove HEIC specific logic:
-        // if (file.type === 'image/heic' || ...) { ... canvas logic ... }
-
-      } catch (previewError) {
-        // Error creating the object URL (less common, but possible)
-        console.error("Error creating object URL:", previewError);
-        toast.error(`Failed to generate preview for: ${file.name}`);
-        // error = true; // Remove error flag setting
-      }
-
-      // Update the specific photo's state once processing is done
-      setPhotos(currentPhotos =>
-        currentPhotos.map(p =>
-          p.id === initialPreview.id
-            ? { ...p, previewUrl: previewUrl /*, error: error*/ } // Remove error update
-            : p
-        )
-      );
-    });
-
-    // Wait for all processing to attempt completion
-    // Note: This doesn't guarantee all previews are ready, just that async ops finished
-    try {
-        await Promise.all(processingPromises);
-    } finally {
-        // Set overall converting state to false once all attempts are done
-        setIsConvertingPhoto(false);
-    }
+    // Wait for all attempts to settle (though UI updates happen individually)
+    await Promise.allSettled(uploadPromises);
+    // Final isUploading state determined by useEffect
   };
-  // --- End Refactored file processing logic ---
+  // --- End Process Selected Files ---
+
+  // Effect to update global isUploading state
+  useEffect(() => {
+    const anyUploading = photos.some(p => p.uploadStatus === 'uploading');
+    setIsUploading(anyUploading);
+  }, [photos]);
 
   // Original handler for file input click
   const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     await processFiles(event.target.files);
-    // Reset file input value after processing to allow selecting the same file again
     if (event.target) {
-        event.target.value = '';
+        event.target.value = ''; // Reset file input
     }
   };
 
@@ -294,29 +256,67 @@ export default function LogDay() {
   };
   // --- End Drag and Drop Handlers ---
 
-  const removePhoto = (index: number) => {
-    setPhotos(prev => {
-      const photoToRemove = prev[index];
-      if (photoToRemove && photoToRemove.previewUrl) { // Only revoke if URL exists
-        URL.revokeObjectURL(photoToRemove.previewUrl);
+  // --- Remove Photo Handler (Now calls service) ---
+  const removePhoto = async (clientSideId: string) => {
+    const photoToRemove = photos.find(p => p.id === clientSideId);
+    if (!photoToRemove) return;
+
+    const serverId = photoToRemove.serverId;
+    const uploadStatus = photoToRemove.uploadStatus;
+    const currentPreviewUrl = photoToRemove.previewUrl;
+
+    // Optimistically remove from UI
+    setPhotos(prev => prev.filter(p => p.id !== clientSideId));
+
+    // Attempt backend deletion ONLY if it was successfully uploaded
+    if (serverId && uploadStatus === 'completed') {
+      try {
+        // Call the service function
+        await skiService.deletePhoto(serverId);
+        toast.info('Photo removed.');
+
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+        toast.error('Could not delete photo from server. Please try again.');
+        // Re-add photo to UI upon failure?
+        // setPhotos(prev => [...prev, photoToRemove]); // Consider race conditions/state mismatch if re-adding
       }
-      return prev.filter((_, i) => i !== index);
-    });
+    }
+
+    // Revoke preview URL if it existed
+    if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+    }
+  };
+  // --- End Remove Photo Handler ---
+
+  const handleSaveInlineSki = () => {
+    if (!newInlineSkiName.trim()) {
+      toast.error("Please enter a ski name.");
+      return;
+    }
+    addSki({ name: newInlineSkiName.trim() });
   };
 
+  // Effect to load data in Edit mode or reset for New mode
   useEffect(() => {
     if (isEditMode && dayToEdit) {
-      // date comes as string from API, parse it
-      const editDate = new Date(dayToEdit.date.replace(/-/g, '/')); // Adjust parsing if needed
+      const editDate = new Date(dayToEdit.date.replace(/-/g, '/'));
       setDate(editDate);
       setDisplayedMonth(editDate);
-      // Access ID from nested ski object
       setSelectedSki(dayToEdit.ski.id);
       setSelectedActivity(dayToEdit.activity);
-      // Use nested resort object (already checked)
       setSelectedResort(dayToEdit.resort);
-      // TODO: Populate existing photos for editing/viewing
-      setPhotos([]); // Clear any existing photos for now
+
+      // Map existing photo data from the fetched day
+      const existingPhotos: PhotoPreview[] = dayToEdit.photos?.map((p: any) => ({
+        id: crypto.randomUUID(),
+        originalFile: null,
+        previewUrl: p.preview_url, // Use preview URL from serializer
+        serverId: p.id,
+        uploadStatus: 'completed',
+      })) || [];
+      setPhotos(existingPhotos);
     }
     if (!isEditMode) {
         const today = new Date();
@@ -327,13 +327,57 @@ export default function LogDay() {
         setSelectedActivity("");
         setResortQuery("");
         setIsSearchingMode(false);
+        setPhotos([]); // Clear photos
+        setIsUploading(false); // Reset upload state
     }
   }, [isEditMode, dayId, dayToEdit]);
 
   const isSelectedResortRecent = selectedResort && recentResorts?.some(r => r.id === selectedResort.id);
 
+  // Determine if main action is blocked
   const isLoading = isLoadingSkis || isLoadingRecentResorts || (isEditMode && isLoadingDayToEdit);
-  const isProcessing = isSaving || isUpdating || isAddingSki;
+  const isProcessing = isSaving || isUpdating || isAddingSki || isUploading; // Include photo uploading
+
+  // --- Main Save/Update Handler ---
+  const handleSave = () => {
+    if (!selectedResort || selectedSki === null || !selectedActivity) {
+      toast.error("Please select a resort, skis, and activity.");
+      return;
+    }
+
+    // Prevent saving if photos are still uploading
+    if (isUploading) {
+      toast.warning("Please wait for photos to finish uploading.");
+      return;
+    }
+
+    const formattedDate = format(date, 'yyyy-MM-dd');
+
+    // Get IDs of successfully uploaded photos
+    const successfullyUploadedPhotoIds = photos
+      .filter(p => p.uploadStatus === 'completed' && p.serverId)
+      .map(p => p.serverId!);
+
+    // Prepare plain object payload for both create and update
+    const payload = {
+        date: formattedDate,
+        resort_id: selectedResort.id,
+        ski_id: selectedSki,
+        activity: selectedActivity,
+        photo_ids: successfullyUploadedPhotoIds
+    };
+
+    if (isEditMode) {
+      // Prepare update payload (plain object) - Already done above
+      // const updatePayload = { ... };
+      updateDay(payload); // Pass plain object
+    } else {
+      // Prepare create payload (plain object) - Already done above
+      // const formData = new FormData(); ... // Remove FormData creation
+      saveDay(payload); // Pass plain object
+    }
+  };
+  // --- End Main Save/Update Handler ---
 
   if (isEditMode && isLoadingDayToEdit) {
     return (
@@ -348,7 +392,7 @@ export default function LogDay() {
      return (
        <div className="flex flex-col justify-center items-center min-h-screen text-red-600">
          <span>Error loading day details.</span>
-         <Button onClick={() => navigate('/days')}>Go Back</Button>
+         <Button onClick={() => navigate('/')}>Go Back</Button>
        </div>
      );
    }
@@ -356,17 +400,12 @@ export default function LogDay() {
   return (
     <div className="min-h-screen bg-white p-4 flex justify-center">
       <div className="w-full max-w-md mx-auto space-y-6">
+        {/* Header with Back/Settings Buttons */}
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
             className="text-slate-600 hover:text-slate-800"
-            onClick={() => {
-              if (isEditMode) {
-                navigate('/days');
-              } else {
-                navigate(-1);
-              }
-            }}
+            onClick={() => navigate(-1)} // Simpler back navigation
             disabled={isProcessing}
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
@@ -384,6 +423,7 @@ export default function LogDay() {
           </Button>
         </div>
 
+        {/* Form Title */}
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 mb-6 text-center">
              {isEditMode ? 'Edit Ski Day' : 'Log New Ski Day'}
@@ -400,7 +440,9 @@ export default function LogDay() {
           />
         </div>
 
+        {/* Form Sections */}
         <div className="space-y-8">
+          {/* Resort Selection */}
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Ski Resort</h2>
             <div className="flex flex-wrap gap-2 items-center">
@@ -495,6 +537,7 @@ export default function LogDay() {
             </div>
           </div>
 
+          {/* Ski Selection */}
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Skis</h2>
             <div className="flex flex-wrap gap-2 items-center">
@@ -521,7 +564,7 @@ export default function LogDay() {
                     ))}
                   </>
                 ) : (
-                  null
+                  null // Show Add button if list is empty
                 )
               )}
               {!isLoadingSkis && !skisError && !isAddingSkiInline && (
@@ -554,7 +597,7 @@ export default function LogDay() {
                     onClick={handleSaveInlineSki}
                     disabled={isProcessing || isLoading || !newInlineSkiName.trim()}
                   >
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {isAddingSki ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     <span className="sr-only">Save Ski</span>
                   </Button>
                   <Button
@@ -575,6 +618,7 @@ export default function LogDay() {
             </div>
           </div>
 
+          {/* Activity Selection */}
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">Activity</h2>
             <div className="flex flex-wrap gap-2">
@@ -591,14 +635,16 @@ export default function LogDay() {
             </div>
           </div>
 
+          {/* Photo Upload Section */}
           <div className="space-y-2">
             <Label htmlFor="photo-upload" className="text-slate-700 font-medium">Add Photos (optional)</Label>
             <div className="flex items-center space-x-2">
+              {/* Dropzone Label */}
               <Label
                 htmlFor="photo-upload"
                 data-testid="photo-dropzone-label"
                 className={`flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-colors ${
-                  isDraggingOver ? 'border-blue-600 bg-blue-50' : '' // Add visual feedback for drag over
+                  isDraggingOver ? 'border-blue-600 bg-blue-50' : ''
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -608,43 +654,70 @@ export default function LogDay() {
                   <ImagePlus className="mx-auto h-8 w-8" />
                   <span>Click or drag to upload</span>
                 </div>
+                {/* Hidden File Input */}
                 <Input
                   id="photo-upload"
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/*" // Accept all image types, backend handles validation/conversion
                   className="sr-only"
                   onChange={handlePhotoChange}
-                  disabled={isProcessing || isConvertingPhoto}
+                  disabled={isProcessing}
                 />
               </Label>
             </div>
+            {/* Photo Preview Grid */}
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2 pt-2">
-                {photos.map((photo, index) => (
-                  <div key={photo.id} className="relative group" data-testid="photo-preview">
-                    {photo.previewUrl ? (
+                {photos.map((photo) => (
+                  <div key={photo.id} className="relative group w-full h-20" data-testid="photo-preview">
+                    {/* Completed & Preview Available */}
+                    {photo.uploadStatus === 'completed' && photo.previewUrl ? (
                       <img
                         src={photo.previewUrl}
-                        alt={`preview ${index}`}
-                        className="w-full h-20 object-cover rounded-md"
+                        alt={`preview ${photo.originalFile?.name || photo.serverId}`}
+                        className="w-full h-full object-cover rounded-md"
+                        onError={(e) => {
+                           const target = e.target as HTMLImageElement;
+                           target.style.display = 'none';
+                           const parent = target.closest('[data-testid="photo-preview"]');
+                           const fallback = parent?.querySelector('[data-fallback-id="' + photo.id + '"]');
+                           if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                        }}
                       />
+                    // Failed Upload
+                    ) : photo.uploadStatus === 'failed' ? (
+                      <div className="w-full h-full bg-red-100 rounded-md flex flex-col items-center justify-center text-center text-xs text-red-600 p-1 font-medium">
+                         <X className="h-4 w-4 mb-1" />
+                         <span className="break-words">Upload Failed</span>
+                      </div>
+                    // Uploading
+                    ) : photo.uploadStatus === 'uploading' ? (
+                       <div className="w-full h-full bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-400 p-1 animate-pulse">
+                         <Loader2 className="h-5 w-5 animate-spin" />
+                       </div>
+                    // Fallback (Pending, Completed w/o URL)
                     ) : (
-                      // Simplified Placeholder/Fallback State
-                      <div className="w-full h-20 bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-500 p-1">
-                        {/* Remove processing text and animation */}
-                        <span>Preview N/A</span>
+                      <div
+                         data-fallback-id={photo.id}
+                         className="w-full h-full bg-slate-100 rounded-md items-center justify-center text-center text-xs text-slate-500 p-1"
+                         style={{ display: (photo.uploadStatus === 'completed' && !photo.previewUrl) || photo.uploadStatus === 'pending' ? 'flex' : 'none' }}
+                      >
+                         <span className="break-words">Preview N/A</span>
                       </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-75 group-hover:opacity-100 transition-opacity"
-                      aria-label="Remove photo"
-                      disabled={isProcessing || isConvertingPhoto}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                    {/* Remove Button Overlay */}
+                    {(photo.uploadStatus === 'completed' || photo.uploadStatus === 'failed') && (
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(photo.id)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                        aria-label="Remove photo"
+                        disabled={isProcessing} // Disable if main form is saving OR photos are uploading
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -652,14 +725,18 @@ export default function LogDay() {
           </div>
         </div>
 
+        {/* Save/Update Button */}
         <div className="pt-4">
           <Button
             className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700"
             onClick={handleSave}
-            disabled={isProcessing || isLoading}
+            disabled={isProcessing || isLoading} // isProcessing includes isUploading
             data-testid="save-day-button"
           >
-            {isProcessing ? (
+            {/* Show upload progress or saving state */}
+            {isUploading ? (
+                 <><Loader2 className="h-6 w-6 animate-spin mr-2" /> Uploading Photos...</>
+            ) : isSaving || isUpdating ? (
               <Loader2 className="h-6 w-6 animate-spin" />
             ) : (
               isEditMode ? 'Update Day' : 'Save Day'

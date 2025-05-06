@@ -39,7 +39,7 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
       <Avatar className="h-24 w-24 rounded-sm shadow-md flex-shrink-0">
         {day.photos && day.photos.length > 0 ? (
           <img
-            src={day.photos[0].url}
+            src={day.photos[0].preview_url}
             alt={`${day.resort_name} photo`}
             className="h-full w-full object-cover rounded-sm"
           />
