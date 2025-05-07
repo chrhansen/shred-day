@@ -63,8 +63,8 @@ describe('Ski Days List Page', () => {
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getDaysList');
 
-    // Check title
-    cy.contains('h1', 'Ski Days').should('be.visible');
+    // Check title - Title is now in the Navbar
+    cy.get('.flex-1.text-center').contains('span', '2024/25 Season').should('be.visible');
 
     // Use the aliased resort name for checking content
     cy.get('@resortName').then(resortName => {
@@ -135,10 +135,11 @@ describe('Ski Days List Page', () => {
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getDaysList');
 
-    // Find the settings button by its aria-label
-    cy.get('[aria-label="Settings"]')
-      .should('be.visible') // Assert it's visible
-      .click();             // Click it
+    // Click the hamburger menu icon to open the drawer
+    cy.get('[aria-label="Open menu"]').should('be.visible').click();
+
+    // Inside the drawer, find the button containing "Settings" text and click it
+    cy.contains('button', 'Settings').should('be.visible').click();
 
     // Verify navigation to the settings page
     cy.url().should('include', '/settings');

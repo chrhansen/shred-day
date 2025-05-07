@@ -24,8 +24,13 @@ describe('Settings Page', () => {
 
   it('should navigate to the settings page when clicking the settings icon on the Days List page', () => {
     cy.visit(ROOT_URL);
-    // Find the settings button using its aria-label and click it
-    cy.get('[aria-label="Settings"]').should('be.visible').click();
+
+    // Click the hamburger menu icon to open the drawer
+    cy.get('[aria-label="Open menu"]').should('be.visible').click();
+
+    // Inside the drawer, find the button containing "Settings" text and click it
+    // We ensure it's visible in case the drawer is still animating
+    cy.contains('button', 'Settings').should('be.visible').click();
 
     // Verify navigation to the settings page
     cy.location('pathname').should('eq', SETTINGS_URL);

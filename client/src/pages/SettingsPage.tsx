@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Settings as SettingsIcon, Loader2, Trash2, Pencil, Check, X, LogOut } from "lucide-react";
+import { Settings as SettingsIcon, Loader2, Trash2, Pencil, Check, X, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { toast } from "sonner";
 import { Ski } from "@/types/ski";
 import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/Navbar";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -96,33 +97,28 @@ export default function SettingsPage() {
     addSki({ name: newSkiName.trim() });
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white p-4">
-      <div className="max-w-2xl mx-auto space-y-8 pt-8">
-        <div className="flex justify-between items-center mb-4">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate(-1)}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-600 hover:text-red-600 hover:bg-red-50"
-            onClick={() => {
-               if (window.confirm("Are you sure you want to log out?")) {
-                 logout();
-               }
-            }}
-            aria-label="Logout"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
-        </div>
+  const pageSpecificHeaderContent = (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-slate-600 hover:text-red-600 hover:bg-red-50"
+        onClick={() => {
+            if (window.confirm("Are you sure you want to log out?")) {
+              logout();
+            }
+        }}
+        aria-label="Logout"
+      >
+        <LogOut className="h-5 w-5" />
+      </Button>
+    </>
+  );
 
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <Navbar rightContent={pageSpecificHeaderContent} title="Settings" />
+      <div className="max-w-2xl mx-auto space-y-8 p-4">
         <h1 className="text-3xl font-bold text-slate-800 flex items-center">
           <SettingsIcon className="mr-3 h-7 w-7 text-blue-600" />
           Settings

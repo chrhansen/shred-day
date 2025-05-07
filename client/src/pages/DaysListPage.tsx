@@ -4,9 +4,10 @@ import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Loader2, Plus, Settings } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import Navbar from '@/components/Navbar';
 
 export default function DaysListPage() {
   const navigate = useNavigate();
@@ -33,32 +34,22 @@ export default function DaysListPage() {
     deleteDay(dayId);
   };
 
-  return (
-    <div className="min-h-screen bg-white p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">Ski Days</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => navigate("/new")}
-              size="sm"
-              className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
-            >
-              <Plus className="mr-1.0 h-4 w-4" />
-              New Day
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-slate-600 hover:text-slate-800"
-              onClick={() => navigate('/settings')}
-              aria-label="Settings"
-            >
-              <Settings className="h-6 w-6" />
-            </Button>
-          </div>
-        </div>
+  const newDayButton = (
+    <Button
+      onClick={() => navigate("/new")}
+      size="sm"
+      className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+    >
+      <Plus className="mr-1.0 h-4 w-4" />
+      New Day
+    </Button>
+  );
 
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar rightContent={newDayButton} title="2024/25 Season" />
+
+      <div className="max-w-2xl mx-auto p-4">
         {isLoading && (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />

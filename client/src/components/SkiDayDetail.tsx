@@ -90,8 +90,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
           <DialogClose asChild>
             <Button
               variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white/90 z-10"
+              className="absolute top-3 right-3 rounded-full bg-white/60 hover:bg-white/75 backdrop-blur-sm z-10 h-7 w-7 flex items-center justify-center"
               data-testid="ski-day-detail-close-button"
             >
               <X className="h-4 w-4 text-slate-700" />
