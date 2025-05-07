@@ -62,7 +62,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
           {day.notes ? ` Notes: ${day.notes}` : " No additional notes."}
         </DialogDescription>
         <div className="relative">
-          <Carousel className="w-full" data-testid="ski-day-detail-carousel">
+          <Carousel className="w-full bg-black" data-testid="ski-day-detail-carousel">
             <CarouselContent>
               {day.photos && day.photos.length > 0 ? (
                 day.photos.map((photo, index) => (
@@ -135,7 +135,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogOverlay className="bg-black/20 backdrop-blur-xs" />
       <DialogContent
-        className="sm:max-w-md md:max-w-xl p-0 gap-0 border-none overflow-hidden bg-white rounded-xl"
+        className="w-[calc(100%-2rem)] max-w-md sm:max-w-lg md:max-w-xl p-0 gap-0 border-none overflow-hidden bg-white rounded-xl"
       >
         {renderContent()}
       </DialogContent>
