@@ -77,7 +77,7 @@ class Api::V1::DaysController < ApplicationController
   def day_params
     # Allow an array of photo_ids instead of photo files
     params.require(:day).permit(
-      :date, :resort_id, :ski_id, :activity, photo_ids: []
+      :date, :resort_id, :ski_id, :activity, :notes, photo_ids: []
     )
   end
 

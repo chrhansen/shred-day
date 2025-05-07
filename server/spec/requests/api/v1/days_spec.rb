@@ -7,7 +7,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   let!(:resort) { create(:resort) }
   let!(:ski) { create(:ski, user: user) }
   let!(:other_ski) { create(:ski, user: user) } # For update tests
-  let!(:day) { create(:day, user: user, resort: resort, ski: ski, activity: "Friends", date: Date.yesterday) } # Create a day for show/update
+  let!(:day) { create(:day, user: user, resort: resort, ski: ski, notes: "This is just a test", activity: "Friends", date: Date.yesterday) } # Create a day for show/update
   let!(:other_day) { create(:day, user: other_user, resort: resort, ski: ski) } # Day belonging to another user
   let!(:resort_b) { create(:resort) } # For variety
   let(:target_date) { Date.today } # A specific date for testing limits
@@ -27,7 +27,8 @@ RSpec.describe "Api::V1::Days", type: :request do
             day: {
               date: Date.today.to_s,
               resort_id: resort.id,
-              ski_id: ski.id
+              ski_id: ski.id,
+              notes: "This is a test note"
             }
           }
         end
@@ -47,12 +48,14 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['id']).to be_present
           expect(json_response['date']).to eq(Date.today.to_s)
           expect(json_response['user_id']).to eq(user.id)
+          expect(json_response['notes']).to eq("This is a test note")
           # Check for nested objects
           expect(json_response).to have_key('resort')
           expect(json_response['resort']).to include('id' => resort.id, 'name' => resort.name)
           expect(json_response).to have_key('ski')
           expect(json_response['ski']).to include('id' => ski.id, 'name' => ski.name)
           # Check absence of flattened names
+          expect(json_response).not_to have_key('has_notes')
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
           expect(json_response['photos']).to eq([]) # Expect empty photos array if none uploaded
@@ -233,12 +236,14 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['id']).to eq(day.id)
           expect(json_response['date']).to eq(day.date.to_s)
           expect(json_response['activity']).to eq("Friends")
+          expect(json_response['notes']).to eq("This is just a test")
           # Check for nested objects
           expect(json_response).to have_key('resort')
           expect(json_response['resort']).to include('id' => resort.id, 'name' => resort.name)
           expect(json_response).to have_key('ski')
           expect(json_response['ski']).to include('id' => ski.id, 'name' => ski.name)
           # Check absence of flattened names
+          expect(json_response).not_to have_key('has_notes')
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
 
@@ -289,7 +294,8 @@ RSpec.describe "Api::V1::Days", type: :request do
           {
             day: {
               activity: "Training", # Change activity
-              ski_id: other_ski.id # Change ski
+              ski_id: other_ski.id, # Change ski
+              notes: "This is an updated test note" # Change notes
             }
           }
         end
@@ -309,6 +315,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check standard fields
           expect(json_response['id']).to eq(day.id)
           expect(json_response['activity']).to eq("Training")
+          expect(json_response['notes']).to eq("This is an updated test note")
 
           # Check for nested objects
           expect(json_response).to have_key('resort')
@@ -317,6 +324,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['ski']['id']).to eq(other_ski.id) # Check updated ski nested object
           expect(json_response['ski']['name']).to eq(other_ski.name)
           # Check absence of flattened names
+          expect(json_response).not_to have_key('has_notes')
           expect(json_response).not_to have_key('resort_name')
           expect(json_response).not_to have_key('ski_name')
 
@@ -510,11 +518,15 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(day_entry['id']).to eq(day.id)
         expect(day_entry).to have_key('date')
         expect(day_entry).to have_key('activity')
+        expect(day_entry).to have_key('has_notes')
+
         # Check for flattened names
         expect(day_entry).to have_key('resort_name')
         expect(day_entry['resort_name']).to eq(resort.name)
         expect(day_entry).to have_key('ski_name')
         expect(day_entry['ski_name']).to eq(ski.name)
+        expect(day_entry['has_notes']).to eq(true)
+
         # Check absence of nested objects
         expect(day_entry).not_to have_key('resort')
         expect(day_entry).not_to have_key('ski')

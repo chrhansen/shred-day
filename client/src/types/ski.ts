@@ -5,6 +5,7 @@ export interface SkiDayDetail {
   id: string;
   date: string; // Keep as string for consistency with API response
   activity: string;
+  notes?: string | null;
   // resort_id and ski_id are removed, access via nested objects
   user_id?: string;
   created_at?: string;
@@ -13,7 +14,7 @@ export interface SkiDayDetail {
   resort: Resort; // Assuming Resort type is correct and available
   ski: Ski; // Assuming Ski type is correct and available
   // Photos included by DaySerializer via PhotoSerializer
-  photos: { id: string; preview_url: string | null; full_url: string | null; filename: string | null }[];
+  photos: { id: string; preview_url: string | null; full_url: string; filename: string | null }[];
 }
 
 export interface SkiStats {
@@ -56,6 +57,7 @@ export interface SkiDayEntry {
   activity: string;
   ski_name: string;
   resort_name: string;
+  has_notes: boolean;
   created_at: string;
   updated_at: string;
   photos?: { id: string; preview_url: string | null; full_url: string | null; filename: string | null }[];

@@ -248,7 +248,8 @@ CREATE TABLE public.days (
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
     ski_id character varying NOT NULL,
-    resort_id character varying NOT NULL
+    resort_id character varying NOT NULL,
+    notes text
 );
 
 
@@ -565,6 +566,7 @@ ALTER TABLE ONLY public.photos
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250507082436'),
 ('20250505111757'),
 ('20250429135612'),
 ('20250429135447'),

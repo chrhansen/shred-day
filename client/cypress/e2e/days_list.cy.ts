@@ -159,4 +159,24 @@ describe('Ski Days List Page', () => {
     cy.contains('h1', 'Log New Ski Day').should('be.visible');
   });
 
+  it('should open the ski day detail popover when a day item is clicked', function() {
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getDaysList');
+
+    // Ensure there's at least one day item (using the ID of the first created day)
+    cy.get(`[data-testid="ski-day-item-${this.day1Id}"]`).should('be.visible');
+
+    // Click the first ski day item
+    cy.get(`[data-testid="ski-day-item-${this.day1Id}"]`).first().click();
+
+    // Check that the ski day detail modal is visible
+    cy.get('[data-testid="ski-day-detail-modal"]').should('be.visible');
+
+    // Optional: Check for some content within the modal to be more specific
+    cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', 'April 15, 2025');
+    cy.get('@resortName').then(resortName => {
+      cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', resortName);
+    });
+  });
+
 });
