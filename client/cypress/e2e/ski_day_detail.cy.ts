@@ -78,23 +78,19 @@ describe('Ski Day Detail Popover', () => {
       }
       dayWithPhotosId = String(createdDayIdValue);
       // @ts-ignore
-      dayDataWithPhotos.id = dayWithPhotosId;
+      // dayDataWithPhotos.id = dayWithPhotosId; // Not needed if detailedFixture constructs its own ID
 
-      // Prepare the detailed data fixture for the intercept.
-      // It needs to match the SkiDayDetailType, so ensure resort and ski are nested objects.
       const detailedFixture = {
         id: dayWithPhotosId,
         date: dayDataWithPhotos.date,
         activity: dayDataWithPhotos.activity,
         notes: dayDataWithPhotos.notes,
         photos: dayDataWithPhotos.photos,
-        resort: { id: "mockResortId", name: resortName }, // Use the resortName from setup
-        ski: { id: "mockSkiId", name: "PhotoSkis" },      // Use the ski name from setup
-        // Add other fields expected by SkiDayDetailType if necessary (user_id, created_at, updated_at)
-        // For this test, focusing on what's displayed.
+        resort: { id: "mockResortId", name: resortName },
+        skis: [{ id: "mockSkiId1", name: "PhotoSkis" }], // Changed to skis: array with one ski object
+        // If your day setup creates more skis, list them here or adjust ski name
       };
 
-      // Intercept the specific day detail fetch that will occur ON CLICK
       cy.intercept('GET', `/api/v1/days/${dayWithPhotosId}`, {
         statusCode: 200,
         body: detailedFixture
@@ -115,8 +111,9 @@ describe('Ski Day Detail Popover', () => {
   it('should display correct ski day details', function() {
     cy.get('[data-testid="ski-day-detail-modal"]').within(() => {
       cy.contains('h2', resortName).should('be.visible');
-      cy.contains('p', 'Sunday, July 20, 2025').should('be.visible');
-      cy.contains('h3', 'Skis').next('p').should('contain.text', "PhotoSkis");
+      cy.contains('p', 'Sunday, July 20, 2025').should('be.visible'); // Ensure date format matches component output
+      // Updated assertion for skis
+      cy.contains('h3', 'Skis Used').next('ul').find('li').should('have.length', 1).first().should('contain.text', "PhotoSkis");
       cy.contains('h3', 'Activity').next('p').should('contain.text', dayDataWithPhotos.activity);
       cy.contains('h3', 'Notes').next('p').should('contain.text', dayDataWithPhotos.notes);
     });
@@ -153,9 +150,9 @@ describe('Ski Day Detail Popover', () => {
       date: dayDataWithPhotos.date,
       activity: dayDataWithPhotos.activity,
       notes: dayDataWithPhotos.notes,
-      photos: [], // Empty photos array
+      photos: [],
       resort: { id: "mockResortId", name: resortName },
-      ski: { id: "mockSkiId", name: "PhotoSkis" },
+      skis: [{ id: "mockSkiId1", name: "PhotoSkis" }], // Keep skis consistent or test no skis
     };
 
     // Intercept the specific day detail fetch for THIS test
@@ -181,51 +178,51 @@ describe('Ski Day Detail Popover', () => {
     cy.get('[data-testid="ski-day-detail-close-button"]').click({ force: true });
     cy.get('[data-testid="ski-day-detail-modal"]').should('not.exist');
 
-    // Get the aliased resortId and skiId from beforeEach context
     cy.get('@resortIdForDetailTest').then(rIdFromAlias => {
       cy.get('@skiIdForDetailTest').then(sIdFromAlias => {
-        // Create a day with no notes, using the retrieved IDs
+        const resortIdString = String(rIdFromAlias); // Ensure string type
+        const skiIdString = String(sIdFromAlias);   // Ensure string type
         let dayWithNoNotesId: string;
+
         cy.request({
           method: 'POST',
           url: `${Cypress.env('apiUrl')}/api/v1/days`,
           body: {
             day: {
               date: '2025-07-21',
-              resort_id: rIdFromAlias,
-              ski_id: sIdFromAlias,
+              resort_id: resortIdString,
+              ski_ids: [skiIdString],
               activity: 'Quick Run',
-              notes: null // Explicitly no notes
+              notes: null
             }
           },
-          failOnStatusCode: false // Allow handling 422 if needed, though we expect success here
+          failOnStatusCode: false
         }).then(dayResponse => {
-          if (dayResponse.status !== 201 && dayResponse.status !== 200) { // Check for successful creation status
+          if (dayResponse.status !== 201 && dayResponse.status !== 200) {
             cy.log('Day creation for "no notes" test failed. Status: ' + dayResponse.status + ' Body: ' + JSON.stringify(dayResponse.body));
             throw new Error('Failed to create day for "no notes" test. API returned: ' + dayResponse.status);
           }
           expect(dayResponse.body, 'Day creation response body').to.exist.and.to.have.property('id');
           dayWithNoNotesId = dayResponse.body.id;
 
-          // Intercept the GET request for this new day
           const dayWithoutNotesFixture = {
             id: dayWithNoNotesId,
             date: '2025-07-21',
             activity: 'Quick Run',
             notes: null,
-            photos: [], // Assuming no photos for this specific day either, or provide some
-            resort: { id: String(rIdFromAlias), name: resortName }, // Use the original resortName
-            ski: { id: String(sIdFromAlias), name: "PhotoSkis" },      // Use the original ski name
+            photos: [],
+            resort: { id: resortIdString, name: resortName },
+            skis: [{ id: skiIdString, name: "PhotoSkis" }],
           };
           cy.intercept('GET', `/api/v1/days/${dayWithNoNotesId}`, {
             statusCode: 200,
             body: dayWithoutNotesFixture
           }).as('getDayDetailsNoNotes');
 
-          cy.visit(DAYS_LIST_URL); // Re-visit to refresh list
+          cy.visit(DAYS_LIST_URL);
           cy.wait('@getDaysList');
           cy.get(`[data-testid="ski-day-item-${dayWithNoNotesId}"]`).should('be.visible').first().click();
-          cy.wait('@getDayDetailsNoNotes'); // Wait for the detail fetch
+          cy.wait('@getDayDetailsNoNotes');
           cy.get('[data-testid="ski-day-detail-modal"]').should('be.visible');
 
           cy.get('[data-testid="ski-day-detail-modal"]').within(() => {

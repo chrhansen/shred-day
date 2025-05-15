@@ -48,10 +48,22 @@ export default function PhotoImportPage() {
     enabled: !!importId,
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (data?.status === 'committed' || data?.status === 'canceled') return false;
-      if (data?.status === 'processing' || uploadingPhotos.some(p => p.uploadStatus === 'uploading' || p.uploadStatus === 'completed')) return 2000;
-      if (data?.status === 'ready_for_review') return false;
-      return 2000;
+      // Stop polling if status is terminal (committed, canceled, failed)
+      if (data?.status === 'committed' || data?.status === 'canceled' || data?.status === 'failed') {
+        return false;
+      }
+      // Continue polling if processing or if waiting and uploads are in progress client-side
+      if (data?.status === 'processing' ||
+          (data?.status === 'waiting' && uploadingPhotos.some(p => p.uploadStatus === 'uploading' || p.uploadStatus === 'completed'))) {
+        return 2000; // Keep polling (was 1000, 2000 is fine)
+      }
+      // If status is 'waiting' and no uploads are active, we can stop or slow down significantly.
+      // For now, let's assume if it's 'waiting' and not caught above, we might not need to poll aggressively.
+      // Or, if 'waiting' implies user interaction is needed to trigger processing, polling might stop until action.
+      // Let's default to stopping if it's just 'waiting' and no client-side activity.
+      if (data?.status === 'waiting') return false;
+
+      return 2000; // Default polling interval if none of the above
     },
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
@@ -66,9 +78,8 @@ export default function PhotoImportPage() {
     originalResortId: serverPhoto.resort?.id || null,
     latitude: serverPhoto.latitude,
     longitude: serverPhoto.longitude,
-    status: 'pending', // Default UI status for individual photo, might be overridden by group decision
     exif_state: serverPhoto.exif_state || 'missing',
-    uploadStatus: 'completed', // Assumed completed if it's from server
+    uploadStatus: 'completed',
     serverId: serverPhoto.id,
   });
 
@@ -227,10 +238,11 @@ export default function PhotoImportPage() {
       queryClient.invalidateQueries({ queryKey: ['photoImport', importId] }); // To get final committed state
       queryClient.invalidateQueries({ queryKey: ['days'] }); // To update main days list
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
-      // Optionally navigate away after a delay or if data.status is committed
-      if (data.status === 'committed' || data.status === 'completed') { // 'completed' if backend uses that as final
+      // Navigate away if the backend confirms it's 'committed'
+      if (data.status === 'committed') {
         navigate("/");
       }
+      // If backend returns 'failed', we might stay on the page to show errors/details.
     },
     onError: (error) => {
       toast({ title: "Failed to commit import", description: error.message, variant: "destructive" });
@@ -283,8 +295,8 @@ export default function PhotoImportPage() {
                 <Button onClick={handleSaveImport} disabled={anyClientUploading || backendIsProcessing || isCommittingImport}>
                     {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save Import
-                </Button>
-            )}
+            </Button>
+          )}
           </div>
         </div>
 
@@ -325,12 +337,13 @@ export default function PhotoImportPage() {
         {!isLoadingImportDetails && !anyClientUploading && !backendIsProcessing && displayedStrippedPhotos.length === 0 && displayedDraftDays.length === 0 && photoImportData && (
            <div className="mt-8 p-6 text-center bg-slate-50 rounded-lg">
              <p className="text-slate-600">
-                {photoImportData.status === 'ready_for_review' || photoImportData.status === 'waiting' ?
+                {photoImportData.status === 'waiting' ?
                     'Drop photos above to start your import and automatically draft days.' :
-                    'Import session is in an unexpected state.'
+                    (photoImportData.status === 'failed' ? 'Photo import processing failed. Please try again or contact support.' :
+                        'Import session is in an unexpected state or has no data to display.')
                 }
              </p>
-          </div>
+           </div>
         )}
 
         <AlertDialog open={isConfirmSaveOpen} onOpenChange={setIsConfirmSaveOpen}>

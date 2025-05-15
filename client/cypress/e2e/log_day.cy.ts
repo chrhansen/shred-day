@@ -66,10 +66,21 @@ describe('Create and Edit a Ski Day', () => {
     // Select Resort
     cy.get('[data-testid="find-resort-button"]').should('not.be.disabled').click();
     cy.get('[data-testid="resort-search-input"]').should('not.be.disabled').type(RESORT_A_NAME);
-    cy.intercept('GET', `/api/v1/resorts?query=*`).as('searchResorts');
-    cy.wait('@searchResorts');
-    cy.get(`[data-testid="resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}"]`).click();
-    // --- End Restore ---
+
+    // Make the intercept more specific for this search
+    cy.intercept('GET', `/api/v1/resorts?query=${encodeURIComponent(RESORT_A_NAME)}`).as('searchSpecificResort');
+
+    cy.wait('@searchSpecificResort').then((interception) => {
+      cy.log("Specific Search Resorts API Response Status:", interception.response?.statusCode?.toString());
+      cy.log("Specific Search Resorts API Response Headers:", JSON.stringify(interception.response?.headers));
+      // Log the raw body as Cypress sees it initially
+      cy.log("Raw interception.response.body type:", typeof interception.response?.body);
+      cy.log("Raw interception.response.body value:", JSON.stringify(interception.response?.body));
+    });
+
+    cy.get('[data-testid="resort-search-results"]').should('be.visible');
+    const resortOptionTestId = `resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}`;
+    cy.get(`[data-testid="${resortOptionTestId}"]`).should('be.visible').click();
 
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
@@ -120,7 +131,7 @@ describe('Create and Edit a Ski Day', () => {
               day: {
                   date: '2025-03-10',
                   resort_id: resortAId,
-                  ski_id: skiAId,
+                  ski_ids: [skiAId],
                   activity: INITIAL_ACTIVITY
               }
           };
@@ -270,7 +281,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload JPEG image
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#photo-upload-interactive').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
     // Verify loading state (spinner)
     cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
@@ -330,7 +341,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload HEIC image
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.heic', { force: true });
+    cy.get('#photo-upload-interactive').selectFile('cypress/fixtures/test_image.heic', { force: true });
 
     // Verify loading state
     cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
@@ -393,7 +404,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload both JPEG and HEIC images
-    cy.get('#photo-upload').selectFile([
+    cy.get('#photo-upload-interactive').selectFile([
       'cypress/fixtures/test_image.jpg',
       'cypress/fixtures/test_image.heic'
     ], { force: true });
@@ -457,7 +468,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload first photo (JPEG)
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#photo-upload-interactive').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
     // Verify one spinner, wait, check it's gone, check preview
     cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 1);
@@ -466,7 +477,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.get('[data-testid="photo-preview"] img[src]').should('have.length', 1);
 
     // Upload second photo (PNG)
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.png', { force: true });
+    cy.get('#photo-upload-interactive').selectFile('cypress/fixtures/test_image.png', { force: true });
 
     // Verify two previews exist now, one still loading (spinner)
     cy.get('[data-testid="photo-preview"]').should('have.length', 2);
@@ -581,7 +592,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
 
     // Upload a photo
-    cy.get('#photo-upload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#photo-upload-interactive').selectFile('cypress/fixtures/test_image.jpg', { force: true });
 
     // Wait for upload and capture server ID
     cy.wait('@uploadPhoto').then((interception) => {

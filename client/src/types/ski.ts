@@ -92,7 +92,7 @@ export interface DraftDay {
 export interface PhotoImport {
   id: string;
   user_id: string;
-  status: "waiting" | "processing" | "committed" | "canceled" | "failed" ;
+  status: "waiting" | "processing" | "committed" | "canceled" | "failed";
   created_at: string;
   updated_at: string;
   draft_days?: DraftDay[];
@@ -108,11 +108,10 @@ export interface SkiPhoto {
   originalResortId?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  status: "pending" | "accepted" | "rejected"; // User's decision on this photo if it were itemized for acceptance (may change with group decisions)
   exif_state?: "pending" | "extracted" | "missing" | null;
   originalFile?: File | null;
   uploadProgress?: number;
-  uploadStatus?: 'pending_upload' | 'uploading' | 'completed' | 'failed_upload';
+  uploadStatus?: 'uploading' | 'completed' | 'failed';
   serverId?: string | null;
   errorMessage?: string;
 }

@@ -39,9 +39,9 @@ describe('Stats Page', () => {
 
   it('should display correct stats based on logged days', function() {
     // Log some days using the aliases for IDs
-    cy.logDay({ date: '2024-01-10', resort_id: this.resortLeMassifId, ski_id: this.ski1Id });
-    cy.logDay({ date: '2024-01-11', resort_id: this.resortLeMassifId, ski_id: this.ski1Id }); // Same resort & ski
-    cy.logDay({ date: '2024-01-12', resort_id: this.resortMaikoId, ski_id: this.ski2Id }); // Different resort & ski
+    cy.logDay({ date: '2024-01-10', resort_id: this.resortLeMassifId, ski_ids: [this.ski1Id] });
+    cy.logDay({ date: '2024-01-11', resort_id: this.resortLeMassifId, ski_ids: [this.ski1Id] }); // Same resort & ski
+    cy.logDay({ date: '2024-01-12', resort_id: this.resortMaikoId, ski_ids: [this.ski2Id] }); // Different resort & ski
 
     // Visit the stats page (formerly dashboard)
     cy.visit('/stats');
