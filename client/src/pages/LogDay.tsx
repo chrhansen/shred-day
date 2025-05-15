@@ -13,17 +13,10 @@ import { toast } from "sonner";
 import debounce from 'lodash.debounce';
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import { type PhotoPreview } from "@/types/ski";
+import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
 
 const ACTIVITIES = ["Friends", "Training"];
-
-// Define the new state structure for photos
-interface PhotoPreview {
-  id: string; // Client-side unique ID for React key and updates
-  originalFile: File | null; // Keep original file ref for potential retry, null for existing photos
-  previewUrl: string | null; // URL for display (from backend response)
-  serverId: string | null; // ID from backend after successful upload
-  uploadStatus: 'pending' | 'uploading' | 'completed' | 'failed'; // Upload tracking
-}
 
 export default function LogDay() {
   const navigate = useNavigate();
@@ -37,13 +30,12 @@ export default function LogDay() {
   const [searchResults, setSearchResults] = useState<Resort[]>([]);
   const [isSearchingResorts, setIsSearchingResorts] = useState<boolean>(false);
   const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
-  const [selectedSki, setSelectedSki] = useState<string | null>(null);
+  const [selectedSkis, setSelectedSkis] = useState<string[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
   const [newInlineSkiName, setNewInlineSkiName] = useState("");
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false); // General upload tracking state
-  const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
 
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
@@ -64,7 +56,7 @@ export default function LogDay() {
   });
 
   const { mutate: saveDay, isPending: isSaving } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }) =>
       skiService.logDay(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -82,7 +74,7 @@ export default function LogDay() {
   });
 
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }) =>
         skiService.updateDay(dayId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -106,7 +98,7 @@ export default function LogDay() {
       toast.success(`Ski "${newSki.name}" added successfully!`);
       setNewInlineSkiName("");
       setIsAddingSkiInline(false);
-      setSelectedSki(newSki.id);
+      setSelectedSkis(prevSkis => [...prevSkis, newSki.id]);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to add ski");
@@ -197,98 +189,52 @@ export default function LogDay() {
   };
   // --- End Upload Photo Function ---
 
-  // --- Process Selected Files (Input/Drop) ---
-  const processFiles = async (files: FileList | null) => {
+  // Callback for InteractivePhotoUploader when files are selected
+  const handleFilesSelected = async (files: File[]) => {
     if (!files || files.length === 0) return;
+    await processFiles(files); // processFiles now takes File[]
+  };
 
-    const filesArray = Array.from(files);
+  // Adjust processFiles to accept File[] directly
+  const processFiles = async (filesArray: File[]) => {
+    if (!filesArray || filesArray.length === 0) return;
+
     const initialPreviews: PhotoPreview[] = filesArray.map(file => ({
       id: crypto.randomUUID(),
       originalFile: file,
-      previewUrl: null,
+      previewUrl: null, // Set to null, will be populated by server response
       serverId: null,
-      uploadStatus: 'pending',
+      uploadStatus: 'uploading',
     }));
 
     setPhotos(prev => [...prev, ...initialPreviews]);
-    // isUploading state will be set by useEffect
 
-    // Trigger uploads
     const uploadPromises = initialPreviews.map(preview =>
-      uploadPhoto(preview.id, preview.originalFile)
+      uploadPhoto(preview.id, preview.originalFile!) // originalFile should exist here
     );
-
-    // Wait for all attempts to settle (though UI updates happen individually)
     await Promise.allSettled(uploadPromises);
-    // Final isUploading state determined by useEffect
-  };
-  // --- End Process Selected Files ---
-
-  // Effect to update global isUploading state
-  useEffect(() => {
-    const anyUploading = photos.some(p => p.uploadStatus === 'uploading');
-    setIsUploading(anyUploading);
-  }, [photos]);
-
-  // Original handler for file input click
-  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    await processFiles(event.target.files);
-    if (event.target) {
-        event.target.value = ''; // Reset file input
-    }
   };
 
-  // --- Drag and Drop Handlers ---
-  const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
-    event.preventDefault(); // Necessary to allow dropping
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = (event: React.DragEvent<HTMLLabelElement>) => {
-     event.preventDefault();
-     setIsDraggingOver(false);
-  };
-
-  const handleDrop = async (event: React.DragEvent<HTMLLabelElement>) => {
-    event.preventDefault(); // Prevent default browser behavior (opening file)
-    setIsDraggingOver(false);
-    await processFiles(event.dataTransfer.files);
-  };
-  // --- End Drag and Drop Handlers ---
-
-  // --- Remove Photo Handler (Now calls service) ---
-  const removePhoto = async (clientSideId: string) => {
+  // Remove photo now just needs the clientSideId
+  const handleRemovePhoto = async (clientSideId: string) => {
     const photoToRemove = photos.find(p => p.id === clientSideId);
     if (!photoToRemove) return;
 
     const serverId = photoToRemove.serverId;
     const uploadStatus = photoToRemove.uploadStatus;
-    const currentPreviewUrl = photoToRemove.previewUrl;
 
-    // Optimistically remove from UI
     setPhotos(prev => prev.filter(p => p.id !== clientSideId));
 
-    // Attempt backend deletion ONLY if it was successfully uploaded
     if (serverId && uploadStatus === 'completed') {
       try {
-        // Call the service function
         await skiService.deletePhoto(serverId);
-        toast.info('Photo removed.');
-
+        toast.info('Photo removed from server.');
       } catch (error) {
-        console.error('Error deleting photo:', error);
-        toast.error('Could not delete photo from server. Please try again.');
-        // Re-add photo to UI upon failure?
-        // setPhotos(prev => [...prev, photoToRemove]); // Consider race conditions/state mismatch if re-adding
+        console.error('Error deleting photo from server:', error);
+        toast.error('Could not delete photo from server.');
       }
     }
-
-    // Revoke preview URL if it existed
-    if (currentPreviewUrl) {
-        URL.revokeObjectURL(currentPreviewUrl);
-    }
   };
-  // --- End Remove Photo Handler ---
 
   const handleSaveInlineSki = () => {
     if (!newInlineSkiName.trim()) {
@@ -304,7 +250,7 @@ export default function LogDay() {
       const editDate = new Date(dayToEdit.date.replace(/-/g, '/'));
       setDate(editDate);
       setDisplayedMonth(editDate);
-      setSelectedSki(dayToEdit.ski.id);
+      setSelectedSkis(dayToEdit.skis ? dayToEdit.skis.map(ski => ski.id) : []);
       setSelectedActivity(dayToEdit.activity);
       setSelectedResort(dayToEdit.resort);
 
@@ -323,7 +269,7 @@ export default function LogDay() {
         setDate(today);
         setDisplayedMonth(today);
         setSelectedResort(null);
-        setSelectedSki(null);
+        setSelectedSkis([]);
         setSelectedActivity("");
         setResortQuery("");
         setIsSearchingMode(false);
@@ -340,8 +286,8 @@ export default function LogDay() {
 
   // --- Main Save/Update Handler ---
   const handleSave = () => {
-    if (!selectedResort || selectedSki === null || !selectedActivity) {
-      toast.error("Please select a resort, skis, and activity.");
+    if (!selectedResort || selectedSkis.length === 0 || !selectedActivity) {
+      toast.error("Please select a resort, at least one pair of skis, and an activity.");
       return;
     }
 
@@ -362,19 +308,15 @@ export default function LogDay() {
     const payload = {
         date: formattedDate,
         resort_id: selectedResort.id,
-        ski_id: selectedSki,
+        ski_ids: selectedSkis,
         activity: selectedActivity,
         photo_ids: successfullyUploadedPhotoIds
     };
 
     if (isEditMode) {
-      // Prepare update payload (plain object) - Already done above
-      // const updatePayload = { ... };
-      updateDay(payload); // Pass plain object
+      updateDay(payload);
     } else {
-      // Prepare create payload (plain object) - Already done above
-      // const formData = new FormData(); ... // Remove FormData creation
-      saveDay(payload); // Pass plain object
+      saveDay(payload);
     }
   };
   // --- End Main Save/Update Handler ---
@@ -556,16 +498,20 @@ export default function LogDay() {
                       <SelectionPill
                         key={ski.id}
                         label={ski.name}
-                        selected={selectedSki === ski.id}
-                        onClick={() => setSelectedSki(ski.id)}
+                        selected={selectedSkis.includes(ski.id)}
+                        onClick={() => {
+                          setSelectedSkis(prevSelectedSkis =>
+                            prevSelectedSkis.includes(ski.id)
+                              ? prevSelectedSkis.filter(id => id !== ski.id)
+                              : [...prevSelectedSkis, ski.id]
+                          );
+                        }}
                         data-testid={`ski-option-${ski.name.toLowerCase().replace(/\s+/g, '-')}`}
                         disabled={isProcessing || isLoading}
                       />
                     ))}
                   </>
-                ) : (
-                  null // Show Add button if list is empty
-                )
+                ) : null
               )}
               {!isLoadingSkis && !skisError && !isAddingSkiInline && (
                  <Button
@@ -635,94 +581,14 @@ export default function LogDay() {
             </div>
           </div>
 
-          {/* Photo Upload Section */}
-          <div className="space-y-2">
-            <Label htmlFor="photo-upload" className="text-slate-700 font-medium">Add Photos (optional)</Label>
-            <div className="flex items-center space-x-2">
-              {/* Dropzone Label */}
-              <Label
-                htmlFor="photo-upload"
-                data-testid="photo-dropzone-label"
-                className={`flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-colors ${
-                  isDraggingOver ? 'border-blue-600 bg-blue-50' : ''
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <div className="text-center text-slate-500">
-                  <ImagePlus className="mx-auto h-8 w-8" />
-                  <span>Click or drag to upload</span>
-                </div>
-                {/* Hidden File Input */}
-                <Input
-                  id="photo-upload"
-                  type="file"
-                  multiple
-                  accept="image/*" // Accept all image types, backend handles validation/conversion
-                  className="sr-only"
-                  onChange={handlePhotoChange}
-                  disabled={isProcessing}
-                />
-              </Label>
-            </div>
-            {/* Photo Preview Grid */}
-            {photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 pt-2">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative group w-full h-20" data-testid="photo-preview">
-                    {/* Completed & Preview Available */}
-                    {photo.uploadStatus === 'completed' && photo.previewUrl ? (
-                      <img
-                        src={photo.previewUrl}
-                        alt={`preview ${photo.originalFile?.name || photo.serverId}`}
-                        className="w-full h-full object-cover rounded-md"
-                        onError={(e) => {
-                           const target = e.target as HTMLImageElement;
-                           target.style.display = 'none';
-                           const parent = target.closest('[data-testid="photo-preview"]');
-                           const fallback = parent?.querySelector('[data-fallback-id="' + photo.id + '"]');
-                           if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                        }}
-                      />
-                    // Failed Upload
-                    ) : photo.uploadStatus === 'failed' ? (
-                      <div className="w-full h-full bg-red-100 rounded-md flex flex-col items-center justify-center text-center text-xs text-red-600 p-1 font-medium">
-                         <X className="h-4 w-4 mb-1" />
-                         <span className="break-words">Upload Failed</span>
-                      </div>
-                    // Uploading
-                    ) : photo.uploadStatus === 'uploading' ? (
-                       <div className="w-full h-full bg-slate-100 rounded-md flex items-center justify-center text-center text-xs text-slate-400 p-1 animate-pulse">
-                         <Loader2 className="h-5 w-5 animate-spin" />
-                       </div>
-                    // Fallback (Pending, Completed w/o URL)
-                    ) : (
-                      <div
-                         data-fallback-id={photo.id}
-                         className="w-full h-full bg-slate-100 rounded-md items-center justify-center text-center text-xs text-slate-500 p-1"
-                         style={{ display: (photo.uploadStatus === 'completed' && !photo.previewUrl) || photo.uploadStatus === 'pending' ? 'flex' : 'none' }}
-                      >
-                         <span className="break-words">Preview N/A</span>
-                      </div>
-                    )}
-                    {/* Remove Button Overlay */}
-                    {(photo.uploadStatus === 'completed' || photo.uploadStatus === 'failed') && (
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(photo.id)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                        aria-label="Remove photo"
-                        disabled={isProcessing} // Disable if main form is saving OR photos are uploading
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Photo Upload Section - Replaced with InteractivePhotoUploader */}
+          <InteractivePhotoUploader
+            photos={photos}
+            onFilesSelected={handleFilesSelected}
+            onRemovePhoto={handleRemovePhoto}
+            isProcessing={isProcessing}
+            acceptedFileTypes="image/jpeg,image/png,image/gif,image/heic,image/heif" // Example
+          />
         </div>
 
         {/* Save/Update Button */}

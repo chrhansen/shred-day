@@ -26,6 +26,34 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
     return null;
   }
 
+  const getAccessibilityText = () => {
+    if (isLoading) {
+      return {
+        title: "Loading ski day details",
+        description: "Please wait while the ski day details are being loaded."
+      };
+    }
+    if (error) {
+      return {
+        title: "Error loading details",
+        description: `An error occurred: ${error}`
+      };
+    }
+    if (!day) {
+      return {
+        title: "No details available",
+        description: "There are no details to display for this ski day."
+      };
+    }
+    const skiNames = day.skis && day.skis.length > 0 ? day.skis.map(s => s.name).join(", ") : "N/A";
+    return {
+      title: `${day.resort.name} - Ski Day Details`,
+      description: `Details for ski day at ${day.resort.name} on ${format(new Date(day.date.replace(/-/g, '/')), "EEEE, MMMM d, yyyy")}. Skis used: ${skiNames}. ${day.notes ? `Notes: ${day.notes}` : "No additional notes."}`
+    };
+  };
+
+  const { title: accessibilityTitle, description: accessibilityDescription } = getAccessibilityText();
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -56,11 +84,8 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
 
     return (
       <>
-        <DialogTitle className="sr-only">{day.resort.name} - Ski Day Details</DialogTitle>
-        <DialogDescription className="sr-only">
-          Details for ski day at {day.resort.name} on {format(new Date(day.date.replace(/-/g, '/')), "EEEE, MMMM d, yyyy")}.
-          {day.notes ? ` Notes: ${day.notes}` : " No additional notes."}
-        </DialogDescription>
+        <DialogTitle className="sr-only">{accessibilityTitle}</DialogTitle>
+        <DialogDescription className="sr-only">{accessibilityDescription}</DialogDescription>
         <div className="relative">
           <Carousel className="w-full bg-black" data-testid="ski-day-detail-carousel">
             <CarouselContent>
@@ -111,8 +136,14 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
           <Separator />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-medium text-slate-500 mb-1">Skis</h3>
-              <p className="text-slate-800">{day.ski.name}</p>
+              <h3 className="text-sm font-medium text-slate-500 mb-1">Skis Used</h3>
+              {day.skis && day.skis.length > 0 ? (
+                <ul className="list-disc list-inside text-slate-800">
+                  {day.skis.map(s => <li key={s.id}>{s.name}</li>)}
+                </ul>
+              ) : (
+                <p className="text-slate-800 italic">No skis recorded.</p>
+              )}
             </div>
             <div>
               <h3 className="text-sm font-medium text-slate-500 mb-1">Activity</h3>
@@ -136,6 +167,8 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
       <DialogContent
         className="w-[calc(100%-2rem)] max-w-md sm:max-w-lg md:max-w-xl p-0 gap-0 border-none overflow-hidden bg-white rounded-xl"
       >
+        <DialogTitle className="sr-only">{accessibilityTitle}</DialogTitle>
+        <DialogDescription className="sr-only">{accessibilityDescription}</DialogDescription>
         {renderContent()}
       </DialogContent>
     </Dialog>

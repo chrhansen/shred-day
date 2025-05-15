@@ -5,6 +5,9 @@ class Api::V1::PhotosController < ApplicationController
     photo = current_user.photos.build
 
     if params[:file].present? && photo.image.attach(params[:file]) && photo.save
+      ExifExtractService.new(photo).extract_from_file
+      SetNearestResortService.new(photo).set_nearest_resort
+
       render json: photo, status: :created, serializer: Api::V1::PhotoSerializer
     else
       error_message = photo.errors.full_messages.presence || ["Failed to attach or save file."]

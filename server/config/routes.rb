@@ -9,12 +9,13 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
-  # Defines the root path route ("/")
-  # root "posts#index"
-
   namespace :api do
     namespace :v1 do
       resources :photos, only: [:create, :destroy]
+      resources :photo_imports, only: [:create, :show, :update] do
+        resources :photos, only: [:create, :destroy, :update], module: :photo_imports
+      end
+      resources :draft_days, only: [:update]
 
       resources :days, only: [:create, :index, :show, :update, :destroy]
       resource :stats, only: [:show]
@@ -23,13 +24,8 @@ Rails.application.routes.draw do
       resources :users, only: [:create] # Sign Up
       resource :session, only: [:create, :destroy] # Sign In, Sign Out
 
-      # Ski equipment routes
       resources :skis, only: [:index, :create, :update, :destroy]
-
-      # Resort routes
       resources :resorts, only: [:index] # GET /api/v1/resorts?query=... (Search Resorts)
-
-      # Recent Resorts route
       resources :recent_resorts, only: [:index] # GET /api/v1/recent_resorts
     end
   end

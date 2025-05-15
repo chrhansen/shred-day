@@ -7,7 +7,15 @@ class Photo < ApplicationRecord
 
   belongs_to :user
   belongs_to :day, optional: true
+  belongs_to :photo_import, optional: true
+  belongs_to :draft_day, optional: true
+  belongs_to :resort, optional: true
 
+  enum :exif_state, {
+    pending: 0,
+    extracted: 1,
+    missing: 2
+  }, prefix: true
 
   # validates :image, presence: true, blob: { content_type: ['image/png', 'image/jpeg', 'image/gif', 'image/heic', 'image/heif'], size_range: 1..(10.megabytes) }
 end

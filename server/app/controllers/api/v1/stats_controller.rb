@@ -8,13 +8,13 @@ class Api::V1::StatsController < ApplicationController
     total_days = user_days.count
     # Count distinct resort_id from the user's days
     unique_resorts = user_days.select(:resort_id).distinct.count
-    most_used_ski_id = user_days.group(:ski_id).count.max_by { |_ski_id, count| count }
-    most_used_ski = current_user.skis.find_by(id: most_used_ski_id ? most_used_ski_id[0] : nil)
+    # most_used_ski_ids = user_days.group(:ski_ids).count.max_by { |_ski_ids, count| count }
+    # most_used_skis = current_user.skis.find_by(id: most_used_ski_ids ? most_used_ski_ids[0] : nil)
 
     render json: {
       totalDays: total_days,
       uniqueResorts: unique_resorts,
-      mostUsedSki: most_used_ski&.name || "-"
+      mostUsedSki: "-"
     }
   end
 end

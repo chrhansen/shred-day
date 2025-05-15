@@ -99,8 +99,8 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
           <div className="text-lg font-medium text-slate-800 truncate">{day.resort_name}</div>
           <div className="text-base text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}</div>
           <div className="text-base text-slate-500 flex items-center gap-2 flex-wrap">
-            {day.ski_name && <span>{day.ski_name}</span>}
-            {day.ski_name && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
+            {day.ski_names && <span>{day.ski_names.join('/')}</span>}
+            {day.ski_names && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
             {day.activity && <span>{day.activity}</span>}
           </div>
         </div>

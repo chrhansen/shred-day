@@ -3,7 +3,10 @@ module Api
     class PhotoSerializer < ActiveModel::Serializer
       include Rails.application.routes.url_helpers # Needed for url_for
 
-      attributes :id, :filename, :preview_url, :full_url
+      attributes :id, :filename, :preview_url, :full_url, :taken_at, :latitude,
+      :longitude, :exif_state, :photo_import_id, :draft_day_id
+
+      belongs_to :resort, serializer: Api::V1::ResortSerializer
 
       def filename
         object.image.filename.to_s if object.image.attached?

@@ -1,10 +1,11 @@
 class Api::V1::DaysController < ApplicationController
   before_action :set_day, only: [:show, :update, :destroy]
+  before_action :set_skis, only: [:create, :update]
 
   # GET /api/v1/days
   def index
     # Preload associations (:ski, :resort) and photos with their attached image blobs
-    days = current_user.days.includes(:ski, :resort, photos: { image_attachment: :blob }).order(date: :desc)
+    days = current_user.days.includes(:skis, :resort, photos: { image_attachment: :blob }).order(date: :desc)
     # Use the specific serializer for the list view
     render json: days, each_serializer: Api::V1::DayEntrySerializer
   end
@@ -18,11 +19,11 @@ class Api::V1::DaysController < ApplicationController
   # POST /api/v1/days
   def create
     # Exclude photo_ids from initial build, handle association later
-    day = current_user.days.build(day_params.except(:photo_ids))
+    day = current_user.days.build(day_params.except(:photo_ids, :ski_ids))
 
     if day.save
       sync_photos(day, day_params[:photo_ids] || [])
-
+      day.skis << @skis
       # Eager load associations for the response, including photos and their blobs
       day.reload(include: [:ski, :resort, :photos])
 
@@ -65,8 +66,12 @@ class Api::V1::DaysController < ApplicationController
 
   private
 
+  def set_skis
+    @skis = current_user.skis.find(day_params[:ski_ids])
+  end
+
   def set_day
-    @day = current_user.days.includes(:ski, :resort, :photos).find(params[:id])
+    @day = current_user.days.includes(:skis, :resort, :photos).find(params[:id])
     # Preload associations and photo attachments
     # Use attachment names for eager loading
   rescue ActiveRecord::RecordNotFound
@@ -77,7 +82,7 @@ class Api::V1::DaysController < ApplicationController
   def day_params
     # Allow an array of photo_ids instead of photo files
     params.require(:day).permit(
-      :date, :resort_id, :ski_id, :activity, :notes, photo_ids: []
+      :date, :resort_id, :activity, :notes, photo_ids: [], ski_ids: []
     )
   end
 

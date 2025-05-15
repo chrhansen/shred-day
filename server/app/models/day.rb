@@ -1,11 +1,12 @@
 class Day < ApplicationRecord
   belongs_to :user
-  belongs_to :ski
   belongs_to :resort
   has_many :photos, dependent: :destroy
+  has_many :draft_days, dependent: :destroy
+  has_and_belongs_to_many :skis
 
   # Validations
-  validates :date, :resort, :ski, :user, presence: true
+  validates :date, :resort, :user, presence: true
 
   # Custom validation for max 3 entries per user per date
   validate :maximum_3days_per_date, on: [:create, :update]

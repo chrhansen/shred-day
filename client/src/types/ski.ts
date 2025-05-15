@@ -12,7 +12,7 @@ export interface SkiDayDetail {
   updated_at?: string;
   // Nested objects are included by DaySerializer
   resort: Resort; // Assuming Resort type is correct and available
-  ski: Ski; // Assuming Ski type is correct and available
+  skis: Ski[]; // Changed from ski: Ski to skis: Ski[]
   // Photos included by DaySerializer via PhotoSerializer
   photos: { id: string; preview_url: string | null; full_url: string; filename: string | null }[];
 }
@@ -55,10 +55,74 @@ export interface SkiDayEntry {
   id: string;
   date: string; // API returns string, we can parse it later
   activity: string;
-  ski_name: string;
+  ski_names: string[];
   resort_name: string;
   has_notes: boolean;
   created_at: string;
   updated_at: string;
   photos?: { id: string; preview_url: string | null; full_url: string | null; filename: string | null }[];
+}
+
+// Standardized Photo object structure from backend (used in PhotoImport and DraftDay)
+export interface ServerPhoto {
+  id: string;
+  preview_url: string | null;
+  full_url: string | null;
+  filename: string | null;
+  taken_at?: string | null;
+  resort?: Resort | null; // Full Resort object as per your serializer
+  latitude?: number | null;
+  longitude?: number | null;
+  exif_state?: "pending" | "extracted" | "missing" | null;
+  draft_day_id?: string | null; // As seen in screenshot data
+  // any other fields your PhotoSerializer sends
+}
+
+export interface DraftDay {
+  id: string;
+  date: string; // Keep as string from API, convert to Date in frontend when needed
+  decision?: "pending" | "merge" | "duplicate" | "skip"; // Align with SkiDayActionToggle
+  resort?: Resort | null; // The determined resort for this draft day (can be null if group is by date only initially)
+  photos?: ServerPhoto[];
+  day_id?: string | null; // Add day_id from backend response
+  // photoCount can be photos.length
+  skiDayExists?: boolean; // If backend can determine this for the group
+}
+
+export interface PhotoImport {
+  id: string;
+  user_id: string;
+  status: "waiting" | "processing" | "committed" | "canceled" | "failed" ;
+  created_at: string;
+  updated_at: string;
+  draft_days?: DraftDay[];
+  photos?: ServerPhoto[]; // Root level photos, typically those not yet assigned or with missing EXIF
+}
+
+// Client-side representation for UI, especially for PhotoList/PhotoItem
+export interface SkiPhoto {
+  id: string;
+  url: string;
+  date?: Date | null;
+  resort?: string | null; // Resort name for display
+  originalResortId?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  status: "pending" | "accepted" | "rejected"; // User's decision on this photo if it were itemized for acceptance (may change with group decisions)
+  exif_state?: "pending" | "extracted" | "missing" | null;
+  originalFile?: File | null;
+  uploadProgress?: number;
+  uploadStatus?: 'pending_upload' | 'uploading' | 'completed' | 'failed_upload';
+  serverId?: string | null;
+  errorMessage?: string;
+}
+
+// Client-side preview object for InteractivePhotoUploader
+export interface PhotoPreview {
+  id: string;
+  originalFile: File | null;
+  previewUrl: string | null;
+  serverId: string | null;
+  uploadStatus: 'uploading' | 'completed' | 'failed';
+  errorMessage?: string;
 }

@@ -10,8 +10,8 @@ module Api
         object.notes.present?
       end
 
-      attribute :ski_name do
-        object.ski&.name
+      attribute :ski_names do
+        object.skis.map(&:name)
       end
 
       attribute :resort_name do

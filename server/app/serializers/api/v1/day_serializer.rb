@@ -7,11 +7,11 @@ module Api
       attributes :id, :date, :activity, :user_id, :created_at, :updated_at, :notes
 
       # Use belongs_to to embed the full associated objects
-      belongs_to :ski
       belongs_to :resort
 
       # Use has_many with the dedicated PhotoSerializer
       has_many :photos, serializer: Api::V1::PhotoSerializer
+      has_many :skis, serializer: Api::V1::SkiSerializer
     end
   end
 end

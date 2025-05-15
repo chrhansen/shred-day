@@ -3,13 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import StatsPage from "./pages/StatsPage";
-import LogDay from "./pages/LogDay";
-import SettingsPage from "./pages/SettingsPage";
-import DaysListPage from "./pages/DaysListPage";
-import AuthPage from "./pages/AuthPage";
+import StatsPage from "@/pages/StatsPage";
+import LogDay from "@/pages/LogDay";
+import SettingsPage from "@/pages/SettingsPage";
+import DaysListPage from "@/pages/DaysListPage";
+import AuthPage from "@/pages/AuthPage";
+import PhotoImportPage from "@/pages/PhotoImportPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const AppRoutes = () => {
           <Route path="/days/:id/edit" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
+          <Route path="/photo-imports/:importId" element={<ProtectedRoute><PhotoImportPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       ) : (

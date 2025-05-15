@@ -3,7 +3,7 @@ class Api::V1::SkisController < ApplicationController
 
   # GET /api/v1/skis
   def index
-    @skis = current_user.skis.order(:name)
+    @skis = current_user.skis.order('lower(name)')
     render json: @skis
   end
 

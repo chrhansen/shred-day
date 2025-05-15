@@ -247,9 +247,47 @@ CREATE TABLE public.days (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
-    ski_id character varying NOT NULL,
     resort_id character varying NOT NULL,
     notes text
+);
+
+
+--
+-- Name: days_skis; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.days_skis (
+    day_id character varying NOT NULL,
+    ski_id character varying NOT NULL
+);
+
+
+--
+-- Name: draft_days; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.draft_days (
+    id character varying DEFAULT public.gen_id('drd'::text) NOT NULL,
+    photo_import_id character varying NOT NULL,
+    resort_id character varying NOT NULL,
+    day_id character varying,
+    date date NOT NULL,
+    decision integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: photo_imports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.photo_imports (
+    id character varying DEFAULT public.gen_id('pi'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    status integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -262,7 +300,14 @@ CREATE TABLE public.photos (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     day_id character varying,
-    user_id character varying NOT NULL
+    user_id character varying NOT NULL,
+    draft_day_id character varying,
+    photo_import_id character varying,
+    resort_id character varying,
+    latitude double precision,
+    longitude double precision,
+    taken_at timestamp(6) without time zone,
+    exif_state integer DEFAULT 0 NOT NULL
 );
 
 
@@ -379,6 +424,22 @@ ALTER TABLE ONLY public.days
 
 
 --
+-- Name: draft_days draft_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_days
+    ADD CONSTRAINT draft_days_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: photo_imports photo_imports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.photo_imports
+    ADD CONSTRAINT photo_imports_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: photos photos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -454,13 +515,6 @@ CREATE INDEX index_days_on_resort_id ON public.days USING btree (resort_id);
 
 
 --
--- Name: index_days_on_ski_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_days_on_ski_id ON public.days USING btree (ski_id);
-
-
---
 -- Name: index_days_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -468,10 +522,73 @@ CREATE INDEX index_days_on_user_id ON public.days USING btree (user_id);
 
 
 --
+-- Name: index_days_skis_on_day_id_and_ski_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_days_skis_on_day_id_and_ski_id ON public.days_skis USING btree (day_id, ski_id);
+
+
+--
+-- Name: index_days_skis_on_ski_id_and_day_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_days_skis_on_ski_id_and_day_id ON public.days_skis USING btree (ski_id, day_id);
+
+
+--
+-- Name: index_draft_days_on_day_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_draft_days_on_day_id ON public.draft_days USING btree (day_id);
+
+
+--
+-- Name: index_draft_days_on_photo_import_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_draft_days_on_photo_import_id ON public.draft_days USING btree (photo_import_id);
+
+
+--
+-- Name: index_draft_days_on_resort_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_draft_days_on_resort_id ON public.draft_days USING btree (resort_id);
+
+
+--
+-- Name: index_photo_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_photo_imports_on_user_id ON public.photo_imports USING btree (user_id);
+
+
+--
 -- Name: index_photos_on_day_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_photos_on_day_id ON public.photos USING btree (day_id);
+
+
+--
+-- Name: index_photos_on_draft_day_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_photos_on_draft_day_id ON public.photos USING btree (draft_day_id);
+
+
+--
+-- Name: index_photos_on_photo_import_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_photos_on_photo_import_id ON public.photos USING btree (photo_import_id);
+
+
+--
+-- Name: index_photos_on_resort_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_photos_on_resort_id ON public.photos USING btree (resort_id);
 
 
 --
@@ -520,11 +637,27 @@ ALTER TABLE ONLY public.photos
 
 
 --
--- Name: days fk_rails_96ca576737; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: photo_imports fk_rails_439e345dbd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.days
-    ADD CONSTRAINT fk_rails_96ca576737 FOREIGN KEY (ski_id) REFERENCES public.skis(id);
+ALTER TABLE ONLY public.photo_imports
+    ADD CONSTRAINT fk_rails_439e345dbd FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: draft_days fk_rails_67a15fe389; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_days
+    ADD CONSTRAINT fk_rails_67a15fe389 FOREIGN KEY (day_id) REFERENCES public.days(id);
+
+
+--
+-- Name: photos fk_rails_7f028822e1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.photos
+    ADD CONSTRAINT fk_rails_7f028822e1 FOREIGN KEY (photo_import_id) REFERENCES public.photo_imports(id);
 
 
 --
@@ -544,6 +677,22 @@ ALTER TABLE ONLY public.days
 
 
 --
+-- Name: photos fk_rails_abbf718543; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.photos
+    ADD CONSTRAINT fk_rails_abbf718543 FOREIGN KEY (resort_id) REFERENCES public.resorts(id);
+
+
+--
+-- Name: draft_days fk_rails_b973de63fc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_days
+    ADD CONSTRAINT fk_rails_b973de63fc FOREIGN KEY (photo_import_id) REFERENCES public.photo_imports(id);
+
+
+--
 -- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -560,12 +709,32 @@ ALTER TABLE ONLY public.photos
 
 
 --
+-- Name: photos fk_rails_ca324dbc81; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.photos
+    ADD CONSTRAINT fk_rails_ca324dbc81 FOREIGN KEY (draft_day_id) REFERENCES public.draft_days(id);
+
+
+--
+-- Name: draft_days fk_rails_cc88a79625; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_days
+    ADD CONSTRAINT fk_rails_cc88a79625 FOREIGN KEY (resort_id) REFERENCES public.resorts(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250515081850'),
+('20250510072251'),
+('20250509182404'),
+('20250509181957'),
 ('20250507082436'),
 ('20250505111757'),
 ('20250429135612'),

@@ -71,18 +71,12 @@ export const skiService = {
     return await response.json();
   },
 
-  // Accept plain object now, not FormData
-  // async logDay(formData: FormData): Promise<SkiDayDetail> {
-  async logDay(dayData: { date: string; resort_id: string; ski_id: string; activity: string; photo_ids: string[] }): Promise<SkiDayDetail> {
-    // Send as JSON, using default options
-    // const requestOptions: RequestInit = { ... }; // Remove custom options
-
+  async logDay(dayData: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }): Promise<SkiDayDetail> {
     const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
-      ...defaultFetchOptions, // Use defaults (includes Content-Type: application/json)
+      ...defaultFetchOptions,
       method: 'POST',
-      body: JSON.stringify({ day: dayData }), // Nest under 'day' key
+      body: JSON.stringify({ day: dayData }),
     });
-
     if (!response.ok) await handleApiError(response);
     const responseData = await response.json();
     return responseData;
@@ -181,15 +175,15 @@ export const skiService = {
     return dayData;
   },
 
-  // to update a ski day
-  // Accept plain object including optional photo_ids
-  async updateDay(dayId: string, dayData: Partial<Omit<SkiDayDetail, 'id' | 'resort' | 'ski' | 'photos'>> & { resort_id?: string; ski_id?: string; photo_ids?: string[] }): Promise<SkiDayDetail> {
-     const payload = dayData;
-
+  async updateDay(
+    dayId: string,
+    dayData: Partial<Omit<SkiDayDetail, 'id' | 'resort' | 'photos' | 'skis'>> &
+             { resort_id?: string; ski_ids?: string[]; activity?: string; photo_ids?: string[] }
+  ): Promise<SkiDayDetail> {
     const response = await fetch(`${API_BASE_URL}/api/v1/days/${dayId}`, {
       ...defaultFetchOptions,
       method: 'PATCH',
-      body: JSON.stringify({ day: payload }),
+      body: JSON.stringify({ day: dayData }),
     });
     if (!response.ok) await handleApiError(response);
     const updatedDayData = await response.json();
