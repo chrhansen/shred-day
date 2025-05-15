@@ -6,7 +6,7 @@ class Api::V1::DraftDaysController < ApplicationController
     if draft_day.valid?
       render json: draft_day
     else
-      render json: draft_day.errors, status: :unprocessable_entity
+      render json: { errors: draft_day.errors }, status: :unprocessable_entity
     end
   end
 

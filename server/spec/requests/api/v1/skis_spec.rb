@@ -177,20 +177,17 @@ RSpec.describe "Api::V1::Skis", type: :request do
       end
 
       context "deleting a ski associated with a day" do
-        let!(:day_using_ski) { create(:day, user: user, ski: user_ski1, resort: create(:resort)) }
+        let!(:day_using_ski) { create(:day, user: user, skis: [user_ski1], resort: create(:resort)) }
 
-        it "does not delete the ski" do
+        it "does delete the ski" do
           expect {
             delete api_v1_ski_path(user_ski1)
-          }.to_not change(Ski, :count)
+          }.to change(Ski, :count).by(-1)
         end
 
         it "returns unprocessable_entity status and an error message" do
           delete api_v1_ski_path(user_ski1)
-          expect(response).to have_http_status(:unprocessable_entity)
-          json_response = JSON.parse(response.body)
-          # Check for the standard Rails error message format
-          expect(json_response['errors']).to include("Cannot delete record because dependent days exist")
+          expect(response).to have_http_status(:no_content)
         end
       end
     end

@@ -8,9 +8,9 @@ RSpec.describe "Api::V1::Stats", type: :request do
   let!(:resort2) { create(:resort) } # Another distinct resort
   let!(:ski1) { create(:ski, user: user) }
   let!(:ski2) { create(:ski, user: user) }
-  let!(:day1) { create(:day, user: user, resort: resort1, ski: ski1, date: Date.today - 2) }
-  let!(:day2) { create(:day, user: user, resort: resort1, ski: ski1, date: Date.today - 1) } # Same resort, same ski
-  let!(:day3) { create(:day, user: user, resort: resort2, ski: ski2, date: Date.today) }     # Different resort, different ski
+  let!(:day1) { create(:day, user: user, resort: resort1, skis: [ski1], date: Date.today - 2) }
+  let!(:day2) { create(:day, user: user, resort: resort1, skis: [ski1], date: Date.today - 1) } # Same resort, same ski
+  let!(:day3) { create(:day, user: user, resort: resort2, skis: [ski2], date: Date.today) }     # Different resort, different ski
 
   describe "GET /api/v1/stats" do
     context "when not authenticated" do
@@ -44,6 +44,7 @@ RSpec.describe "Api::V1::Stats", type: :request do
         expect(json_response["uniqueResorts"]).to eq(2)
 
         expect(json_response).to have_key("mostUsedSki")
+
         expect(json_response["mostUsedSki"]).to eq(ski1.name) # ski1 was used twice
       end
     end

@@ -9,7 +9,6 @@ RSpec.describe "Api::V1::RecentResorts", type: :request do
   let!(:resort4) { create(:resort, name: "Resort Delta") }
   let!(:resort5) { create(:resort, name: "Resort Epsilon") }
   let!(:resort6) { create(:resort, name: "Resort Zeta") }
-  let!(:ski) { create(:ski, user: user) }
 
   # --- Authentication Helper ---
   def login(user_to_login)
@@ -25,18 +24,18 @@ RSpec.describe "Api::V1::RecentResorts", type: :request do
         before do
           # Log days with specific dates to control order
           # Most recent date: resort3
-          create(:day, user: user, resort: resort3, ski: ski, date: Date.today)
+          create(:day, user: user, resort: resort3, date: Date.today)
           # Second most recent date: resort1 (logged twice, but last actual ski date is older)
-          create(:day, user: user, resort: resort1, ski: ski, date: Date.today - 2.days)
-          create(:day, user: user, resort: resort1, ski: ski, date: Date.today - 1.day)
+          create(:day, user: user, resort: resort1, date: Date.today - 2.days)
+          create(:day, user: user, resort: resort1, date: Date.today - 1.day)
           # Third most recent date: resort5
-          create(:day, user: user, resort: resort5, ski: ski, date: Date.today - 3.days)
+          create(:day, user: user, resort: resort5, date: Date.today - 3.days)
           # Fourth most recent date: resort2
-          create(:day, user: user, resort: resort2, ski: ski, date: Date.today - 4.days)
+          create(:day, user: user, resort: resort2, date: Date.today - 4.days)
           # Fifth most recent date: resort4
-          create(:day, user: user, resort: resort4, ski: ski, date: Date.today - 5.days)
+          create(:day, user: user, resort: resort4, date: Date.today - 5.days)
           # Sixth most recent date (should be excluded): resort6
-          create(:day, user: user, resort: resort6, ski: ski, date: Date.today - 6.days)
+          create(:day, user: user, resort: resort6, date: Date.today - 6.days)
         end
 
         it "returns the top 5 most recently visited unique resorts in order" do

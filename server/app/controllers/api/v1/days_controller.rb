@@ -4,7 +4,6 @@ class Api::V1::DaysController < ApplicationController
 
   # GET /api/v1/days
   def index
-    # Preload associations (:ski, :resort) and photos with their attached image blobs
     days = current_user.days.includes(:skis, :resort, photos: { image_attachment: :blob }).order(date: :desc)
     # Use the specific serializer for the list view
     render json: days, each_serializer: Api::V1::DayEntrySerializer
@@ -12,7 +11,6 @@ class Api::V1::DaysController < ApplicationController
 
   # GET /api/v1/days/:id
   def show
-    # Render the single day using the default DaySerializer (includes nested objects)
     render json: @day
   end
 
@@ -27,10 +25,8 @@ class Api::V1::DaysController < ApplicationController
       # Eager load associations for the response, including photos and their blobs
       day.reload(include: [:ski, :resort, :photos])
 
-      # Render created day using the default DaySerializer
       render json: day, status: :created
     else
-      # Use a consistent error format { errors: ... }
       render json: { errors: day.errors }, status: :unprocessable_entity
     end
   end
@@ -48,8 +44,6 @@ class Api::V1::DaysController < ApplicationController
       sync_photos(@day, day_params[:photo_ids] || [])
     end
 
-    # If update was successful (or photo sync happened without error)
-    # Eager load for response
     @day.reload(include: [:ski, :resort, :photos])
     render json: @day # Return updated day on success (200 OK)
   end
@@ -67,7 +61,12 @@ class Api::V1::DaysController < ApplicationController
   private
 
   def set_skis
-    @skis = current_user.skis.find(day_params[:ski_ids])
+    @skis = []
+    if day_params[:ski_ids] && day_params[:ski_ids].any?
+      @skis = current_user.skis.find(day_params[:ski_ids])
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { errors: { ski_ids: ['One or more skis not found'] } }, status: :unprocessable_entity
   end
 
   def set_day

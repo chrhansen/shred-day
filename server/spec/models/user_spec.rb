@@ -52,10 +52,10 @@ RSpec.describe User, type: :model do
 
     before do
       # Create days in a specific order to test sorting
-      create(:day, user: user, resort: resort_b, ski: ski, date: 5.days.ago)
-      create(:day, user: user, resort: resort_a, ski: ski, date: 3.days.ago)
-      create(:day, user: user, resort: resort_c, ski: ski, date: 2.days.ago)
-      create(:day, user: user, resort: resort_a, ski: ski, date: 1.day.ago) # Most recent visit to A
+      create(:day, user: user, resort: resort_b, skis: [ski], date: 5.days.ago)
+      create(:day, user: user, resort: resort_a, skis: [ski], date: 3.days.ago)
+      create(:day, user: user, resort: resort_c, skis: [ski], date: 2.days.ago)
+      create(:day, user: user, resort: resort_a, skis: [ski], date: 1.day.ago) # Most recent visit to A
     end
 
     it 'returns unique resorts visited by the user' do

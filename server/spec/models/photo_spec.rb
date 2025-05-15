@@ -5,7 +5,7 @@ RSpec.describe Photo, type: :model do
   let(:user) { create(:user) }
   let(:resort) { create(:resort) }
   let(:ski) { create(:ski, user: user) }
-  let(:day) { create(:day, user: user, resort: resort, ski: ski) }
+  let(:day) { create(:day, user: user, resort: resort) }
 
   # Test associations
   describe 'associations' do
