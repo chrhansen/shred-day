@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, Menu as MenuIcon, X as XIcon, Home as HomeIcon, BarChart2, UploadCloud, Loader2 } from 'lucide-react';
@@ -14,6 +14,8 @@ interface NavbarProps {
 export default function Navbar({ rightContent, title }: NavbarProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
 
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
@@ -33,6 +35,21 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
     if (isCreatingImport) return;
     createImport();
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      // Show/hide the navbar
+      // Hide if scrolling down beyond navbar height (e.g. 80px, adjust as needed) and navbar is visible
+      // Show if scrolling up or at the top and navbar is hidden
+      setVisible((prevScrollPos > currentScrollPos && prevScrollPos - currentScrollPos > 70) || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   return (
     <>
@@ -116,7 +133,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
       </div>
 
       {/* Top Bar */}
-      <div className="flex justify-between items-center mb-8 p-4 bg-white sticky top-0 z-30 shadow-sm">
+      <div className={`flex justify-between items-center p-2 bg-white sticky top-0 z-30 shadow-sm transition-transform duration-300 ease-in-out ${visible ? 'translate-y-0' : '-translate-y-full'}`}>
         {/* Left Aligned: Hamburger Menu Icon - Wrapped in a div for flex structure */}
         <div className="w-10">
           <Button

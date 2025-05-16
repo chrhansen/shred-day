@@ -50,7 +50,7 @@ env:
 
     # Match this to any external database server to configure Active Record correctly
     # Use server-db for a db accessory server on same machine via local kamal docker network.
-    DB_HOST: server-db
+    DB_HOST: shred-day-db
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
