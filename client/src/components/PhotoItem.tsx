@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
-import { Calendar, Edit, Trash, Search, Loader2, X as XIcon } from "lucide-react";
+import { Calendar, Edit as EditIcon, Trash2, Search, Loader2, X as XIcon, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -136,16 +136,16 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
   };
 
   return (
-    <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
-      <div className="w-full sm:w-32 h-32 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
+    <div className="p-3 border-b border-slate-100 flex flex-row gap-3 items-start">
+      <div className="w-24 h-24 bg-slate-100 rounded-sm shadow-md overflow-hidden flex-shrink-0">
         <img
           src={photo.url}
           alt={`Photo from ${photo.resort}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-sm"
         />
       </div>
 
-      <div className="flex-grow">
+      <div className="flex-grow min-w-0">
         {isEditing ? (
           <div className="space-y-3">
             <div className="relative">
@@ -221,7 +221,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
                 className="flex items-center gap-1 border-slate-200"
                 onClick={() => setIsEditing(true)}
               >
-                <Edit className="h-3.5 w-3.5" />
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </Button>
               {onDeletePhoto && (
@@ -231,7 +231,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
                   className="flex items-center gap-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={handleDeleteClick}
                 >
-                  <Trash className="h-3.5 w-3.5" />
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete Image
                 </Button>
               )}
