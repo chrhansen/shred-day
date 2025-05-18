@@ -39,11 +39,32 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.pageYOffset;
-      // Show/hide the navbar
-      // Hide if scrolling down beyond navbar height (e.g. 80px, adjust as needed) and navbar is visible
-      // Show if scrolling up or at the top and navbar is hidden
-      setVisible((prevScrollPos > currentScrollPos && prevScrollPos - currentScrollPos > 70) || currentScrollPos < 10);
-      setPrevScrollPos(currentScrollPos);
+      const scrollDownThreshold = 20; // Hide navbar if scrolling down AND current position is past this.
+      const deltaThreshold = 5; // Min scroll delta to react
+
+      const isScrollingUp = currentScrollPos < prevScrollPos;
+      const isScrollingDown = currentScrollPos > prevScrollPos;
+      const scrollDelta = Math.abs(currentScrollPos - prevScrollPos);
+
+      if (scrollDelta >= deltaThreshold) {
+        if (isScrollingUp) {
+          setVisible(true);
+        } else if (isScrollingDown) {
+          if (currentScrollPos > scrollDownThreshold) {
+            setVisible(false);
+          } else {
+            // If scrolling down, but not past the threshold, keep it visible
+            setVisible(true);
+          }
+        }
+      }
+
+      // Always ensure visible if at the very top
+      if (currentScrollPos < deltaThreshold) {
+        setVisible(true);
+      }
+
+      setPrevScrollPos(currentScrollPos <= 0 ? 0 : currentScrollPos); // Prevent negative scroll position storage
     };
 
     window.addEventListener('scroll', handleScroll);
