@@ -186,6 +186,37 @@ async function commitPhotoImport(importId: string): Promise<PhotoImport> {
   return await response.json() as PhotoImport; // Expects the updated PhotoImport object
 }
 
+/**
+ * Cancels and deletes a photo import session.
+ */
+async function cancelPhotoImport(importId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}`, {
+    ...defaultFetchOptions, // defaultFetchOptions should be fine for DELETE
+    method: 'DELETE',
+    headers: {
+      'Accept': 'application/json',
+      // Safely add Authorization header if present in defaultFetchOptions
+      ...(defaultFetchOptions.headers instanceof Headers ?
+          (defaultFetchOptions.headers.get('Authorization') ? { 'Authorization': defaultFetchOptions.headers.get('Authorization')! } : {}) :
+          ((defaultFetchOptions.headers as Record<string, string>)?.Authorization ? { 'Authorization': (defaultFetchOptions.headers as Record<string, string>).Authorization } : {})
+      ),
+    }
+  });
+
+  if (response.status === 204) { // Successfully deleted, no content
+    return;
+  }
+  if (response.status === 401) {
+    throw new AuthenticationError('User not authenticated');
+  }
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+  if (response.ok) return; // Should have been 204
+
+  throw new Error(`Failed to cancel photo import. Status: ${response.status}`);
+}
+
 // Future functions might include:
 // - getPhotoImportDraftDays(importId: string): Promise<DraftDay[]>
 
@@ -197,4 +228,5 @@ export const photoImportService = {
   deletePhotoFromImport,
   updateDraftDayDecision,
   commitPhotoImport,
+  cancelPhotoImport,
 };

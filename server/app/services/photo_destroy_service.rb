@@ -8,7 +8,9 @@ class PhotoDestroyService
 
     destroyed = @photo.destroy
 
-    if draft_day.reload.photos.empty?
+    # The draft day may not exist. E.g. if the photo was missing-exif data
+    # and therefore never connected to a draft day.
+    if draft_day && draft_day.reload&.photos&.empty?
       draft_day.destroy
     end
 

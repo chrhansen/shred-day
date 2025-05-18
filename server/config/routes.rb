@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :photos, only: [:create, :destroy]
-      resources :photo_imports, only: [:create, :show, :update] do
+      resources :photo_imports, only: [:create, :show, :update, :destroy] do
         resources :photos, only: [:create, :destroy, :update], module: :photo_imports
       end
       resources :draft_days, only: [:update]

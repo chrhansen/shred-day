@@ -9,6 +9,6 @@ class PhotoImport < ApplicationRecord
     failed: 4
   }, prefix: true
 
-  has_many :draft_days, dependent: :delete_all
   has_many :photos, dependent: :delete_all
+  has_many :draft_days, dependent: :delete_all
 end

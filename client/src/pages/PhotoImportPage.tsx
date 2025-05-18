@@ -229,7 +229,9 @@ export default function PhotoImportPage() {
     }
   }, [importId, toast, queryClient]);
 
-  const handleCancel = useCallback(() => { navigate("/"); }, [navigate]);
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
+  const [saveSummary, setSaveSummary] = useState({ newDays: 0, mergeDays: 0, skippedDays: 0 });
+  const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
 
   const { mutate: commitImport, isPending: isCommittingImport } = useMutation({
     mutationFn: () => photoImportService.commitPhotoImport(importId!),
@@ -249,6 +251,32 @@ export default function PhotoImportPage() {
     },
   });
 
+  const { mutate: cancelImportMutation, isPending: isCancellingImport } = useMutation({
+    mutationFn: () => photoImportService.cancelPhotoImport(importId!),
+    onSuccess: () => {
+      toast({ title: "Photo import canceled and deleted." });
+      navigate("/"); // Navigate away after successful cancellation
+    },
+    onError: (error) => {
+      toast({ title: "Failed to cancel import", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleCancel = useCallback(() => {
+    // Always open confirmation dialog before navigating or calling API
+    setIsConfirmCancelOpen(true);
+  }, []);
+
+  const confirmAndCancelImport = () => {
+    setIsConfirmCancelOpen(false);
+    if (!importId) {
+      toast({title: "Cannot cancel: Import session ID missing.", variant: "destructive"});
+      navigate("/"); // Navigate away if importId is missing for some reason
+      return;
+    }
+    cancelImportMutation();
+  };
+
   const handleSaveImport = useCallback(() => {
     const newDaysCount = displayedDraftDays.filter(dd => dd.decision === 'duplicate').length;
     const mergeDaysCount = displayedDraftDays.filter(dd => dd.decision === 'merge').length;
@@ -267,9 +295,6 @@ export default function PhotoImportPage() {
   const backendIsProcessing = photoImportData?.status === 'processing';
   const showOverallSpinner = anyClientUploading || (backendIsProcessing && displayedDraftDays.length === 0 && displayedStrippedPhotos.length === 0 && uploadingPhotos.length === 0);
 
-  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
-  const [saveSummary, setSaveSummary] = useState({ newDays: 0, mergeDays: 0, skippedDays: 0 });
-
   if (isLoadingImportDetails && !photoImportData) {
     return (
       <div className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
@@ -283,7 +308,7 @@ export default function PhotoImportPage() {
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <Button variant="ghost" onClick={handleCancel} disabled={anyClientUploading || backendIsProcessing}>
+          <Button variant="ghost" onClick={handleCancel} disabled={anyClientUploading || backendIsProcessing || isCancellingImport || isCommittingImport}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             Cancel
           </Button>
@@ -292,11 +317,14 @@ export default function PhotoImportPage() {
           </h1>
           <div className="w-auto min-w-[100px] text-right">
             {displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip') && (
-                <Button onClick={handleSaveImport} disabled={anyClientUploading || backendIsProcessing || isCommittingImport}>
+                <Button onClick={handleSaveImport} disabled={anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport}>
                     {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save Import
-            </Button>
-          )}
+                </Button>
+            )}
+            {(anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport) &&
+             !(isCommittingImport && displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip')) &&
+             <Loader2 className="h-5 w-5 animate-spin ml-2" />}
           </div>
         </div>
 
@@ -367,6 +395,26 @@ export default function PhotoImportPage() {
               <AlertDialogAction onClick={confirmAndCommitImport} disabled={isCommittingImport}>
                 {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Proceed with Import
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isConfirmCancelOpen} onOpenChange={setIsConfirmCancelOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Cancellation</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to cancel this photo import?
+                All uploaded photos and draft days for this session will be deleted.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep Importing</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmAndCancelImport} disabled={isCancellingImport} className="bg-red-600 hover:bg-red-700">
+                {isCancellingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Yes, Cancel Import
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
