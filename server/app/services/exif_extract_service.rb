@@ -1,5 +1,9 @@
 require "vips"
 
+# This service will look at the image file and extract the date/timestamp and
+# GPS coordinates if they exist. It will also set the exif_state to extracted if
+# the date/timestamp and GPS coordinates are present, so that we don't attempt
+# to extract the data again.
 class ExifExtractService
   def initialize(photo)
     @photo = photo

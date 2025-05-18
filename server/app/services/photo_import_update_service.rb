@@ -1,3 +1,10 @@
+
+# This service is used when a user commits or cancels a photo-import. The happy
+# path is when the user have decided on all their draft days and now wants to
+# create actual days from the draft days and merge photos from some draft days
+# into existing days. We make sure to set the status to "processing" before we
+# actually start processing the draft-days, just in case this service is called
+# multiple times (e.g. if the user clicks the button multiple times fast).
 class PhotoImportUpdateService
   def initialize(photo_import, photo_import_params)
     @photo_import = photo_import

@@ -1,3 +1,7 @@
+
+# This service is used to destroy a photo during a photo-import, not when simply
+# creating a ski day. It will also destroy the draft day if it's the last/only
+# photo for the draft-day.
 class PhotoDestroyService
   def initialize(photo)
     @photo = photo

@@ -1,3 +1,8 @@
+# This service is used to set the nearest ski resort for a photo based on
+# latitude and longitude on the photo record. Lat and long is taken from the
+# photo record, which have been set by the exif-data on the photo. If lat/long
+# is not set this service should not be called. Instead, we have the user simply
+# tell us the resort.
 class SetNearestResortService
   def initialize(photo)
     @photo = photo

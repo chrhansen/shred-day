@@ -1,3 +1,7 @@
+# This service is used to create a new photo during a photo-import, i.e. it's not
+# used when a user uploads a photo to simple create a day. Teh service will
+# extract the exif data, lookup and set nearest ski resort, and finally, attach
+# the photo to a draft day.
 class PhotoCreateService
   def initialize(photo_import, photo_params)
     @photo_import = photo_import

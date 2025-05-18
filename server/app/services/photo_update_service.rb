@@ -1,3 +1,10 @@
+# This service is used to update a photo during a photo-import, e.g. if a user
+# sets the date/resort for a photo that was missing exif data. This service
+# will set the taken_at and resort (if present) and the set the photo's exif_state
+# to extracted. Exit-data is not actually set and extracted. We could
+# consider doing actually updating the underlying file (in an "ExifSetService"
+# similar to ExifExtractService), but for now we just set the attributes on the
+# photo record.
 class PhotoUpdateService
   def initialize(photo, photo_params)
     @photo = photo

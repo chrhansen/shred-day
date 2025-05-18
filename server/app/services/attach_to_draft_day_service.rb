@@ -1,5 +1,13 @@
+# This service is used during a mass photo import to create days. We do this
+# by creating draft-days that the user can decide to promote to days (i.e. create
+# a day record), just merge photos from the draft-day to an existing day, or ignore
+# (skip import) the draft-day entirely. This service is used when a photo has
+# date/timestamp as well as a resort set, so that we can attach the photo to a an
+# existing draft-day for the current photo import. If a draft-day doesn't exist,
+# this service will create the draft-day, and other photos could later attach to
+# this draft-day. If the photo is deleted and it's the last/only photo on a draft-day,
+# the draft-day will also be deleted.
 class AttachToDraftDayService
-
   def initialize(photo)
     @photo = photo
   end
