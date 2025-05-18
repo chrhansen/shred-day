@@ -30,6 +30,12 @@ class Api::V1::PhotoImportsController < ApplicationController
     end
   end
 
+  def destroy
+    photo_import = current_user.photo_imports.find(params[:id])
+    photo_import.destroy
+    head :no_content
+  end
+
   private
 
   def photo_import_params
