@@ -4,7 +4,8 @@ class Api::V1::PhotoImportsController < ApplicationController
 
     render json: photo_import,
       serializer: Api::V1::PhotoImportSerializer,
-      include: ['draft_days', 'draft_days.photos', 'draft_days.resort']
+      include: ['draft_days', 'draft_days.photos', 'draft_days.resort', 'photos'],
+      status: :created
   end
 
   def show
