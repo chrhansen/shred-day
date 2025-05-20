@@ -1,4 +1,3 @@
-# server/spec/services/attach_to_draft_day_service_spec.rb
 require 'rails_helper'
 
 RSpec.describe AttachToDraftDayService do

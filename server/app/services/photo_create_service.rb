@@ -12,7 +12,7 @@ class PhotoCreateService
     photo = @photo_import.photos.build(user: @photo_import.user)
     photo.image.attach(@photo_params[:file])
 
-    if photo.save
+    if photo.image.attached? && photo.save
       ::ExtractExifAndSetNearestResortJob.perform_later(photo.id)
       Result.new(created: true, photo: photo)
     else

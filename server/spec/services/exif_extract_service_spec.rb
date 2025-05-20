@@ -1,4 +1,3 @@
-# server/spec/services/exif_extract_service_spec.rb
 require 'rails_helper'
 
 RSpec.describe ExifExtractService do
