@@ -21,7 +21,7 @@ class ExifExtractService
       gps_lon    = safe_get(image, "exif-ifd3-GPSLongitude")
       gps_lon_r  = safe_get(image, "exif-ifd3-GPSLongitudeRef") # "E" / "W"
 
-      data[:taken_at] = Time.strptime(exif_time, "%Y:%m:%d %H:%M:%S") if exif_time
+      data[:taken_at] = Time.zone.strptime(exif_time, "%Y:%m:%d %H:%M:%S") if exif_time
       if gps_lat && gps_lon
         data[:lat] = dms_to_decimal(gps_lat, gps_lat_r)
         data[:lon] = dms_to_decimal(gps_lon, gps_lon_r)
