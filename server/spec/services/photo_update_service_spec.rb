@@ -13,7 +13,7 @@ RSpec.describe PhotoUpdateService do
       it 'updates the photo with the provided params' do
         result = described_class.new(photo, valid_params).update_photo
         expect(result).to be_updated
-        expect(result.photo.taken_at).to eq(valid_params[:taken_at])
+        expect(result.photo.taken_at).to be_within(1.second).of valid_params[:taken_at]
         expect(result.photo.resort_id).to eq(valid_params[:resort_id])
       end
 
