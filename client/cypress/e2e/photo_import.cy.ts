@@ -110,7 +110,7 @@ describe('Photo Import', () => {
     goToPhotoImportPage();
     cy.get('[data-testid="photo-dropzone-label"]').selectFile([
       'cypress/fixtures/test_image.jpg',
-      'cypress/fixtures/test_image.heic'
+      'cypress/fixtures/test_image_with_full_exif.jpg'
     ], { action: 'drag-drop' });
     cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 2);
 
