@@ -63,7 +63,8 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
 
           expect(json_response['photos']).to be_an(Array)
           expect(json_response['photos'].size).to eq(2) # photo_on_draft_day and root_photo are included
-          expect(json_response['photos'][0]['id']).to eq(root_photo.id)
+          photo_ids = json_response['photos'].map { |photo| photo['id'] }
+          expect(photo_ids.sort).to eq([root_photo.id, photo_on_draft_day.id].sort)
           expect(json_response['photos'][0]['resort']['id']).to eq(resort.id)
 
           expect(json_response['draft_days']).to be_an(Array)
