@@ -375,7 +375,7 @@ export default function PhotoImportPage() {
         )}
 
         <AlertDialog open={isConfirmSaveOpen} onOpenChange={setIsConfirmSaveOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent data-testid="confirm-import-dialog">
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Import</AlertDialogTitle>
               <AlertDialogDescription>
@@ -401,7 +401,7 @@ export default function PhotoImportPage() {
         </AlertDialog>
 
         <AlertDialog open={isConfirmCancelOpen} onOpenChange={setIsConfirmCancelOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent data-testid="confirm-cancel-dialog">
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Cancellation</AlertDialogTitle>
               <AlertDialogDescription>

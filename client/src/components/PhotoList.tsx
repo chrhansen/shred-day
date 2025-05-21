@@ -86,7 +86,7 @@ export function PhotoList({
         <div>
           {draftDayGroups.map((group) => (
             <div key={group.id} className="mb-4">
-              <div className="bg-purple-50 p-3 border-l-4 border-purple-400">
+              <div className="bg-purple-50 p-3 border-l-4 border-purple-400" data-testid={`draft-day-${group.id}`}>
                 <div className="flex flex-row justify-between items-center gap-2">
                   <div className="min-w-0 flex flex-col">
                     <h3 className="text-sm font-medium text-purple-800">
@@ -101,6 +101,7 @@ export function PhotoList({
                       skiDayExists={group.skiDayExists || false}
                       selectedAction={groupUserActions[group.id] || (group.skiDayExists ? "merge" : "duplicate")}
                       onActionChange={(action) => handleActionChange(group.id, action as SkiDayUserAction)}
+                      data-testid="draft-day-action-toggle"
                     />
                   </div>
                 </div>

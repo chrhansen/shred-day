@@ -48,7 +48,7 @@ export function SkiDayActionToggle({
   }
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center" data-testid="ski-day-action-toggle">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -65,6 +65,7 @@ export function SkiDayActionToggle({
           {skiDayExists && (
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer"
+              data-testid="action-merge"
               onClick={() => onActionChange("merge")}
             >
               <Merge className="h-4 w-4" />
@@ -73,6 +74,7 @@ export function SkiDayActionToggle({
           )}
           <DropdownMenuItem
             className="flex items-center gap-2 cursor-pointer"
+            data-testid="action-duplicate"
             onClick={() => onActionChange("duplicate")}
           >
             <CopyPlus className="h-4 w-4" />
@@ -80,6 +82,7 @@ export function SkiDayActionToggle({
           </DropdownMenuItem>
           <DropdownMenuItem
             className="flex items-center gap-2 cursor-pointer"
+            data-testid="action-skip"
             onClick={() => onActionChange("skip")}
           >
             <XCircle className="h-4 w-4" />

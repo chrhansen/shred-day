@@ -140,6 +140,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
               className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
               onClick={handleStartPhotoImport}
               disabled={isCreatingImport}
+              data-testid="navbar-import-days"
             >
               {isCreatingImport ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -163,6 +164,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
             className="text-slate-600 hover:text-slate-800"
             onClick={toggleDrawer}
             aria-label="Open menu"
+            data-testid="navbar-hamburger"
           >
             <MenuIcon className="h-6 w-6" />
           </Button>

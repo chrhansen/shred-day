@@ -145,7 +145,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
         />
       </div>
 
-      <div className="flex-grow min-w-0">
+      <div className="flex-grow min-w-0" data-testid={`photo-processed-${photo.id}`}>
         {isEditing ? (
           <div className="space-y-3">
             <div className="relative">
@@ -219,6 +219,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-1 border-slate-200"
+                data-testid={`photo-edit-button-${photo.id}`}
                 onClick={() => setIsEditing(true)}
               >
                 <Pencil className="mr-2 h-4 w-4" />
@@ -229,6 +230,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  data-testid={`photo-delete-button-${photo.id}`}
                   onClick={handleDeleteClick}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
