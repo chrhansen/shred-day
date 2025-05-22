@@ -19,6 +19,7 @@ Rails.application.routes.draw do
 
       resources :days, only: [:create, :index, :show, :update, :destroy]
       resource :stats, only: [:show]
+      resource :account, only: [:show, :update], controller: :account
 
       # Authentication routes
       resources :users, only: [:create] # Sign Up

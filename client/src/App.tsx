@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import StatsPage from "@/pages/StatsPage";
 import LogDay from "@/pages/LogDay";
-import SettingsPage from "@/pages/SettingsPage";
+import SkisPage from "@/pages/SkisPage";
+import AccountPage from "@/pages/AccountPage";
 import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
@@ -47,7 +48,9 @@ const AppRoutes = () => {
           <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
           <Route path="/days/:id/edit" element={<ProtectedRoute><LogDay /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+          <Route path="/settings/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/settings/skis" element={<ProtectedRoute><SkisPage /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
           <Route path="/photo-imports/:importId" element={<ProtectedRoute><PhotoImportPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />

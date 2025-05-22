@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, Menu as MenuIcon, X as XIcon, Home as HomeIcon, BarChart2, UploadCloud, Loader2 } from 'lucide-react';
+import { Settings, Menu as MenuIcon, X as XIcon, Home as HomeIcon, BarChart2, UploadCloud, Loader2, User, SwatchBook, Images } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { photoImportService } from '@/services/photoImportService';
 import { toast } from 'sonner';
@@ -95,7 +95,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
           </Button>
         </div>
         <ul>
-          <li className="mb-2">
+          <li className="mb-2 ml-4">
             <Button
               variant="ghost"
               className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
@@ -108,7 +108,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
               Home
             </Button>
           </li>
-          <li className="mb-2">
+          <li className="mb-2 ml-4">
             <Button
               variant="ghost"
               className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
@@ -121,33 +121,64 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
               Stats
             </Button>
           </li>
-          <li className="mb-2">
+
+          {/* Settings Section Header */}
+          <li className="mb-1 mt-3 px-4 py-2">
+            <div className="flex items-center text-slate-500">
+              <Settings className="mr-2 h-5 w-5" />
+              <span className="text-sm font-medium">Settings</span>
+            </div>
+          </li>
+          {/* Indented Settings Items */}
+          <li className="mb-2 ml-4">
             <Button
               variant="ghost"
               className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
               onClick={() => {
-                navigate('/settings');
+                navigate('/settings/account');
                 toggleDrawer();
               }}
             >
-              <Settings className="mr-2 h-5 w-5" />
-              Settings
+              <User className="mr-2 h-5 w-5" />
+              Account
             </Button>
           </li>
-          <li className="mb-2">
+          <li className="mb-2 ml-4">
             <Button
               variant="ghost"
               className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-              onClick={handleStartPhotoImport}
-              disabled={isCreatingImport}
-              data-testid="navbar-import-days"
+              onClick={() => {
+                navigate('/settings/skis');
+                toggleDrawer();
+              }}
             >
+              <SwatchBook className="mr-2 h-5 w-5" />
+              Manage Skis
+            </Button>
+          </li>
+
+          {/* Import Days Section Header */}
+          <li className="mb-1 mt-3 px-4 py-2">
+            <div className="flex items-center text-slate-500">
               {isCreatingImport ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <UploadCloud className="mr-2 h-5 w-5" />
               )}
-              Import Days from Photos
+              <span className="text-sm font-medium">Mass Import Days</span>
+            </div>
+          </li>
+          {/* Indented Import Items */}
+          <li className="mb-2 ml-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
+              onClick={handleStartPhotoImport}
+              disabled={isCreatingImport}
+              data-testid="navbar-import-days-from-photos"
+            >
+              <Images className="mr-2 h-5 w-5" />
+              From Photos
             </Button>
           </li>
           {/* Add other drawer items here */}
@@ -172,7 +203,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
 
         {/* Centered Title */}
         <div className="flex-1 text-center">
-          {title && <span className="text-lg font-semibold text-slate-700">{title}</span>}
+          {title && <span className="text-lg font-semibold text-slate-700" data-testid="navbar-title">{title}</span>}
         </div>
 
         {/* Right Aligned: Right Content (e.g., New Day Button) - Wrapped in a div for flex structure and width consistency */}

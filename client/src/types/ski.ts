@@ -50,6 +50,14 @@ export interface Ski {
   updated_at: string; // ISO 8601 date string
 }
 
+// Account Details Type
+export interface AccountDetails {
+  id: string;
+  email: string;
+  created_at: string; // ISO 8601 date string
+  season_start_day: string; // Format "MM-DD"
+}
+
 // New type for the GET /days endpoint response item
 export interface SkiDayEntry {
   id: string;

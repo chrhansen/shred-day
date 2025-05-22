@@ -3,7 +3,6 @@
 describe('Ski Days List Page', () => {
   const PASSWORD = 'password123';
   const DAYS_LIST_URL = '/';
-  const RESORT_NAME = "DaysList Resort";
   const SKI_A_NAME = "Test Ski A";
   const SKI_B_NAME = "Test Ski B";
   const DAY1_DATE = '2025-04-15';
@@ -131,7 +130,7 @@ describe('Ski Days List Page', () => {
     cy.get(`[data-testid="edit-day-${this.day2Id}"]`).should('be.visible');
   });
 
-  it('should display a settings icon that navigates to the settings page', () => {
+  it('should show a navbar, allow open drawer, and navigate account settings page', () => {
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getDaysList');
 
@@ -139,11 +138,11 @@ describe('Ski Days List Page', () => {
     cy.get('[aria-label="Open menu"]').should('be.visible').click();
 
     // Inside the drawer, find the button containing "Settings" text and click it
-    cy.contains('button', 'Settings').should('be.visible').click();
+    cy.contains('button', 'Account').should('be.visible').click();
 
     // Verify navigation to the settings page
-    cy.url().should('include', '/settings');
-    cy.contains('h1', 'Settings').should('be.visible'); // Check for settings page title
+    cy.url().should('include', '/settings/account');
+    cy.contains('Sign Up Date').should('be.visible'); // Check for settings page title
   });
 
   it('should display a New Day button that navigates to the log day page', () => {

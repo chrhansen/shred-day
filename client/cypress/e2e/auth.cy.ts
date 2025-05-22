@@ -43,8 +43,8 @@ describe('Authentication Flows', () => {
       // Use the custom login command to log in first
       cy.login(this.userEmail, PASSWORD);
 
-      // Navigate to the settings page
-      cy.visit('/settings');
+      // Navigate to the account settings page
+      cy.visit('/settings/account');
 
       // Find the logout icon button by its aria-label and click it
       cy.get('[aria-label="Logout"]').click();

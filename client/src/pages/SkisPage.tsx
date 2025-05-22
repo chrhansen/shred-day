@@ -1,22 +1,18 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Loader2, Trash2, Pencil, Check, X, LogOut } from "lucide-react";
+import { Loader2, Trash2, Pencil, Check, X, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { toast } from "sonner";
 import { Ski } from "@/types/ski";
-import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { logout } = useAuth();
   const [newSkiName, setNewSkiName] = useState("");
   // State for inline editing
-  const [editingSkiId, setEditingSkiId] = useState<number | null>(null);
+  const [editingSkiId, setEditingSkiId] = useState<string | null>(null);
   const [editedSkiName, setEditedSkiName] = useState("");
 
   const { data: skis, isLoading, error } = useQuery({
@@ -38,7 +34,7 @@ export default function SettingsPage() {
 
   // Mutation for updating skis
   const { mutate: updateSki, isPending: isUpdatingSki } = useMutation({
-    mutationFn: ({ skiId, name }: { skiId: number; name: string }) => skiService.updateSki(skiId, { name }),
+    mutationFn: ({ skiId, name }: { skiId: string; name: string }) => skiService.updateSki(skiId, { name }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skis'] }); // Refetch skis list
       toast.success("Ski updated successfully!");
@@ -62,7 +58,7 @@ export default function SettingsPage() {
     },
   });
 
-  const handleDeleteSki = (skiId: number) => {
+  const handleDeleteSki = (skiId: string) => {
     if (window.confirm("Are you sure you want to delete this ski?")) {
       deleteSki(skiId);
     }
@@ -97,40 +93,17 @@ export default function SettingsPage() {
     addSki({ name: newSkiName.trim() });
   };
 
-  const pageSpecificHeaderContent = (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-slate-600 hover:text-red-600 hover:bg-red-50"
-        onClick={() => {
-            if (window.confirm("Are you sure you want to log out?")) {
-              logout();
-            }
-        }}
-        aria-label="Logout"
-      >
-        <LogOut className="h-5 w-5" />
-      </Button>
-    </>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <Navbar rightContent={pageSpecificHeaderContent} title="Settings" />
+      <Navbar title="Manage Skis" />
       <div className="max-w-2xl mx-auto space-y-8 p-4">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center">
-          <SettingsIcon className="mr-3 h-7 w-7 text-blue-600" />
-          Settings
-        </h1>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Manage Ski Equipment</CardTitle>
+            <CardTitle className="text-xl">Your Skis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-2">My Skis</h3>
               {isLoading && (
                 <div className="flex items-center text-slate-500">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading skis...
@@ -140,7 +113,7 @@ export default function SettingsPage() {
                 <p className="text-red-600">Error loading skis: {error.message}</p>
               )}
               {!isLoading && !error && (
-                <ul className="list-disc list-inside space-y-1 text-slate-700">
+                <ol className="list-disc list-inside space-y-1 text-slate-700">
                   {skis && skis.length > 0 ? (
                     skis.map((ski) => (
                       <li key={ski.id} className="flex justify-between items-center py-1 group">
@@ -198,12 +171,13 @@ export default function SettingsPage() {
                       </li>
                     ))
                   ) : (
-                    <li>No skis added yet.</li>
+                    <li className="text-slate-500 italic">No skis added yet</li>
                   )}
-                </ul>
+
+                </ol>
               )}
             </div>
-            <form onSubmit={handleAddSkiSubmit} className="flex gap-2 items-end">
+            <form onSubmit={handleAddSkiSubmit} className="flex mt-4 gap-2 items-end">
               <div className="flex-grow">
                  <label htmlFor="new-ski-name" className="block text-sm font-medium text-slate-700 mb-1">Add New Ski</label>
                  <input

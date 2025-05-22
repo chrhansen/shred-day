@@ -40,6 +40,37 @@ RSpec.describe User, type: :model do
       expect(user).to_not be_valid
       expect(user.errors[:password]).to include("is too short (minimum is 8 characters)")
     end
+
+    # Season Start Day validations
+    it { should validate_presence_of(:season_start_day) }
+
+    it 'is valid with a valid season_start_day format (MM-DD)' do
+      subject.season_start_day = "09-01"
+      expect(subject).to be_valid
+    end
+
+    it 'is valid with another valid season_start_day format (e.g., Feb 29th in a leap year context)' do
+      subject.season_start_day = "02-29"
+      expect(subject).to be_valid # The model uses year 2000 (leap) for validation
+    end
+
+    it 'is not valid with an invalid month' do
+      subject.season_start_day = "13-01"
+      expect(subject).to_not be_valid
+      expect(subject.errors[:season_start_day]).to include("must be a valid date in MM-DD format (e.g., 09-15)")
+    end
+
+    it 'is not valid with an invalid day' do
+      subject.season_start_day = "01-32"
+      expect(subject).to_not be_valid
+      expect(subject.errors[:season_start_day]).to include("must be a valid date in MM-DD format (e.g., 09-15)")
+    end
+
+    it 'is not valid with non-numeric characters' do
+      subject.season_start_day = "ab-cd"
+      expect(subject).to_not be_valid
+      expect(subject.errors[:season_start_day]).to include("must be a valid date in MM-DD format (e.g., 09-15)")
+    end
   end
 
   describe '#recent_resorts association' do

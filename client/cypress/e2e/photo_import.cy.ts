@@ -11,7 +11,7 @@ describe('Photo Import', () => {
     // Open hamburger menu (assume button is first in header or has aria-label)
     cy.get('[data-testid="navbar-hamburger"]').click();
     // Click the drawer link
-    cy.contains('Import Days from Photos').click();
+    cy.contains('From Photos').click();
     // Should now be on the import page
     cy.location('pathname').should('match', /\/photo-imports\//);
   }

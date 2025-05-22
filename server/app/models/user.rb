@@ -19,4 +19,17 @@ class User < ApplicationRecord
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
+  validates :season_start_day, presence: true
+  validate :season_start_day_must_be_valid_date
+
+  def season_start_day_must_be_valid_date
+    return if season_start_day.blank?
+
+    begin
+      # Use a dummy leap-safe year like 2000 for parsing
+      Date.strptime("2000-#{season_start_day}", "%Y-%m-%d")
+    rescue ArgumentError
+      errors.add(:season_start_day, "must be a valid date in MM-DD format (e.g., 09-15)")
+    end
+  end
 end
