@@ -154,8 +154,12 @@ export const skiService = {
   },
 
   // get all ski days
-  async getDays(): Promise<SkiDayEntry[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/days`, {
+  async getDays(params?: { season?: number }): Promise<SkiDayEntry[]> {
+    let url = `${API_BASE_URL}/api/v1/days`;
+    if (params?.season) {
+      url += `?season=${params.season}`;
+    }
+    const response = await fetch(url, {
       ...defaultFetchOptions,
       method: 'GET',
     });

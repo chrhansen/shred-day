@@ -21,7 +21,7 @@ describe('Account Page', () => {
   });
 
   it('should display initial account information correctly', () => {
-    cy.contains('[data-testid="navbar-title"]', 'Account Settings').should('be.visible');
+    cy.contains('[data-testid="navbar"]', 'Account Settings').should('be.visible');
 
     cy.contains('label', 'Email').should('be.visible');
     cy.contains('div', userEmail).should('be.visible');

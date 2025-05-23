@@ -48,7 +48,7 @@ declare global {
     interface Chainable {
       createUser(email: string, password?: string): Chainable<Response<any>>
       login(email: string, password?: string): Chainable<void>
-      logDay(dayData: { date: string; resort_id: any; ski_ids: any; }): Chainable<Response<any>>
+      logDay(dayData: { date: string; resort_id: any; ski_ids: any; activity?: string; }): Chainable<Response<any>>
     }
   }
 }

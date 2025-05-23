@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { skiService } from "@/services/skiService";
+import { accountService } from "@/services/accountService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -36,7 +37,10 @@ export default function AuthPage() {
         password: signupPassword,
       });
       toast.success(`Welcome, ${user.email}! Sign up successful.`);
-      login(user);
+
+      // Fetch complete account details for the auth context
+      const accountDetails = await accountService.getAccountDetails();
+      login(accountDetails);
       navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
@@ -55,7 +59,10 @@ export default function AuthPage() {
         password: loginPassword,
       });
       toast.success(`Welcome back, ${user.email}!`);
-      login(user);
+
+      // Fetch complete account details for the auth context
+      const accountDetails = await accountService.getAccountDetails();
+      login(accountDetails);
       navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");

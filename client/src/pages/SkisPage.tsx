@@ -95,7 +95,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <Navbar title="Manage Skis" />
+      <Navbar centerContent="Manage Skis" />
       <div className="max-w-2xl mx-auto space-y-8 p-4">
 
         <Card>

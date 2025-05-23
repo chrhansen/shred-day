@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 interface NavbarProps {
   rightContent?: React.ReactNode;
-  title?: string;
+  centerContent?: React.ReactNode;
 }
 
-export default function Navbar({ rightContent, title }: NavbarProps) {
+export default function Navbar({ rightContent, centerContent }: NavbarProps) {
   const navigate = useNavigate();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -186,7 +186,7 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
       </div>
 
       {/* Top Bar */}
-      <div className={`flex justify-between items-center p-2 bg-white sticky top-0 z-30 shadow-sm transition-transform duration-300 ease-in-out ${visible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className={`flex justify-between items-center p-2 bg-white sticky top-0 z-30 shadow-sm transition-transform duration-300 ease-in-out ${visible ? 'translate-y-0' : '-translate-y-full'}`} data-testid="navbar">
         {/* Left Aligned: Hamburger Menu Icon - Wrapped in a div for flex structure */}
         <div className="w-10">
           <Button
@@ -201,12 +201,10 @@ export default function Navbar({ rightContent, title }: NavbarProps) {
           </Button>
         </div>
 
-        {/* Centered Title */}
         <div className="flex-1 text-center">
-          {title && <span className="text-lg font-semibold text-slate-700" data-testid="navbar-title">{title}</span>}
+          {centerContent}
         </div>
 
-        {/* Right Aligned: Right Content (e.g., New Day Button) - Wrapped in a div for flex structure and width consistency */}
         <div className="w-auto min-w-[40px] flex justify-end items-center gap-2">
           {rightContent}
         </div>

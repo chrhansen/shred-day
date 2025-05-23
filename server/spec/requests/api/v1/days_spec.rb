@@ -576,6 +576,96 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(photo_json['preview_url']).to include('test_image.jpg')
         expect(photo_json['full_url']).to include('test_image.jpg')
       end
+
+      context "with season filtering" do
+        let!(:user_with_custom_season) { create(:user, season_start_day: "10-01") } # October 1st season start
+        let!(:current_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2024, 11, 15), resort: resort, skis: [ski1], activity: "Current Season") }
+        let!(:previous_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2023, 12, 15), resort: resort, skis: [ski1], activity: "Previous Season") }
+        let!(:older_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], activity: "Older Season") }
+
+        before do
+          post api_v1_session_path, params: { email: user_with_custom_season.email, password: user_with_custom_season.password }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "returns current season days when no season parameter is provided" do
+          # Mock current date to be within 2024-2025 season
+          allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
+
+          get api_v1_days_path
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Current Season")
+        end
+
+        it "returns current season days when season=0" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
+
+          get api_v1_days_path, params: { season: 0 }
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Current Season")
+        end
+
+        it "returns previous season days when season=-1" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
+
+          get api_v1_days_path, params: { season: -1 }
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Previous Season")
+        end
+
+        it "returns older season days when season=-2" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
+
+          get api_v1_days_path, params: { season: -2 }
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Older Season")
+        end
+
+        it "returns empty array for seasons with no days" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
+
+          get api_v1_days_path, params: { season: -3 }
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response).to eq([])
+        end
+
+        it "handles edge case when current date is exactly on season start day" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 10, 1)) # Exactly on season start
+
+          get api_v1_days_path, params: { season: 0 }
+          expect(response).to have_http_status(:ok)
+
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Current Season")
+        end
+
+        it "handles edge case when current date is day before season start" do
+          allow(Date).to receive(:current).and_return(Date.new(2024, 9, 30)) # Day before season start
+
+          get api_v1_days_path, params: { season: 0 }
+          expect(response).to have_http_status(:ok)
+
+          # Current season should be 2023-2024 with the mocked date, so "previous_season_day" from Dec 2023 should now appear
+          json_response = JSON.parse(response.body)
+          expect(json_response.length).to eq(1)
+          expect(json_response[0]['activity']).to eq("Previous Season")
+        end
+      end
     end
 
     context "when not authenticated" do

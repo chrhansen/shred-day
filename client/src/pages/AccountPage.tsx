@@ -151,7 +151,7 @@ export default function AccountPage() {
   if (isLoadingAccount) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Navbar title="Account Settings" rightContent={logOutButton} />
+        <Navbar centerContent="Account Settings" rightContent={logOutButton} />
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
@@ -160,7 +160,7 @@ export default function AccountPage() {
   if (accountError || !accountDetails) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar title="Account Settings" rightContent={logOutButton} />
+        <Navbar centerContent="Account Settings" rightContent={logOutButton} />
         <div className="max-w-md mx-auto space-y-8 pt-8 p-4 md:p-0 text-center">
             <p className="text-red-600">
               {accountError ? `Error loading account details: ${accountError.message}` : "Could not load account details."}
@@ -172,7 +172,7 @@ export default function AccountPage() {
 
   return (
   <div className="min-h-screen bg-white">
-    <Navbar title="Account Settings" rightContent={logOutButton} />
+    <Navbar centerContent="Account Settings" rightContent={logOutButton} />
 
       <div className="max-w-md mx-auto space-y-8 pt-8 p-2 md:p-0">
 

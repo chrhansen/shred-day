@@ -1,5 +1,28 @@
 /// <reference types="cypress" />
 
+// Helper to convert season number to display string using user's season_start_day
+// Copied from DaysListPage.tsx for test use
+const getSeasonDisplayName = (seasonNumber: number, seasonStartDay: string): string => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth(); // 0-indexed
+  const currentDay = today.getDate();
+
+  // Parse user's season start day
+  const [startMonth, startDayVal] = seasonStartDay.split('-').map(num => parseInt(num, 10));
+
+  // Determine what year the current season started
+  let currentSeasonStartYear;
+  if (currentMonth < startMonth - 1 || (currentMonth === startMonth - 1 && currentDay < startDayVal)) {
+    currentSeasonStartYear = currentYear - 1;
+  } else {
+    currentSeasonStartYear = currentYear;
+  }
+
+  const displaySeasonStartYear = currentSeasonStartYear + seasonNumber;
+  return `${displaySeasonStartYear}/${String(displaySeasonStartYear + 1).slice(-2)} Season`;
+};
+
 describe('Ski Days List Page', () => {
   const PASSWORD = 'password123';
   const DAYS_LIST_URL = '/';
@@ -63,7 +86,7 @@ describe('Ski Days List Page', () => {
     cy.wait('@getDaysList');
 
     // Check title - Title is now in the Navbar
-    cy.get('.flex-1.text-center').contains('span', '2024/25 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
 
     // Use the aliased resort name for checking content
     cy.get('@resortName').then(resortName => {
@@ -177,6 +200,161 @@ describe('Ski Days List Page', () => {
     cy.get('@resortName').then(resortName => {
       cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', resortName);
     });
+  });
+
+});
+
+describe('Season Dropdown Functionality', () => {
+  const PASSWORD = 'password123';
+  const CUSTOM_SEASON_START_DAY = '10-15'; // October 15th
+  const DAYS_LIST_URL = '/'; // Define DAYS_LIST_URL here
+
+  // Define dates relative to a consistent "today" for testing display logic
+  // Let's assume "today" is Dec 1, 2024 for season name calculations.
+  // Current Season (0) for season_start_day 10-15 and "today" Dec 1, 2024 is: Oct 15, 2024 - Oct 14, 2025
+  const DAY_CURRENT_SEASON_DATE = '2024-11-20';
+  const DAY_CURRENT_SEASON_ACTIVITY = 'Day in Current Season (2024/25)';
+
+  // Previous Season (-1) is: Oct 15, 2023 - Oct 14, 2024
+  const DAY_PREVIOUS_SEASON_DATE = '2023-12-20';
+  const DAY_PREVIOUS_SEASON_ACTIVITY = 'Day in Previous Season (2023/24)';
+
+  // Two Seasons Ago (-2) is: Oct 15, 2022 - Oct 14, 2023
+  const DAY_TWO_SEASONS_AGO_DATE = '2022-11-20';
+  const DAY_TWO_SEASONS_AGO_ACTIVITY = 'Day in Two Seasons Ago (2022/23)';
+
+  let testUserEmail: string;
+  let resortId: string;
+  let skiId: string;
+
+  beforeEach(() => {
+    testUserEmail = `test-season-dropdown-${Date.now()}@example.com`;
+    cy.createUser(testUserEmail, PASSWORD); // User created with default '09-01' season_start_day
+
+    // Log in
+    cy.request({
+      method: 'POST',
+      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      body: { email: testUserEmail, password: PASSWORD },
+    }).its('status').should('eq', 200);
+
+    // Update user's season_start_day to custom one
+    cy.request({
+      method: 'PATCH',
+      url: `${Cypress.env('apiUrl')}/api/v1/account`,
+      body: { user: { season_start_day: CUSTOM_SEASON_START_DAY } },
+    }).its('status').should('eq', 200);
+
+    // Intercept account details to provide consistent season_start_day and available_seasons
+    // This is what AuthContext will use to populate `user`
+    cy.intercept('GET', '/api/v1/account', {
+      statusCode: 200,
+      body: {
+        id: 'mock-user-id',
+        email: testUserEmail,
+        created_at: new Date().toISOString(),
+        season_start_day: CUSTOM_SEASON_START_DAY,
+        available_seasons: [0, -1, -2], // Mocked based on days we will create
+      },
+    }).as('getAccountDetails');
+
+    // Intercept days API calls
+    cy.intercept('GET', '/api/v1/days*').as('getDaysApi');
+
+    // Setup common data (resort, ski)
+    // Query for an existing resort instead of trying to create one
+    const resortToFind = "Axamer Lizum";
+    cy.request(`${Cypress.env('apiUrl')}/api/v1/resorts?query=${encodeURIComponent(resortToFind)}`)
+      .then((response) => {
+        expect(response.body.length, `Seeded resort "${resortToFind}" not found`).to.be.at.least(1);
+        resortId = response.body[0].id;
+      });
+    cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/skis`, { ski: { name: "SeasonTestSki" } }).then(res => skiId = res.body.id);
+
+    // Create days in different seasons AFTER all IDs are resolved
+    cy.then(() => {
+      cy.logDay({ date: DAY_CURRENT_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_CURRENT_SEASON_ACTIVITY });
+      cy.logDay({ date: DAY_PREVIOUS_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_PREVIOUS_SEASON_ACTIVITY });
+      cy.logDay({ date: DAY_TWO_SEASONS_AGO_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_TWO_SEASONS_AGO_ACTIVITY });
+    });
+  });
+
+  it('should load with the correct season when a season URL parameter is present', function() {
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Month is 0-indexed, so 11 is December
+
+    cy.visit(`${DAYS_LIST_URL}?season=-1`);
+    cy.wait('@getAccountDetails'); // Ensure user context is loaded
+    cy.wait('@getDaysApi').its('request.url').should('include', 'season=-1');
+
+    // Wait for the days to load by checking for the presence of the first ski day item
+    // This assumes ski day items have a data-testid like "ski-day-item-xxxx"
+    // and DAY_PREVIOUS_SEASON_ACTIVITY is unique enough to identify the correct day
+    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
+
+    // Now that content is loaded, check navbar and other content
+    cy.get('[data-testid="navbar"]').contains('2023/24 Season').should('be.visible');
+    cy.get('body').should('not.contain', DAY_CURRENT_SEASON_ACTIVITY);
+    cy.get('body').should('not.contain', DAY_TWO_SEASONS_AGO_ACTIVITY);
+  });
+
+  it('should change season, update URL, and filter days when a new season is selected from dropdown', function() {
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Clock might not be needed if we rely on activity name
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getAccountDetails');
+    cy.wait('@getDaysApi').its('request.url').should('not.include', 'season='); // Default to current (season 0)
+
+    // Ensure initial content (current season day) is loaded before interacting
+    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+
+    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
+    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
+
+    // Open dropdown and select previous season
+    cy.get('[data-testid="navbar"]').find('button').contains('2024/25 Season').click();
+    cy.contains('[role="menuitem"]', '2023/24 Season').click();
+
+    cy.wait('@getDaysApi').its('request.url').should('include', 'season=-1');
+    cy.url().should('include', '?season=-1');
+
+    // Ensure new content is loaded before checking navbar
+    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('2023/24 Season').should('be.visible');
+    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('not.exist');
+  });
+
+  it('should display the correct season options in the dropdown', function() {
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Re-add clock for deterministic display names
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getAccountDetails');
+    cy.wait('@getDaysApi'); // Initial load for current season
+
+    // Ensure initial content (current season day) is loaded before interacting
+    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+
+    // Get the button that displays the current season and click it to open the dropdown
+    cy.get('[data-testid="navbar"]').find('button').contains(getSeasonDisplayName(0, CUSTOM_SEASON_START_DAY)).click();
+
+    // Based on mocked available_seasons: [0, -1, -2] and CUSTOM_SEASON_START_DAY ('10-15')
+    // and the actual current date when the test runs (since cy.clock is removed here for now)
+    // The display names will be calculated dynamically. We verify the presence of each expected offset.
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(0, CUSTOM_SEASON_START_DAY)).should('be.visible');
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(-1, CUSTOM_SEASON_START_DAY)).should('be.visible');
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(-2, CUSTOM_SEASON_START_DAY)).should('be.visible');
+    cy.get('[role="menuitem"]').should('have.length', 3);
+  });
+
+  it('should default to current season (0) and filter correctly if no URL parameter is present', function() {
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Re-add clock for deterministic display names
+    cy.visit(DAYS_LIST_URL);
+    cy.wait('@getAccountDetails');
+    cy.wait('@getDaysApi').its('request.url').should('not.include', 'season=');
+
+    // Ensure initial content (current season day) is loaded before checking navbar
+    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+
+    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
+    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
+    cy.contains(DAY_TWO_SEASONS_AGO_ACTIVITY).should('not.exist');
   });
 
 });

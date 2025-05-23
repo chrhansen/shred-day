@@ -3,7 +3,6 @@
 
 describe('Photo Import', () => {
   const PASSWORD = 'password123';
-  const PHOTO_IMPORT_URL = '/photo-imports/new';
   const DAYS_LIST_URL = '/';
   const RESORT_NAME = "Le Massif";
 
@@ -23,7 +22,7 @@ describe('Photo Import', () => {
 
     // Intercept initial data fetches
     cy.intercept('GET', '/api/v1/recent_resorts*').as('getRecentResorts');
-    cy.intercept('GET', '/api/v1/stats*').as('getStats');
+    cy.intercept('GET', '/api/v1/account*').as('getAccount');
     cy.intercept('GET', '/api/v1/days*').as('getDaysList');
 
     // Log in via API
@@ -38,7 +37,7 @@ describe('Photo Import', () => {
 
     // Visit page AFTER login to establish browser session
     cy.visit(DAYS_LIST_URL);
-    cy.wait('@getStats');
+    cy.wait('@getAccount');
 
     // Find Resort ID
     cy.request(`${Cypress.env('apiUrl')}/api/v1/resorts?query=${encodeURIComponent(RESORT_NAME)}`).then((response) => {

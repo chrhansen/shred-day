@@ -1,13 +1,14 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { skiService, AuthenticationError } from '@/services/skiService';
-import { UserInfo } from '@/types/ski'; // Assuming UserInfo contains basic user details
+import { AuthenticationError } from '@/services/skiService';
+import { accountService } from '@/services/accountService';
+import { AccountDetails } from '@/types/ski';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: UserInfo | null; // Store user info if available
+  user: AccountDetails | null; // Store account details including season_start_day and available_seasons
   checkAuthStatus: () => Promise<void>; // Function to re-check auth
-  login: (user: UserInfo) => void; // Function to set user as logged in
+  login: (user: AccountDetails) => void; // Function to set user as logged in
   logout: () => Promise<void>; // Function to handle logout
 }
 
@@ -15,20 +16,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const [user, setUser] = useState<AccountDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const checkAuthStatus = async () => {
     setIsLoading(true);
     try {
-      // Attempt to fetch stats - this requires authentication
-      // In a real app, you might have a dedicated /api/me endpoint
-      const stats = await skiService.getStats();
-      // If getStats succeeds, we are authenticated.
-      // We don't have user info from stats, so ideally we'd fetch it.
-      // For now, we just know they are authenticated.
+      // Attempt to fetch account details - this requires authentication
+      const accountDetails = await accountService.getAccountDetails();
+      // If getAccountDetails succeeds, we are authenticated and have user info
       setIsAuthenticated(true);
-      // setUser(userInfo); // TODO: Fetch actual user info if needed
+      setUser(accountDetails);
     } catch (error) {
       if (error instanceof AuthenticationError) {
         setIsAuthenticated(false);
@@ -49,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // Function to call after successful login
-  const login = (loggedInUser: UserInfo) => {
+  const login = (loggedInUser: AccountDetails) => {
     setIsAuthenticated(true);
     setUser(loggedInUser);
     setIsLoading(false); // No longer loading initial auth status
@@ -58,6 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Function to call for logout
   const logout = async () => {
     try {
+      const { skiService } = await import('@/services/skiService');
       await skiService.signOut();
     } catch (error) {
       console.error("Error during sign out:", error);

@@ -56,6 +56,7 @@ export interface AccountDetails {
   email: string;
   created_at: string; // ISO 8601 date string
   season_start_day: string; // Format "MM-DD"
+  available_seasons: number[]; // Array of season offsets, e.g., [0, -1, -4]
 }
 
 // New type for the GET /days endpoint response item

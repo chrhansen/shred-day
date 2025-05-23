@@ -20,7 +20,7 @@ describe('Create and Edit a Ski Day', () => {
     // --- Intercept initial data fetches ---
     cy.intercept('GET', '/api/v1/skis*').as('getSkis');
     cy.intercept('GET', '/api/v1/recent_resorts*').as('getRecentResorts');
-    cy.intercept('GET', '/api/v1/stats*').as('getStats');
+    cy.intercept('GET', '/api/v1/account*').as('getAccount');
     cy.intercept('GET', '/api/v1/days*').as('getDaysList');
 
     // Log in via API
@@ -36,7 +36,7 @@ describe('Create and Edit a Ski Day', () => {
 
     // --- Visit page AFTER login to establish browser session ---
     cy.visit(DAYS_LIST_URL);
-    cy.wait('@getStats');
+    cy.wait('@getAccount');
 
     // --- Perform COMMON data setup AFTER visiting ---
     // Find Resort A ID

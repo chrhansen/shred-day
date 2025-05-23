@@ -22,6 +22,14 @@ RSpec.describe "Api::V1::Accounts", type: :request do
         expect(json_response["season_start_day"]).to eq("09-01")
         expect(json_response).to include("created_at")
       end
+
+      it "includes available_seasons field and it is an array" do
+        json_response = JSON.parse(response.body)
+        expect(json_response).to have_key("available_seasons")
+        expect(json_response["available_seasons"]).to be_an(Array)
+      end
+
+      # Detailed calculation tests for available_seasons are moved to service_spec.rb
     end
 
     context "when not authenticated" do
@@ -57,6 +65,12 @@ RSpec.describe "Api::V1::Accounts", type: :request do
         it "returns the updated user details" do
           json_response = JSON.parse(response.body)
           expect(json_response["season_start_day"]).to eq("10-15")
+        end
+
+        it "includes recalculated available_seasons in response and it is an array" do
+          json_response = JSON.parse(response.body)
+          expect(json_response).to have_key("available_seasons")
+          expect(json_response["available_seasons"]).to be_an(Array)
         end
       end
 
