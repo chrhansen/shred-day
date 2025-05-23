@@ -174,7 +174,7 @@ export default function AccountPage() {
   <div className="min-h-screen bg-white">
     <Navbar title="Account Settings" rightContent={logOutButton} />
 
-      <div className="max-w-md mx-auto space-y-8 pt-8 p-0 md:p-0">
+      <div className="max-w-md mx-auto space-y-8 pt-8 p-2 md:p-0">
 
         <div className="space-y-2">
             <Label>Email</Label>
