@@ -2,25 +2,10 @@
 
 // Helper to convert season number to display string using user's season_start_day
 // Copied from DaysListPage.tsx for test use
-const getSeasonDisplayName = (seasonNumber: number, seasonStartDay: string): string => {
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth(); // 0-indexed
-  const currentDay = today.getDate();
-
-  // Parse user's season start day
-  const [startMonth, startDayVal] = seasonStartDay.split('-').map(num => parseInt(num, 10));
-
-  // Determine what year the current season started
-  let currentSeasonStartYear;
-  if (currentMonth < startMonth - 1 || (currentMonth === startMonth - 1 && currentDay < startDayVal)) {
-    currentSeasonStartYear = currentYear - 1;
-  } else {
-    currentSeasonStartYear = currentYear;
-  }
-
-  const displaySeasonStartYear = currentSeasonStartYear + seasonNumber;
-  return `${displaySeasonStartYear}/${String(displaySeasonStartYear + 1).slice(-2)} Season`;
+const getSeasonDisplayName = (seasonNumber: number): string => {
+  if (seasonNumber === 0) return "This Season";
+  if (seasonNumber === -1) return "Last Season";
+  return `${Math.abs(seasonNumber)} Seasons Ago`;
 };
 
 describe('Ski Days List Page', () => {
@@ -86,7 +71,7 @@ describe('Ski Days List Page', () => {
     cy.wait('@getDaysList');
 
     // Check title - Title is now in the Navbar
-    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('This Season').should('be.visible');
 
     // Use the aliased resort name for checking content
     cy.get('@resortName').then(resortName => {
@@ -292,7 +277,7 @@ describe('Season Dropdown Functionality', () => {
     cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
 
     // Now that content is loaded, check navbar and other content
-    cy.get('[data-testid="navbar"]').contains('2023/24 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('Last Season').should('be.visible');
     cy.get('body').should('not.contain', DAY_CURRENT_SEASON_ACTIVITY);
     cy.get('body').should('not.contain', DAY_TWO_SEASONS_AGO_ACTIVITY);
   });
@@ -306,19 +291,19 @@ describe('Season Dropdown Functionality', () => {
     // Ensure initial content (current season day) is loaded before interacting
     cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
 
-    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('This Season').should('be.visible');
     cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
 
     // Open dropdown and select previous season
-    cy.get('[data-testid="navbar"]').find('button').contains('2024/25 Season').click();
-    cy.contains('[role="menuitem"]', '2023/24 Season').click();
+    cy.get('[data-testid="navbar"]').find('button').contains('This Season').click();
+    cy.contains('[role="menuitem"]', 'Last Season').click();
 
     cy.wait('@getDaysApi').its('request.url').should('include', 'season=-1');
     cy.url().should('include', '?season=-1');
 
     // Ensure new content is loaded before checking navbar
     cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
-    cy.get('[data-testid="navbar"]').contains('2023/24 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('Last Season').should('be.visible');
     cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('not.exist');
   });
 
@@ -332,14 +317,13 @@ describe('Season Dropdown Functionality', () => {
     cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
 
     // Get the button that displays the current season and click it to open the dropdown
-    cy.get('[data-testid="navbar"]').find('button').contains(getSeasonDisplayName(0, CUSTOM_SEASON_START_DAY)).click();
+    cy.get('[data-testid="navbar"]').find('button').contains(getSeasonDisplayName(0)).click();
 
-    // Based on mocked available_seasons: [0, -1, -2] and CUSTOM_SEASON_START_DAY ('10-15')
-    // and the actual current date when the test runs (since cy.clock is removed here for now)
+    // Based on mocked available_seasons: [0, -1, -2]
     // The display names will be calculated dynamically. We verify the presence of each expected offset.
-    cy.contains('[role="menuitem"]', getSeasonDisplayName(0, CUSTOM_SEASON_START_DAY)).should('be.visible');
-    cy.contains('[role="menuitem"]', getSeasonDisplayName(-1, CUSTOM_SEASON_START_DAY)).should('be.visible');
-    cy.contains('[role="menuitem"]', getSeasonDisplayName(-2, CUSTOM_SEASON_START_DAY)).should('be.visible');
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(0)).should('be.visible');
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(-1)).should('be.visible');
+    cy.contains('[role="menuitem"]', getSeasonDisplayName(-2)).should('be.visible');
     cy.get('[role="menuitem"]').should('have.length', 3);
   });
 
@@ -352,7 +336,7 @@ describe('Season Dropdown Functionality', () => {
     // Ensure initial content (current season day) is loaded before checking navbar
     cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
 
-    cy.get('[data-testid="navbar"]').contains('2024/25 Season').should('be.visible');
+    cy.get('[data-testid="navbar"]').contains('This Season').should('be.visible');
     cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
     cy.contains(DAY_TWO_SEASONS_AGO_ACTIVITY).should('not.exist');
   });

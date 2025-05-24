@@ -10,19 +10,24 @@ import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import SeasonDropdown from '@/components/SeasonDropdown';
 import { useAuth } from '@/contexts/AuthContext';
+import { format, addYears, subDays } from 'date-fns';
 
-// Helper to convert season number to display string using user's season_start_day
-const getSeasonDisplayName = (seasonNumber: number, seasonStartDay: string): string => {
+// Helper to convert season number to a relative display string
+const getSeasonDisplayName = (seasonNumber: number): string => {
+  if (seasonNumber === 0) return "This Season";
+  if (seasonNumber === -1) return "Last Season";
+  return `${Math.abs(seasonNumber)} Seasons Ago`;
+};
+
+// Helper to get the date range string for a given season
+const getSeasonDateRange = (seasonNumber: number, seasonStartDay: string): string => {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth(); // 0-indexed
   const currentDay = today.getDate();
 
-  // Parse user's season start day
   const [startMonth, startDay] = seasonStartDay.split('-').map(num => parseInt(num, 10));
 
-  // Determine what year the current season started
-  // If we're before the season start date this calendar year, current season started last year
   let currentSeasonStartYear;
   if (currentMonth < startMonth - 1 || (currentMonth === startMonth - 1 && currentDay < startDay)) {
     currentSeasonStartYear = currentYear - 1;
@@ -30,9 +35,13 @@ const getSeasonDisplayName = (seasonNumber: number, seasonStartDay: string): str
     currentSeasonStartYear = currentYear;
   }
 
-  // Calculate the display year for the requested season
-  const displaySeasonStartYear = currentSeasonStartYear + seasonNumber;
-  return `${displaySeasonStartYear}/${String(displaySeasonStartYear + 1).slice(-2)} Season`;
+  const seasonStartActualYear = currentSeasonStartYear + seasonNumber;
+
+  // Create Date object for season start: month is 0-indexed for Date constructor
+  const seasonStartDate = new Date(seasonStartActualYear, startMonth - 1, startDay);
+  const seasonEndDate = subDays(addYears(seasonStartDate, 1), 1);
+
+  return `${format(seasonStartDate, "yyyy MMM. d")} - ${format(seasonEndDate, "yyyy MMM. d")}`;
 };
 
 export default function DaysListPage() {
@@ -41,7 +50,7 @@ export default function DaysListPage() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Initialize selectedSeason from URL parameter or default to 0
+  // Initialize selectedSeason (numeric offset) from URL parameter or default to 0
   const [selectedSeason, setSelectedSeason] = useState<number>(() => {
     const seasonParam = searchParams.get('season');
     return seasonParam ? parseInt(seasonParam, 10) : 0;
@@ -68,7 +77,7 @@ export default function DaysListPage() {
   });
 
   // Get available seasons and season_start_day from user account details
-  const availableSeasons = user?.available_seasons || [0];
+  const availableSeasonOffsets = user?.available_seasons || [0];
   const seasonStartDay = user?.season_start_day || '09-01';
 
   const { mutate: deleteDay, isPending: isDeleting } = useMutation({
@@ -88,26 +97,8 @@ export default function DaysListPage() {
     deleteDay(dayId);
   };
 
-  const handleSeasonChange = (seasonDisplayName: string) => {
-    // Convert display name back to season number
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-    const currentDay = today.getDate();
-
-    // Parse user's season start day
-    const [startMonth, startDay] = seasonStartDay.split('-').map(num => parseInt(num, 10));
-
-    // Determine current season start year (same logic as getSeasonDisplayName)
-    let currentSeasonStartYear;
-    if (currentMonth < startMonth - 1 || (currentMonth === startMonth - 1 && currentDay < startDay)) {
-      currentSeasonStartYear = currentYear - 1;
-    } else {
-      currentSeasonStartYear = currentYear;
-    }
-
-    const seasonStartYear = parseInt(seasonDisplayName.substring(0, 4), 10);
-    const seasonNumber = seasonStartYear - currentSeasonStartYear;
+  const handleSeasonChange = (seasonOffsetString: string) => {
+    const seasonNumber = parseInt(seasonOffsetString, 10);
     setSelectedSeason(seasonNumber);
   };
 
@@ -122,9 +113,14 @@ export default function DaysListPage() {
     </Button>
   );
 
-  // Generate display names for available seasons
-  const availableSeasonDisplayNames = availableSeasons.map(season => getSeasonDisplayName(season, seasonStartDay));
-  const selectedSeasonDisplayName = getSeasonDisplayName(selectedSeason, seasonStartDay);
+  // Prepare data for SeasonDropdown
+  const seasonsDataForDropdown = availableSeasonOffsets.map(offset => {
+    const displayName = getSeasonDisplayName(offset);
+    const dateRange = getSeasonDateRange(offset, seasonStartDay);
+    return { displayName, dateRange, value: offset.toString() };
+  });
+
+  const selectedSeasonDisplayName = getSeasonDisplayName(selectedSeason);
 
   return (
     <div className="min-h-screen bg-white">
@@ -136,7 +132,7 @@ export default function DaysListPage() {
           ) : (
             <SeasonDropdown
               selectedSeason={selectedSeasonDisplayName}
-              availableSeasons={availableSeasonDisplayNames}
+              seasonsData={seasonsDataForDropdown}
               onSeasonChange={handleSeasonChange}
             />
           )

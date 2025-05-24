@@ -223,12 +223,12 @@ export default function AccountPage() {
           <h3 className="font-medium">Season Ranges</h3>
           <div className="space-y-1">
             <div className="text-sm">
-                <span className="font-medium">Current season:</span>{" "}
+                <span className="font-medium">This season:</span>{" "}
                 {format(seasonRanges.current.start, "MMM d, yyyy")} to{" "}
                 {format(seasonRanges.current.end, "MMM d, yyyy")},
             </div>
             <div className="text-sm">
-                <span className="font-medium">Previous season:</span>{" "}
+                <span className="font-medium">Last season:</span>{" "}
                 {format(seasonRanges.last.start, "MMM d, yyyy")} to{" "}
                 {format(seasonRanges.last.end, "MMM d, yyyy")},
             </div>

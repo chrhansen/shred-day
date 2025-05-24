@@ -1,75 +1,80 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { AuthenticationError } from '@/services/skiService';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query';
 import { accountService } from '@/services/accountService';
+import { AuthenticationError } from '@/services/skiService'; // Assuming this is a custom error type
 import { AccountDetails } from '@/types/ski';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: AccountDetails | null; // Store account details including season_start_day and available_seasons
-  checkAuthStatus: () => Promise<void>; // Function to re-check auth
-  login: (user: AccountDetails) => void; // Function to set user as logged in
-  logout: () => Promise<void>; // Function to handle logout
+  user: AccountDetails | null;
+  checkAuthStatus: () => Promise<void>;
+  login: (user: AccountDetails) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const accountDetailsQueryKey: QueryKey = ['accountDetails'];
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<AccountDetails | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
+
+  const { data: user, isLoading: queryIsLoading, isError, error: queryError, refetch } = useQuery<AccountDetails, Error>({
+    queryKey: accountDetailsQueryKey,
+    queryFn: async () => {
+      try {
+        return await accountService.getAccountDetails();
+      } catch (error) {
+        if (error instanceof AuthenticationError) {
+          // Don't throw auth errors, let them result in no user data / !isAuthenticated
+          return null; // Or undefined, handled by how `user` is used
+        }
+        throw error; // Re-throw other errors for React Query to handle
+      }
+    },
+    retry: (failureCount, error) => {
+      if (error instanceof AuthenticationError) return false;
+      return failureCount < 2; // Retry other errors (e.g. network) a couple of times
+    },
+    staleTime: 5 * 60 * 1000, // User data is reasonably stable for 5 mins
+    refetchOnWindowFocus: true, // Standard behavior, good for session validation
+  });
+
+  const isAuthenticated = !!user && !isError; // User exists and no query error (especially not auth error)
 
   const checkAuthStatus = async () => {
-    setIsLoading(true);
-    try {
-      // Attempt to fetch account details - this requires authentication
-      const accountDetails = await accountService.getAccountDetails();
-      // If getAccountDetails succeeds, we are authenticated and have user info
-      setIsAuthenticated(true);
-      setUser(accountDetails);
-    } catch (error) {
-      if (error instanceof AuthenticationError) {
-        setIsAuthenticated(false);
-        setUser(null);
-      } else {
-        // Handle other errors (e.g., network error)
-        console.error("Error checking auth status:", error);
-        // Optionally set an error state here
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    await refetch();
   };
 
-  // Check status on initial load
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  // Function to call after successful login
   const login = (loggedInUser: AccountDetails) => {
-    setIsAuthenticated(true);
-    setUser(loggedInUser);
-    setIsLoading(false); // No longer loading initial auth status
+    queryClient.setQueryData(accountDetailsQueryKey, loggedInUser);
   };
 
-  // Function to call for logout
   const logout = async () => {
     try {
-      const { skiService } = await import('@/services/skiService');
+      // Perform the server-side sign out
+      const { skiService } = await import('@/services/skiService'); // Dynamic import if needed
       await skiService.signOut();
     } catch (error) {
       console.error("Error during sign out:", error);
-      // Handle sign out error if necessary
     } finally {
-      setIsAuthenticated(false);
-      setUser(null);
-      // Optionally redirect here or let the component handle it
+      // Clear user data from React Query cache
+      queryClient.setQueryData(accountDetailsQueryKey, null);
+      // Optionally, fully remove the query to reset its state if needed
+      // queryClient.removeQueries({ queryKey: accountDetailsQueryKey });
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, checkAuthStatus, login, logout }}>
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      isLoading: queryIsLoading,
+      user: user || null, // Provide null if user is undefined from query
+      checkAuthStatus,
+      login,
+      logout
+    }}>
       {children}
     </AuthContext.Provider>
   );

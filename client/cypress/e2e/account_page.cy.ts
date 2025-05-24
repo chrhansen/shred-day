@@ -37,8 +37,8 @@ describe('Account Page', () => {
     cy.get('#seasonStartDay > span').invoke('text').should('not.be.empty');   // Check if day has a value
 
     cy.contains('h3', 'Season Ranges').should('be.visible');
-    cy.contains('[class*="text-sm"]', 'Current season:').should('be.visible');
-    cy.contains('[class*="text-sm"]', 'Previous season:').should('be.visible');
+    cy.contains('[class*="text-sm"]', 'This season:').should('be.visible');
+    cy.contains('[class*="text-sm"]', 'Last season:').should('be.visible');
   });
 
   it('should allow updating the season start date', () => {

@@ -7,13 +7,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 
-interface SeasonDropdownProps {
-  selectedSeason: string;
-  availableSeasons: string[];
-  onSeasonChange: (season: string) => void;
+interface Season {
+  displayName: string;
+  dateRange: string;
+  value: string; // Assuming a value is needed for onSeasonChange
 }
 
-export default function SeasonDropdown({ selectedSeason, availableSeasons, onSeasonChange }: SeasonDropdownProps) {
+interface SeasonDropdownProps {
+  selectedSeason: string;
+  seasonsData: Season[]; // New prop
+  onSeasonChange: (seasonValue: string) => void;
+}
+
+export default function SeasonDropdown({ selectedSeason, seasonsData, onSeasonChange }: SeasonDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,9 +29,12 @@ export default function SeasonDropdown({ selectedSeason, availableSeasons, onSea
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center">
-        {availableSeasons.map((season) => (
-          <DropdownMenuItem key={season} onClick={() => onSeasonChange(season)}>
-            {season}
+        {seasonsData.map((season) => (
+          <DropdownMenuItem key={season.value} onClick={() => onSeasonChange(season.value)}>
+            <div className="flex flex-col">
+              <div>{season.displayName}</div>
+              <div className="text-xs text-muted-foreground">{season.dateRange}</div>
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
