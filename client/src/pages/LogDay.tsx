@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Loader2, Plus, Check, X, Search, Settings, ImagePlus } from "lucide-react";
+import { ChevronLeft, Loader2, Plus, Check, X, Search } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -11,7 +11,6 @@ import { resortService, Resort } from "@/services/resortService";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import debounce from 'lodash.debounce';
-import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { type PhotoPreview } from "@/types/ski";
 import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
@@ -342,26 +341,16 @@ export default function LogDay() {
   return (
     <div className="min-h-screen bg-white p-4 flex justify-center">
       <div className="w-full max-w-md mx-auto space-y-6">
-        {/* Header with Back/Settings Buttons */}
-        <div className="flex justify-between items-center mb-4">
+        {/* Header with Cancel Button */}
+        <div className="flex justify-between items-center">
           <Button
             variant="ghost"
             className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate(-1)} // Simpler back navigation
+            onClick={() => navigate(-1)}
             disabled={isProcessing}
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate('/settings')}
-            aria-label="Settings"
-            disabled={isProcessing}
-          >
-            <Settings className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
+            Cancel
           </Button>
         </div>
 
