@@ -103,26 +103,23 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
         </Avatar>
         <div className="flex-1 min-w-0 ml-1">
           <div className="text-lg font-medium text-slate-800 truncate leading-none -mt-0.5">{day.resort_name}</div>
-          <div className="text-base text-slate-500">{displayDate}</div>
+          <div className="text-base text-slate-500 flex items-center gap-1.5">
+            <span>#{day.day_number}</span> <span className="w-1 h-1 bg-slate-300 rounded-full" /> {displayDate}
+          </div>
           <div className="text-base text-slate-500 flex items-center gap-2 flex-wrap">
             {day.ski_names && <span>{day.ski_names.join('/')}</span>}
             {day.ski_names && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
             {day.activity && <span>{day.activity}</span>}
           </div>
         </div>
-        {/* Vertically stacked and right-aligned group for day number and actions menu */}
-        <div className="ml-auto flex flex-col items-end">
-          {typeof day.day_number === 'number' && (
-            <div className="text-lg font-medium text-slate-800 truncate leading-none -mt-0.5">
-              <span className="text-slate-400">#{day.day_number}</span>
-            </div>
-          )}
+        {/* Vertically stacked and right-aligned for actions menu */}
+        <div className="ml-auto flex self-stretch items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full h-8 w-8 flex-shrink-0 self-center mt-1"
+                className="rounded-full h-8 w-8 flex-shrink-0 self-center"
                 data-testid={`edit-day-${day.id}`}
                 onClick={(e) => e.stopPropagation()}
               >
