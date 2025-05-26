@@ -67,6 +67,7 @@ export interface SkiDayEntry {
   ski_names: string[];
   resort_name: string;
   has_notes: boolean;
+  day_number: number;
   created_at: string;
   updated_at: string;
   photos?: { id: string; preview_url: string | null; full_url: string | null; filename: string | null }[];

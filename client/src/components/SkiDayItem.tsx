@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, getYear } from "date-fns";
 // Use SkiDayEntry for the list item, and SkiDayDetailType for the detailed view
 import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types/ski";
 import { SkiDayDetail } from "@/components/SkiDayDetail";
@@ -75,10 +75,16 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
     navigate(`/days/${day.id}/edit`);
   };
 
+  const currentYear = getYear(new Date());
+  const dayDate = new Date(day.date.replace(/-/g, '/'));
+  const displayDate = getYear(dayDate) === currentYear
+    ? format(dayDate, 'MMM d')
+    : format(dayDate, 'MMM d, yyyy');
+
   return (
     <>
       <div
-        className="flex items-center gap-3 pb-3 pt-3 cursor-pointer hover:bg-slate-50 transition-colors"
+        className="flex items-start gap-3 pb-3 pt-3 cursor-pointer hover:bg-slate-50 transition-colors"
         data-testid={`ski-day-item-${day.id}`}
         onClick={handleItemClick}
       >
@@ -96,41 +102,49 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
           )}
         </Avatar>
         <div className="flex-1 min-w-0 ml-1">
-          <div className="text-lg font-medium text-slate-800 truncate">{day.resort_name}</div>
-          <div className="text-base text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy')}</div>
+          <div className="text-lg font-medium text-slate-800 truncate leading-none -mt-0.5">{day.resort_name}</div>
+          <div className="text-base text-slate-500">{displayDate}</div>
           <div className="text-base text-slate-500 flex items-center gap-2 flex-wrap">
             {day.ski_names && <span>{day.ski_names.join('/')}</span>}
             {day.ski_names && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
             {day.activity && <span>{day.activity}</span>}
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full h-8 w-8 flex-shrink-0"
-              data-testid={`edit-day-${day.id}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem onClick={handleEditClick}>
-              <Pencil className="mr-2 h-4 w-4" />
-              <span>Edit</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDeleteClick}
-              className="text-red-600 focus:text-red-700 focus:bg-red-50"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Vertically stacked and right-aligned group for day number and actions menu */}
+        <div className="ml-auto flex flex-col items-end">
+          {typeof day.day_number === 'number' && (
+            <div className="text-lg font-medium text-slate-800 truncate leading-none -mt-0.5">
+              <span className="text-slate-400">#{day.day_number}</span>
+            </div>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full h-8 w-8 flex-shrink-0 self-center mt-1"
+                data-testid={`edit-day-${day.id}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={handleEditClick}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDeleteClick}
+                className="text-red-600 focus:text-red-700 focus:bg-red-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       {isDetailOpen && (
         <SkiDayDetail

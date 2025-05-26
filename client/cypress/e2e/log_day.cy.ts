@@ -110,7 +110,8 @@ describe('Create and Edit a Ski Day', () => {
     // Get the selected date (15th of current month) and format it
     const selectedDate = new Date();
     selectedDate.setDate(15);
-    const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 15, 2025"
+    // Updated formatting: For current year, only month and day
+    const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
     // Check that the specific item with the new ID contains the correct resort and date
     // Use cy.then to ensure newDayId is available after the wait
@@ -198,9 +199,19 @@ describe('Create and Edit a Ski Day', () => {
     // 9. Verify changes are reflected in the list (wait for dayId alias)
     cy.wait('@getDaysList');
     cy.get('@dayId').then(dayId => {
+      // Dynamically determine the expected date format
+      const testYear = 2025;
+      const testMonth = 2; // 0-indexed for March
+      const testDay = 20;
+      const dateForDisplay = new Date(testYear, testMonth, testDay);
+      const currentRunYear = new Date().getFullYear();
+      const expectedDisplayDate = dateForDisplay.getFullYear() === currentRunYear
+        ? dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // e.g., "Mar 20"
+        : dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 20, 2025"
+
       // Use the new data-testid selector
       cy.get(`[data-testid="ski-day-item-${dayId}"]`)
-        .should('contain.text', 'Mar 20, 2025')
+        .should('contain.text', expectedDisplayDate)
         .and('contain.text', SKI_B_NAME)
         .and('contain.text', EDITED_ACTIVITY);
     });

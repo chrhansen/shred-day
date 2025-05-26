@@ -76,15 +76,26 @@ describe('Ski Days List Page', () => {
     // Use the aliased resort name for checking content
     cy.get('@resortName').then(resortName => {
       // Check Day 1 content
-      cy.get(`[data-testid="edit-day-${this.day1Id}"]`).closest('.flex.items-center')
-        .should('contain.text', 'Apr 15, 2025')
+      const day1TestDate = new Date(DAY1_DATE.replace(/-/g, '/'));
+      const currentRunYear = new Date().getFullYear();
+      const expectedDay1DisplayDate = day1TestDate.getFullYear() === currentRunYear
+        ? day1TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : day1TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      cy.get(`[data-testid="ski-day-item-${this.day1Id}"]`)
+        .should('contain.text', expectedDay1DisplayDate)
         .and('contain.text', resortName) // Use aliased name
         .and('contain.text', SKI_A_NAME)
         .and('contain.text', DAY1_ACTIVITY);
 
       // Check Day 2 content
-      cy.get(`[data-testid="edit-day-${this.day2Id}"]`).closest('.flex.items-center')
-        .should('contain.text', 'Apr 10, 2025')
+      const day2TestDate = new Date(DAY2_DATE.replace(/-/g, '/'));
+      const expectedDay2DisplayDate = day2TestDate.getFullYear() === currentRunYear
+        ? day2TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : day2TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      cy.get(`[data-testid="ski-day-item-${this.day2Id}"]`)
+        .should('contain.text', expectedDay2DisplayDate)
         .and('contain.text', resortName) // Use aliased name
         .and('contain.text', SKI_B_NAME)
         .and('contain.text', DAY2_ACTIVITY);
@@ -95,10 +106,10 @@ describe('Ski Days List Page', () => {
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getDaysList');
 
-    // Find dropdown trigger for day 1
-    cy.get(`[data-testid="edit-day-${this.day1Id}"]`).closest('.flex.items-center').find('button[aria-haspopup="menu"]').click();
+    // Click the edit button directly by its data-testid
+    cy.get(`[data-testid="edit-day-${this.day1Id}"]`).click();
 
-    // Click Edit item
+    // Click Edit item in the dropdown
     cy.contains('[role="menuitem"]', 'Edit').click();
 
     // Verify URL
@@ -121,7 +132,7 @@ describe('Ski Days List Page', () => {
     });
 
     // Find dropdown trigger for day 1
-    cy.get(`[data-testid="edit-day-${this.day1Id}"]`).closest('.flex.items-center').find('button[aria-haspopup="menu"]').click();
+    cy.get(`[data-testid="edit-day-${this.day1Id}"]`).click();
 
     // Click Delete item
     cy.contains('[role="menuitem"]', 'Delete').click();
