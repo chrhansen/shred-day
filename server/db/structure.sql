@@ -248,7 +248,8 @@ CREATE TABLE public.days (
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
     resort_id character varying NOT NULL,
-    notes text
+    notes text,
+    day_number integer
 );
 
 
@@ -732,6 +733,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250525064404'),
 ('20250521141526'),
 ('20250515081850'),
 ('20250510072251'),

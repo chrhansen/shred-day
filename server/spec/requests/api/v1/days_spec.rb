@@ -51,6 +51,9 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['date']).to eq(Date.today.to_s)
           expect(json_response['user_id']).to eq(user.id)
           expect(json_response['notes']).to eq("This is a test note")
+          expect(json_response['created_at'].to_datetime).to be_within(1.second).of(Day.last.created_at.to_datetime)
+          expect(json_response['updated_at'].to_datetime).to be_within(1.second).of(Day.last.updated_at.to_datetime)
+          expect(json_response['day_number']).to eq(Day.last.day_number)
           expect(json_response['activity']).to eq("Piste skiing")
           expect(json_response['resort']['id']).to eq(resort.id)
           expect(json_response['skis']).to be_an(Array)
@@ -552,6 +555,9 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(day_entry['id']).to eq(day.id)
         expect(day_entry).to have_key('date')
         expect(day_entry).to have_key('activity')
+        expect(day_entry).to have_key('created_at')
+        expect(day_entry).to have_key('updated_at')
+        expect(day_entry).to have_key('day_number')
         expect(day_entry).to have_key('has_notes')
 
         # Check for flattened names
