@@ -6,7 +6,7 @@ class DayNumberUpdaterService
   end
 
   def update!
-    season_starts = @affected_dates.map { |date| season_cutoff_for_date(date) }.uniq
+    season_starts = @affected_dates.map { |date| season_cutoff_for_date(date) }.compact.uniq
 
     season_starts.each do |season_start|
       reorder_for_season(season_start)
