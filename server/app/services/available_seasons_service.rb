@@ -44,9 +44,6 @@ class AvailableSeasonsService
       end
     end
 
-    # Always include current season (0) even if no days exist yet
-    seasons.add(0)
-
     seasons.to_a.sort.reverse # Most recent first
   end
 end

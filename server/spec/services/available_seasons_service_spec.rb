@@ -44,19 +44,6 @@ RSpec.describe AvailableSeasonsService do
         # Should be sorted in reverse order (most recent first)
         expect(available_seasons).to eq([0, -1, -3, -4])
       end
-
-      it "always includes current season (0) even when no current season days exist" do
-        # Remove the current season day
-        user.days.where(date: Date.new(2024, 11, 15)).destroy_all
-
-        allow(Date).to receive(:current).and_return(Date.new(2024, 12, 1))
-
-        available_seasons = AvailableSeasonsService.new(user).fetch_available_seasons
-
-        # Should still include 0 even though no current season days exist
-        expect(available_seasons).to include(0)
-        expect(available_seasons).to eq([0, -1, -3, -4])
-      end
     end
 
     context "with different season start dates" do

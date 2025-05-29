@@ -53,7 +53,7 @@ describe('Ski Days List Page', () => {
     cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/skis`, { ski: { name: SKI_B_NAME } })
       .its('body.id').as('skiBId');
 
-    // 4. Create Days (NOW aliases should be reliably set)
+    // 4. Create Days
     cy.get('@resortId').then(resortId => {
       cy.get('@skiAId').then(skiAId => {
         cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY1_DATE, resort_id: resortId, ski_ids: [skiAId], activity: DAY1_ACTIVITY } })

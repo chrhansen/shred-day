@@ -2,7 +2,7 @@
 
 An app for skiers to log and later view their skiing days. You enter things like date, ski resort, skis, who you skied with, what you did (training, powder, etc.).
 
-You can see all your ski days in a calendar or on a map.
+You can see all your ski days in a list view and toggle to see days in different seasons.
 
 ## Project Overview
 
@@ -18,11 +18,12 @@ This is a monorepo containing both the frontend (React client) and the backend (
 ## ✨ Key Features
 
 •⁠ A calendar to flick through months or weeks to see when you skied
-•⁠ A map to see where you went
 •⁠ A simple form or similar way of input where you log: Date, equipment, ski resort, people, specific focus of the day, a photo, etc.
 •⁠ User accounts with email/password authentication.
 •⁠ Logged days and statistics are associated with the logged-in user.
 •⁠ You could also filter (e.g. skis, people, etc.) to find when or where you used that piece of equipment or hung out with a certain person
+•⁠ Mass import of days from photos (based on date and location in EXIF-data)
+•⁠ Export of days in CSV format
 •⁠ A user will come to the app when they need to log a new ski day or review their skiing days. Therefore there will be a backend, reached via HTTP, to store and retrieve the data.
 
 ## 🚀 To run this project:
@@ -81,7 +82,7 @@ bin/rails server
 - Kamal (Deployment tool, run from project root)
   - Configuration: `config/deploy.yml`
   - Target: Hetzner VPS with Ubuntu
-- Traefik (Reverse Proxy, managed by Kamal)
+- Kamal-proxy (Reverse Proxy, managed by Kamal)
 
 ## 🧪 Testing
 
@@ -115,7 +116,7 @@ bundle exec rspec
   - Simulates real user interactions in a browser.
   - Configuration: `client/cypress.config.ts`
   - Specs: `client/cypress/e2e/`
-- **Unit/Component Testing:** Vitest + React Testing Library *(Setup Pending)*
+- **Unit/Component Testing:** Vitest + React Testing Library
   - For testing individual components and functions in isolation.
 
 **Running E2E Tests:**

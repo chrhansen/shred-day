@@ -10,6 +10,7 @@ import AccountPage from "@/pages/AccountPage";
 import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
+import CsvExportPage from "@/pages/CsvExportPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -53,6 +54,7 @@ const AppRoutes = () => {
           <Route path="/settings/skis" element={<ProtectedRoute><SkisPage /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
           <Route path="/photo-imports/:importId" element={<ProtectedRoute><PhotoImportPage /></ProtectedRoute>} />
+          <Route path="/csv-export" element={<ProtectedRoute><CsvExportPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       ) : (

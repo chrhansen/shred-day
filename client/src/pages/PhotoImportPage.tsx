@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
 import { PhotoList } from "@/components/PhotoList";
@@ -309,7 +309,6 @@ export default function PhotoImportPage() {
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <Button variant="ghost" onClick={handleCancel} disabled={anyClientUploading || backendIsProcessing || isCancellingImport || isCommittingImport}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
             Cancel
           </Button>
           <h1 className="text-2xl font-bold text-slate-800 text-center flex-1">

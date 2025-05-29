@@ -10,39 +10,7 @@ import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import SeasonDropdown from '@/components/SeasonDropdown';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, addYears, subDays } from 'date-fns';
-
-// Helper to convert season number to a relative display string
-const getSeasonDisplayName = (seasonNumber: number): string => {
-  if (seasonNumber === 0) return "This Season";
-  if (seasonNumber === -1) return "Last Season";
-  return `${Math.abs(seasonNumber)} Seasons Ago`;
-};
-
-// Helper to get the date range string for a given season
-const getSeasonDateRange = (seasonNumber: number, seasonStartDay: string): string => {
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth(); // 0-indexed
-  const currentDay = today.getDate();
-
-  const [startMonth, startDay] = seasonStartDay.split('-').map(num => parseInt(num, 10));
-
-  let currentSeasonStartYear;
-  if (currentMonth < startMonth - 1 || (currentMonth === startMonth - 1 && currentDay < startDay)) {
-    currentSeasonStartYear = currentYear - 1;
-  } else {
-    currentSeasonStartYear = currentYear;
-  }
-
-  const seasonStartActualYear = currentSeasonStartYear + seasonNumber;
-
-  // Create Date object for season start: month is 0-indexed for Date constructor
-  const seasonStartDate = new Date(seasonStartActualYear, startMonth - 1, startDay);
-  const seasonEndDate = subDays(addYears(seasonStartDate, 1), 1);
-
-  return `${format(seasonStartDate, "yyyy MMM. d")} - ${format(seasonEndDate, "yyyy MMM. d")}`;
-};
+import { getSeasonDisplayName, getFormattedSeasonDateRange } from '@/utils/seasonFormatters';
 
 export default function DaysListPage() {
   const navigate = useNavigate();
@@ -116,7 +84,7 @@ export default function DaysListPage() {
   // Prepare data for SeasonDropdown
   const seasonsDataForDropdown = availableSeasonOffsets.map(offset => {
     const displayName = getSeasonDisplayName(offset);
-    const dateRange = getSeasonDateRange(offset, seasonStartDay);
+    const dateRange = getFormattedSeasonDateRange(offset, seasonStartDay);
     return { displayName, dateRange, value: offset.toString() };
   });
 
