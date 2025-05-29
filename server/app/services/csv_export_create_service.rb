@@ -36,6 +36,8 @@ class CsvExportCreateService
             day.date&.iso8601
           when 'resort_name'
             day.resort&.name
+          when 'resort_country'
+            day.resort&.country
           when 'skis'
             day.skis.map(&:name).join(', ')
           when 'activity'

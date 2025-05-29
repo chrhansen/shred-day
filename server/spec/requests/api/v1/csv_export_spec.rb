@@ -45,11 +45,12 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
           expected_columns = [
             { id: 'date', label: 'Date', enabled: true },
             { id: 'resort_name', label: 'Resort', enabled: true },
+            { id: 'resort_country', label: 'Country', enabled: false },
             { id: 'skis', label: 'Skis', enabled: true },
             { id: 'activity', label: 'Activity', enabled: true },
             { id: 'season', label: 'Season', enabled: false },
-            { id: 'day_number', label: 'Day #', enabled: true },
-            { id: 'day_id', label: 'Day ID', enabled: false },
+            { id: 'day_number', label: 'Season Day #', enabled: true },
+            { id: 'day_id', label: 'Shred Day ID', enabled: false },
             { id: 'notes', label: 'Notes', enabled: false },
             { id: 'photo_count', label: 'Photo Count', enabled: false }
           ]
