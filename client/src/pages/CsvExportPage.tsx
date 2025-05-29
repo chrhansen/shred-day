@@ -122,16 +122,16 @@ export default function ExportPage() {
 
   return (
     <div className="min-h-screen bg-white p-4">
-      <div className="max-w-md mx-auto space-y-8 pt-8">
-        <div className="flex items-center mb-4">
+      <div className="max-w-md mx-auto space-y-4 pt-4">
+        <div className="relative flex justify-center items-center mb-4">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="mr-2"
+            className="absolute left-0 top-1/2 -translate-y-1/2"
           >
             Cancel
           </Button>
-          <h1 className="text-xl font-bold">Export Ski Days</h1>
+          <h1 className="text-xl font-bold">Export Days to CSV</h1>
         </div>
 
         <div className="space-y-4">

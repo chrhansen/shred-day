@@ -56,7 +56,7 @@ describe('CSV Export Page', () => {
     cy.location('pathname').should('eq', CSV_EXPORT_URL);
     cy.wait('@getCsvExportData');
 
-    cy.contains('h1', 'Export Ski Days').should('be.visible');
+    cy.contains('h1', 'Export Days to CSV').should('be.visible');
     cy.contains('p', 'Select the seasons you want to include in your CSV export:').should('be.visible');
     cy.contains('button', /Customize Columns \(\d+ selected\)/).should('be.visible');
     cy.contains('button', 'Download CSV').should('be.visible');
