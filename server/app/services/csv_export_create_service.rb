@@ -20,7 +20,7 @@ class CsvExportCreateService
 
      @season_ids.each do |offset|
       start_date, end_date = offset_converter_instance.date_range(offset)
-      days_in_season = @user.days.includes(:resort, :skis, :photos).where(date: start_date..end_date).order(date: :asc)
+      days_in_season = @user.days.includes(:resort, :skis, :photos).where(date: start_date..end_date).order(date: :desc)
 
       all_days_for_export.concat(days_in_season.to_a)
     end

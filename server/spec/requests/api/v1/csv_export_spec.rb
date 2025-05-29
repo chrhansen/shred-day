@@ -108,8 +108,8 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
           csv_data = CSV.parse(response.body)
           expect(csv_data.length).to eq(3) # Header + 2 data rows
           expect(csv_data[0]).to eq(["Date", "Resort", "Skis", "Activity", "Season", "Day #", "Notes"]) # Headers
-          expect(csv_data[1]).to eq([day1_date.iso8601, "Snow Valley", "Alpine Cruiser", "Resort Skiing", "0", 1.to_s, "Fun day!"])
-          expect(csv_data[2]).to eq([day2_date.iso8601, "Snow Valley", "Alpine Cruiser, Powder King", "Powder Day", "0", 2.to_s, nil])
+          expect(csv_data[1]).to eq([day2_date.iso8601, "Snow Valley", "Alpine Cruiser, Powder King", "Powder Day", "0", 2.to_s, nil])
+          expect(csv_data[2]).to eq([day1_date.iso8601, "Snow Valley", "Alpine Cruiser", "Resort Skiing", "0", 1.to_s, "Fun day!"])
         end
       end
 
