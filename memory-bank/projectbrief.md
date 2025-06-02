@@ -1,6 +1,6 @@
 # Project Brief
 
-*   **Structure:** Monorepo with React frontend (`/client`) and Rails API backend (`/server`). Deployment via Kamal.
+*   **Structure:** Monorepo with React frontend (`/client`), Ruby on Rails 8.0 API backend (`/server`), and PostgreSQL 17 database. Deployment via Kamal in a Github Action.
 *   **Core Requirements:**
     *   User accounts with email/password sign-up and sign-in (using Rails sessions).
     *   Log ski days with details (date, resort, skis, etc.), associated with the logged-in user.
