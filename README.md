@@ -6,7 +6,7 @@ You can see all your ski days in a list view and toggle to see days in different
 
 ## Project Overview
 
-This is a monorepo containing both the frontend (React client) and the backend (Rails API).
+This is a monorepo containing both the frontend (React client in /client) and the backend (Ruby on Rails API in /server).
 
 ## 🏗️ Project Structure
 

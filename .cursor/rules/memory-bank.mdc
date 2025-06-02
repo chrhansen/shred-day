@@ -1,11 +1,11 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 # Cursor's Memory Bank
@@ -17,11 +17,16 @@ I am Cursor, an expert software engineer with a unique characteristic: my memory
 The Memory Bank consists of required core files and optional context files, all in Markdown format.
 
 ### Core Files (Required)
-1. `projectbrief.md`
+1. `projectbrief.md` (in /memory-bank/projectbrief.md)
    - Foundation document that shapes all other files
    - Created at project start if it doesn't exist
    - Defines core requirements and goals
    - Source of truth for project scope
+2. `README.md` (in /README.md)
+   - Describes what the web-app does
+   - How to run the project (React and Rails)
+   - How to run tests. React: Cypress and Jest, Ruby on Rails: rspec
+   - and more
 
 ### Additional Context
 Create additional files/folders within memory-bank/ when they help organize:
@@ -30,6 +35,7 @@ Create additional files/folders within memory-bank/ when they help organize:
 - API documentation
 - Testing strategies
 - Deployment procedures
+- Authentication flows and provider-specific details (e.g., Google Sign-In)
 
 ## Documentation Updates
 
@@ -53,5 +59,45 @@ The .cursor/rules file is my learning journal for each project. It captures impo
 - Tool usage patterns
 
 The format is flexible - focus on capturing valuable insights that help me work more effectively with you and the project. Think of .cursor/rules as a living document that grows smarter as we work together.
+
+## How you, the Cursor software engineer, should edit code
+
+### Code Comments
+- DO NOT ADD TRANSIENT COMMENTS/non-timeless comments. I don't want to see comments on a diff that says something like: "We no longer need this code"; Or: "With the new feature we can directly use the ID". Such comments only make sense in the moment you're making code edits, but then I can see the red/green diff and don't need the comments.
+- Only add short comments when they are timeless and do so as a last resort. First of all make code simple and name methods/functions and variables/constant with meaningful names. Only if the code is not clearly understandable or a future software engineer may not immediately get a detail can (you don't have to) you add a comment.
+
+### Scope of code edits
+- DO NOT EDIT CODE THAT IS NOT RELATED TO THE CURRENT TASK. When creating code edits when given a task ONLY MAKE EDITS DIRECTLY RELATED TO THE TASK GIVEN. Do not be opportunistic and "fix"/"refactor" other parts of the code. You may need to edit seemingly unrelated code, but then you are only doing so because you have to to complete the given task.
+
+## Authentication
+
+### Google Sign-In (OAuth 2.0)
+
+**Objective:** Allow users to sign up or sign in using their Google account.
+
+**Progress:**
+- **Google Cloud Project Setup:**
+    - OAuth 2.0 Client ID for Web application created.
+    - Authorized JavaScript origins: `https://shred.day`, `http://localhost:3000`
+    - Authorized redirect URIs: `https://shred.day/api/v1/sessions/google_callback`, `http://localhost:3000/api/v1/sessions/google_callback`
+- **Backend (Ruby on Rails):**
+    - `omniauth`, `omniauth-google-oauth2`, `omniauth-rails_csrf_protection` gems installed (`Gemfile`).
+    - User model updated with `google_uid` (string, unique) and `full_name` (string) attributes (migration: `20250530100236_add_google_fields_to_users.rb`).
+    - Routes defined in `config/routes.rb`:
+        - `/auth/:provider/callback` to `sessions#create` (generic OmniAuth callback).
+        - `/api/v1/sessions/google_callback` to `api/v1/sessions/google_callback#create` (specific handler for Google).
+    - Controller `api/v1/sessions/google_callback_controller.rb` created to handle the callback:
+        - Finds or initializes a user by `google_uid`.
+        - Updates user's email and name from Google's auth data.
+        - Sets `session[:user_id]`.
+        - Returns a JSON response.
+- **Frontend (React):**
+    - No changes implemented yet. A "Sign in with Google" button will be needed on `AuthPage.tsx`.
+
+**Next Steps:**
+1.  Implement the frontend button and logic to initiate Google Sign-In.
+2.  Complete the `sessions#create` action in the Rails `SessionsController` if it's intended to be a generic OmniAuth handler, or ensure the current Google-specific callback is sufficient.
+3.  Thoroughly test the end-to-end flow.
+4.  Consider error handling for Google authentication failures.
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
