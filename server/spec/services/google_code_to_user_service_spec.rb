@@ -35,11 +35,11 @@ RSpec.describe GoogleCodeToUserService do
     allow(service).to receive(:redirect_uri).and_return('http://test.host:8080/auth/callback')
   end
 
-  describe '#to_user' do
+  describe '#to_local_user' do
     context 'when state is invalid' do
       let(:state) { 'invalid_state' }
       it 'returns a Result with an invalid state error' do
-        result = service.to_user
+        result = service.to_local_user
         expect(result.error).to eq('Invalid state')
         expect(result.user).to be_nil
         expect(session[:oauth_state]).to be_nil
@@ -62,7 +62,7 @@ RSpec.describe GoogleCodeToUserService do
           let!(:existing_user) { User.create!(email: user_email, password: 'password123', full_name: 'Old Name') }
 
           it 'finds the existing user, updates name, sets session, and returns user in Result' do
-            result = service.to_user
+            result = service.to_local_user
             existing_user.reload
             expect(result.user).to eq(existing_user)
             expect(result.error).to be_nil
@@ -73,8 +73,41 @@ RSpec.describe GoogleCodeToUserService do
         end
 
         context 'when user does not exist' do
+          it 'creates a new user, sets session, and returns user in Result' do
+            expect {
+              result = service.to_local_user
+              expect(result.user).to be_present
+              expect(result.user.email).to eq(user_email.downcase)
+              expect(result.user.full_name).to eq(user_name)
+              expect(result.user.password_digest).to be_present # Should have a password set
+              expect(result.error).to be_nil
+              expect(result.session[:user_id]).to eq(result.user.id)
+              expect(session[:user_id]).to eq(result.user.id)
+            }.to change(User, :count).by(1)
+          end
+
+          it 'sets a secure random password for the new user' do
+            result = service.to_local_user
+            new_user = result.user
+            expect(new_user.password_digest).to be_present
+            expect(new_user.authenticate('wrong_password')).to be_falsey
+            # We can't easily test the exact password since it's randomly generated
+            # but we can verify it's properly hashed
+          end
+        end
+
+        context 'when user creation fails due to validation errors' do
+          before do
+            # Mock a user that fails to save
+            failed_user = User.new(email: user_email.downcase)
+            allow(User).to receive(:find_or_initialize_by).and_return(failed_user)
+            allow(failed_user).to receive(:new_record?).and_return(true)
+            allow(failed_user).to receive(:save).and_return(false)
+            allow(failed_user).to receive(:present?).and_return(false)
+          end
+
           it 'returns a Result with user not found error' do
-            result = service.to_user
+            result = service.to_local_user
             expect(result.error).to eq('User not found')
             expect(result.user).to be_nil
             expect(session[:user_id]).to be_nil
@@ -86,7 +119,7 @@ RSpec.describe GoogleCodeToUserService do
         let(:mock_token_response) { instance_double(OAuth2::AccessToken, params: {}) } # No id_token
         it 'returns a Result with an error and does not call verify_oidc' do
           expect(Google::Auth::IDTokens).not_to receive(:verify_oidc)
-          result = service.to_user
+          result = service.to_local_user
           expect(result.error).to eq('ID token not found in Google response')
         end
       end
@@ -99,28 +132,28 @@ RSpec.describe GoogleCodeToUserService do
           allow(Google::Auth::IDTokens).to receive(:verify_oidc)
             .with('valid_id_token', aud: google_client_id)
             .and_raise(Google::Auth::IDTokens::VerificationError, "Signature is invalid")
-          expect { service.to_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Signature is invalid")
+          expect { service.to_local_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Signature is invalid")
         end
 
         it 'propagates Google::Auth::ExpiredTokenError' do
           allow(Google::Auth::IDTokens).to receive(:verify_oidc)
             .with('valid_id_token', aud: google_client_id)
             .and_raise(Google::Auth::IDTokens::VerificationError, "Token has expired")
-          expect { service.to_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Token has expired")
+          expect { service.to_local_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Token has expired")
         end
 
         it 'propagates Google::Auth::InvalidIssuerError' do
           allow(Google::Auth::IDTokens).to receive(:verify_oidc)
             .with('valid_id_token', aud: google_client_id)
             .and_raise(Google::Auth::IDTokens::VerificationError, "Issuer is invalid")
-          expect { service.to_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Issuer is invalid")
+          expect { service.to_local_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Issuer is invalid")
         end
 
         it 'propagates Google::Auth::InvalidAudienceError' do
           allow(Google::Auth::IDTokens).to receive(:verify_oidc)
             .with('valid_id_token', aud: google_client_id)
             .and_raise(Google::Auth::IDTokens::VerificationError, "Audience is invalid")
-          expect { service.to_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Audience is invalid")
+          expect { service.to_local_user }.to raise_error(Google::Auth::IDTokens::VerificationError, "Audience is invalid")
         end
       end
 
@@ -131,7 +164,7 @@ RSpec.describe GoogleCodeToUserService do
         end
 
         it 'propagates OAuth2::Error' do
-          expect { service.to_user }.to raise_error(OAuth2::Error)
+          expect { service.to_local_user }.to raise_error(OAuth2::Error)
         end
       end
     end

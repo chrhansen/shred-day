@@ -15,7 +15,7 @@ class Api::V1::GoogleSignInFlowController < ApplicationController
   # an access token, and the user-info. After this, we will sign the user in in
   # the session cookie.
   def update
-    result = GoogleCodeToUserService.new(session: session, code: params[:code], state: params[:state]).to_user
+    result = GoogleCodeToUserService.new(session: session, code: params[:code], state: params[:state]).to_local_user
 
     if result.signed_in?
       render json: { message: 'Signed in successfully', user: result.user.as_json(except: :password_digest) }, status: :ok

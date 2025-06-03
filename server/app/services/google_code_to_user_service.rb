@@ -5,7 +5,7 @@ class GoogleCodeToUserService
     @state = state
   end
 
-  def to_user
+  def to_local_user
     oauth_state = @session.delete(:oauth_state)
 
     if @state != oauth_state
@@ -23,7 +23,11 @@ class GoogleCodeToUserService
       id_token,
       aud: Rails.application.credentials.dig(:google, :client_id))
 
-    user = User.find_by(email: payload['email'].downcase)
+    user = User.find_or_initialize_by(email: payload['email'].downcase)
+    if user.new_record?
+      user.password = SecureRandom.hex(12)
+      user.save
+    end
 
     if user.present?
       user.update(full_name: payload['name']) if payload['name']
@@ -33,7 +37,6 @@ class GoogleCodeToUserService
       Result.new(error: 'User not found')
     end
   end
-
 
   private
 

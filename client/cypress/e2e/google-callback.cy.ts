@@ -115,6 +115,19 @@ describe('Google OAuth Callback', () => {
 
   describe('Loading States', () => {
     it('should show loading state when processing callback', function() {
+      // Intercept the API call and add a delay to ensure loading state is visible
+      cy.intercept('PATCH', '/api/v1/google_sign_in_flow', (req) => {
+        req.reply((res) => {
+          // Add a delay to guarantee the loading state shows
+          return new Promise(resolve => {
+            setTimeout(() => {
+              // Return an error response after delay (since we're using fake codes)
+              resolve(res.send({ statusCode: 401, body: { error: 'Invalid state' } }));
+            }, 1000);
+          });
+        });
+      }).as('googleCallbackRequest');
+
       // Visit callback page with fake parameters that will trigger API calls
       cy.visit(`${CALLBACK_URL}?code=fake_auth_code&state=fake_state`);
 
@@ -123,7 +136,11 @@ describe('Google OAuth Callback', () => {
       cy.contains('Please wait while we complete your Google sign-in').should('be.visible');
       cy.get('.animate-spin').should('be.visible');
 
-      // Will eventually fail due to fake codes, but we're testing the loading state
+      // Wait for the API call to complete
+      cy.wait('@googleCallbackRequest');
+
+      // Should eventually show error after the delayed response
+      cy.contains('Sign-in Failed').should('be.visible');
     });
   });
 });

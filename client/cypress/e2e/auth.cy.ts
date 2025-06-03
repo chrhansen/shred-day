@@ -118,6 +118,78 @@ describe('Authentication Flows', () => {
     });
   });
 
+  // --- Google Sign-Up Tests --- //
+  describe('Google Sign-Up', () => {
+    beforeEach(() => {
+      cy.clearCookies();
+      cy.visit(AUTH_URL);
+      // Switch to Sign Up tab
+      cy.contains('button', /sign up/i).click();
+    });
+
+    it('should call backend API when Google Sign-Up button is clicked from Sign Up tab', () => {
+      // Intercept the API call to verify it happens (but don't mock the response)
+      cy.intercept('POST', '/api/v1/google_sign_in_flow').as('googleSignUpRequest');
+
+      // Click the Google Sign-Up button on the Sign Up tab
+      cy.contains('button', /Continue with Google/i).click();
+
+      // Verify the API call was made to the backend
+      cy.wait('@googleSignUpRequest').then((interception) => {
+        // Verify the request was made
+        expect(interception.request.method).to.equal('POST');
+        expect(interception.request.url).to.include('/api/v1/google_sign_in_flow');
+
+        // Verify the response contains a Google OAuth URL
+        expect(interception.response?.statusCode).to.equal(200);
+        expect(interception.response?.body).to.have.property('url');
+        expect(interception.response?.body.url).to.match(/^https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth/);
+        expect(interception.response?.body.url).to.include('scope=openid%20email%20profile');
+        expect(interception.response?.body.url).to.include('client_id=');
+        expect(interception.response?.body.url).to.include('state=');
+      });
+
+      // Note: The actual redirect to Google will happen, but that's expected behavior
+      // We've verified that our backend API works correctly for sign-up flow
+    });
+
+    it('should show loading state during Google sign-up initiation', () => {
+      // Intercept to add a delay and test loading state
+      cy.intercept('POST', '/api/v1/google_sign_in_flow', (req) => {
+        req.reply((res) => {
+          // Add a small delay to see loading state
+          return new Promise(resolve => {
+            setTimeout(() => resolve(res.send()), 500);
+          });
+        });
+      });
+
+      // Click the Google Sign-Up button on the Sign Up tab
+      cy.contains('button', /Continue with Google/i).click();
+
+      // Check that button shows loading state
+      cy.contains('button', /Redirecting.../i).should('be.visible');
+      cy.contains('button', /Redirecting.../i).should('be.disabled');
+    });
+
+    it('should use the same Google OAuth flow as sign-in', () => {
+      // This test verifies that both sign-in and sign-up use the same backend endpoint
+      // The backend will determine whether to create a new user or find existing one
+
+      // Intercept the API call
+      cy.intercept('POST', '/api/v1/google_sign_in_flow').as('googleOAuthRequest');
+
+      // Click the Google button from Sign Up tab
+      cy.contains('button', /Continue with Google/i).click();
+
+      // Verify it calls the same endpoint as sign-in
+      cy.wait('@googleOAuthRequest').then((interception) => {
+        expect(interception.request.url).to.include('/api/v1/google_sign_in_flow');
+        // The backend will handle whether this is a sign-up or sign-in based on whether user exists
+      });
+    });
+  });
+
   // --- Sign Up Tests --- //
   describe('Sign Up', () => {
     beforeEach(() => {

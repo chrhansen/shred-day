@@ -247,6 +247,29 @@ export default function AuthPage() {
                   {isSigningUp ? "Signing Up..." : "Sign Up"}
                 </Button>
               </form>
+              {/* Google Sign-In Button and Separator */}
+              <div className="relative my-6">
+                <div className="flex items-center">
+                  <div className="flex-grow border-t border-slate-300"></div>
+                  <span className="px-4 text-muted-foreground uppercase text-xs">
+                    OR
+                  </span>
+                  <div className="flex-grow border-t border-slate-300"></div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-md rounded-lg"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleSigningIn}
+              >
+                {isGoogleSigningIn ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <GoogleIcon className="mr-2 h-5 w-5" />
+                )}
+                {isGoogleSigningIn ? "Redirecting..." : "Continue with Google"}
+              </Button>
             </TabsContent>
           </Tabs>
         </CardContent>

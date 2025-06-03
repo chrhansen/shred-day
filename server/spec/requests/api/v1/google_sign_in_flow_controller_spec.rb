@@ -40,7 +40,7 @@ RSpec.describe "Api::V1::GoogleSignInFlowController", type: :request do
       let(:service_result) { GoogleCodeToUserService::Result.new(user: user_instance, session: mock_session) }
 
       before do
-        allow(mock_code_to_user_service).to receive(:to_user).and_return(service_result)
+        allow(mock_code_to_user_service).to receive(:to_local_user).and_return(service_result)
       end
 
       it "calls GoogleCodeToUserService, and returns user info" do
@@ -51,7 +51,7 @@ RSpec.describe "Api::V1::GoogleSignInFlowController", type: :request do
           code: 'test_code',
           state: 'test_state'
         )
-        expect(mock_code_to_user_service).to have_received(:to_user)
+        expect(mock_code_to_user_service).to have_received(:to_local_user)
         expect(response).to have_http_status(:ok)
         expect(json_response['message']).to eq('Signed in successfully')
         expect(json_response['user']['email']).to eq(user_attributes[:email])
@@ -64,7 +64,7 @@ RSpec.describe "Api::V1::GoogleSignInFlowController", type: :request do
       let(:service_result) { GoogleCodeToUserService::Result.new(error: 'Invalid token', session: mock_session) }
 
       before do
-        allow(mock_code_to_user_service).to receive(:to_user).and_return(service_result)
+        allow(mock_code_to_user_service).to receive(:to_local_user).and_return(service_result)
       end
 
       it "returns an unauthorized status and error message" do
