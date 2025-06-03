@@ -17,7 +17,7 @@ RSpec.describe "Api::V1::Days", type: :request do
     context "when authenticated" do
       before do
         # Log in the user
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 
@@ -243,7 +243,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   describe "GET /api/v1/days/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 
@@ -306,7 +306,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   describe "PATCH /api/v1/days/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 
@@ -537,7 +537,7 @@ RSpec.describe "Api::V1::Days", type: :request do
       before do
         # Ensure the 'day' exists for the list
         day
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
         get api_v1_days_path
       end
@@ -590,7 +590,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         let!(:older_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], activity: "Older Season") }
 
         before do
-          post api_v1_session_path, params: { email: user_with_custom_season.email, password: user_with_custom_season.password }
+          post api_v1_sessions_path, params: { email: user_with_custom_season.email, password: user_with_custom_season.password }
           expect(response).to have_http_status(:ok)
         end
 
@@ -685,7 +685,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   describe "DELETE /api/v1/days/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
         # Ensure the day exists before trying to delete
         day

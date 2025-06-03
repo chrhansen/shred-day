@@ -93,7 +93,7 @@ export const skiService = {
   },
 
   async signIn(credentials: UserCredentials): Promise<UserInfo> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/session`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
       ...defaultFetchOptions,
       method: 'POST',
       body: JSON.stringify(credentials),
@@ -104,7 +104,7 @@ export const skiService = {
   },
 
   async signOut(): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/session`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
       ...defaultFetchOptions,
       method: 'DELETE',
     });
@@ -255,6 +255,34 @@ export const skiService = {
     // Optionally throw an error for unexpected non-error statuses?
     // throw new Error(`Unexpected status ${response.status} deleting photo`);
   },
+
+  async initiateGoogleSignIn(): Promise<{ url: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/google_sign_in_flow`, {
+      ...defaultFetchOptions,
+      method: 'POST',
+      // No body is needed for this specific POST request as per backend controller
+    });
+    if (!response.ok) {
+      await handleApiError(response);
+      // handleApiError should throw, but as a fallback to satisfy TypeScript:
+      throw new Error('Failed to initiate Google sign-in after handling API error.');
+    }
+    return await response.json();
+  },
+
+  async completeGoogleSignIn(code: string, state: string): Promise<{ user: { email: string, name: string } }> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/google_sign_in_flow`, {
+      ...defaultFetchOptions,
+      method: 'PATCH',
+      body: JSON.stringify({ code, state }),
+    });
+    if (!response.ok) {
+      await handleApiError(response);
+      throw new Error('Failed to complete Google sign-in after handling API error.');
+    }
+    return await response.json();
+  },
+
   // --- END NEW Photo Service Methods ---
 
 };

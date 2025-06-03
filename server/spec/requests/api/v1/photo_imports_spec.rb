@@ -13,7 +13,7 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
   describe "POST /api/v1/photo_imports" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 
@@ -48,7 +48,7 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
   describe "GET /api/v1/photo_imports/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
       end
 
       context "when the photo_import exists and belongs to the user" do
@@ -105,7 +105,7 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
   describe "PATCH /api/v1/photo_imports/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
       end
 
       context "with valid parameters to trigger processing/commit (e.g., changing status)" do
@@ -150,7 +150,7 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
   describe "DELETE /api/v1/photo_imports/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
       end
 
       it "deletes the photo_import and associated records" do

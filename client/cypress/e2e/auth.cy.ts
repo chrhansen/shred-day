@@ -65,6 +65,59 @@ describe('Authentication Flows', () => {
     });
   });
 
+  // --- Google Sign-In Tests --- //
+  describe('Google Sign-In', () => {
+    beforeEach(() => {
+      cy.clearCookies();
+      cy.visit(AUTH_URL);
+    });
+
+    it('should call backend API when Google Sign-In button is clicked', () => {
+      // Intercept the API call to verify it happens (but don't mock the response)
+      cy.intercept('POST', '/api/v1/google_sign_in_flow').as('googleSignInRequest');
+
+      // Click the Google Sign-In button
+      cy.contains('button', /Continue with Google/i).click();
+
+      // Verify the API call was made to the backend
+      cy.wait('@googleSignInRequest').then((interception) => {
+        // Verify the request was made
+        expect(interception.request.method).to.equal('POST');
+        expect(interception.request.url).to.include('/api/v1/google_sign_in_flow');
+
+        // Verify the response contains a Google OAuth URL
+        expect(interception.response?.statusCode).to.equal(200);
+        expect(interception.response?.body).to.have.property('url');
+        expect(interception.response?.body.url).to.match(/^https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth/);
+        expect(interception.response?.body.url).to.include('scope=openid%20email%20profile');
+        expect(interception.response?.body.url).to.include('client_id=');
+        expect(interception.response?.body.url).to.include('state=');
+      });
+
+      // Note: The actual redirect to Google will happen, but that's expected behavior
+      // We've verified that our backend API works correctly
+    });
+
+    it('should show loading state during Google sign-in initiation', () => {
+      // Intercept to add a delay and test loading state
+      cy.intercept('POST', '/api/v1/google_sign_in_flow', (req) => {
+        req.reply((res) => {
+          // Add a small delay to see loading state
+          return new Promise(resolve => {
+            setTimeout(() => resolve(res.send()), 500);
+          });
+        });
+      });
+
+      // Click the Google Sign-In button
+      cy.contains('button', /Continue with Google/i).click();
+
+      // Check that button shows loading state
+      cy.contains('button', /Redirecting.../i).should('be.visible');
+      cy.contains('button', /Redirecting.../i).should('be.disabled');
+    });
+  });
+
   // --- Sign Up Tests --- //
   describe('Sign Up', () => {
     beforeEach(() => {
@@ -140,6 +193,4 @@ describe('Authentication Flows', () => {
 
     // TODO: Add tests for invalid signup attempts (e.g., password mismatch, email taken)
   });
-
-  // Add more tests: e.g., required fields, signup link, logout flow
 });

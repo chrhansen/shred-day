@@ -16,7 +16,7 @@ describe('CSV Export Page', () => {
     // Log in via API to establish session
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD },
     }).its('status').should('eq', 200);
 

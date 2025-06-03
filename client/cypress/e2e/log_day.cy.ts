@@ -26,7 +26,7 @@ describe('Create and Edit a Ski Day', () => {
     // Log in via API
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).then((resp) => {
       expect(resp.status).to.eq(200);

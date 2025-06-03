@@ -27,7 +27,7 @@ describe('Ski Day Detail Popover', () => {
 
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).its('status').should('eq', 200);
 

@@ -9,6 +9,7 @@ import SkisPage from "@/pages/SkisPage";
 import AccountPage from "@/pages/AccountPage";
 import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
+import CallbackPage from "./pages/CallbackPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
 import CsvExportPage from "@/pages/CsvExportPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -60,6 +61,7 @@ const AppRoutes = () => {
       ) : (
         <>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<CallbackPage />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </>
       )}

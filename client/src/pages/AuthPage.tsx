@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { GoogleIcon } from "@/assets/icons/google-g-logo";
 import { useNavigate } from "react-router-dom";
 import { skiService } from "@/services/skiService";
 import { accountService } from "@/services/accountService";
@@ -26,6 +27,7 @@ export default function AuthPage() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
 
   // --- Sign Up Handler ---
   const handleSignUpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -49,7 +51,7 @@ export default function AuthPage() {
     }
   };
 
-  // --- Sign In Handler ---
+  // --- Login Handler ---
   const handleSignInSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoggingIn(true);
@@ -68,6 +70,26 @@ export default function AuthPage() {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  // --- Google Sign In Handler ---
+  const handleGoogleSignIn = async () => {
+    setIsGoogleSigningIn(true);
+    try {
+      // Step 1: Call the service to get the Google Auth URL
+      const data = await skiService.initiateGoogleSignIn();
+
+      if (data.url) {
+        // Step 2: Redirect to the Google Auth URL received from the backend
+        window.location.href = data.url;
+      } else {
+        toast.error("Could not retrieve Google sign-in URL. Please try again.");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred during Google sign-in.");
+    } finally {
+      setIsGoogleSigningIn(false);
     }
   };
 
@@ -147,6 +169,29 @@ export default function AuthPage() {
                   {isLoggingIn ? "Logging In..." : "Login"}
                 </Button>
               </form>
+              {/* Google Sign-In Button and Separator */}
+              <div className="relative my-6">
+                <div className="flex items-center">
+                  <div className="flex-grow border-t border-slate-300"></div>
+                  <span className="px-4 text-muted-foreground uppercase text-xs">
+                    OR
+                  </span>
+                  <div className="flex-grow border-t border-slate-300"></div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-md rounded-lg"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleSigningIn}
+              >
+                {isGoogleSigningIn ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <GoogleIcon className="mr-2 h-5 w-5" />
+                )}
+                {isGoogleSigningIn ? "Redirecting..." : "Continue with Google"}
+              </Button>
             </TabsContent>
             <TabsContent value="signup">
               <form className="w-full space-y-6" onSubmit={handleSignUpSubmit}>

@@ -9,7 +9,7 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
   describe "GET #show" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok) # Confirm login was successful
       end
 
@@ -74,7 +74,7 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
 
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 

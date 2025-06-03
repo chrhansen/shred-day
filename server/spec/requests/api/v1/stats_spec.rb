@@ -24,7 +24,7 @@ RSpec.describe "Api::V1::Stats", type: :request do
       before do
         # Simulate login before the request (adjust if your auth method differs)
         # This assumes session-based auth; adapt for tokens if needed.
-        post api_v1_session_path, params: { email: user.email, password: user.password } # Log in the user
+        post api_v1_sessions_path, params: { email: user.email, password: user.password } # Log in the user
         expect(response).to have_http_status(:ok) # Ensure login was successful
       end
 

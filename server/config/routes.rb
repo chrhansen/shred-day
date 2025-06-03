@@ -23,7 +23,8 @@ Rails.application.routes.draw do
 
       # Authentication routes
       resources :users, only: [:create] # Sign Up
-      resource :session, only: [:create, :destroy] # Sign In, Sign Out
+      resource :sessions, only: [:create, :destroy] # Sign In, Sign Out
+      resource :google_sign_in_flow, only: [:update, :create], controller: :google_sign_in_flow
 
       resources :skis, only: [:index, :create, :update, :destroy]
       resources :resorts, only: [:index] # GET /api/v1/resorts?query=... (Search Resorts)

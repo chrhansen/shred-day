@@ -12,7 +12,7 @@ RSpec.describe "Api::V1::DraftDays", type: :request do
   describe "PATCH /api/v1/draft_days/:id" do
     context "when authenticated" do
       before do
-        post api_v1_session_path, params: { email: user.email, password: user.password }
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
         expect(response).to have_http_status(:ok)
       end
 

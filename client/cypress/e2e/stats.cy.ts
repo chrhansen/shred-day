@@ -11,7 +11,7 @@ describe('Stats Page', () => {
     // Log in via API to get session cookie set for subsequent requests
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).then((resp) => {
       expect(resp.status).to.eq(200);

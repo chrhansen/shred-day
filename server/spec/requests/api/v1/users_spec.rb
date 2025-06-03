@@ -25,6 +25,7 @@ RSpec.describe "Api::V1::Users", type: :request do
 
         json_response = JSON.parse(response.body)
         expect(json_response['email']).to eq("newuser@example.com")
+        expect(json_response).to have_key('full_name')
         expect(json_response).not_to have_key('password_digest') # Ensure sensitive info isn't returned
       end
 

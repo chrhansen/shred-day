@@ -12,7 +12,7 @@ RSpec.describe "Api::V1::RecentResorts", type: :request do
 
   # --- Authentication Helper ---
   def login(user_to_login)
-    post api_v1_session_path, params: { email: user_to_login.email, password: user_to_login.password }
+    post api_v1_sessions_path, params: { email: user_to_login.email, password: user_to_login.password }
     expect(response).to have_http_status(:ok)
   end
 

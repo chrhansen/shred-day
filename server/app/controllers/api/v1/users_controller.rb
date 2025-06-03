@@ -4,7 +4,7 @@ class Api::V1::UsersController < ApplicationController
 
   # POST /api/v1/users
   def create
-    user = User.new(user_params)
+    user = User.new(email: user_params[:email].strip.downcase, password: user_params[:password])
 
     if user.save
       # Establish session immediately after sign up

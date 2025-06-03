@@ -360,7 +360,8 @@ CREATE TABLE public.users (
     password_digest character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    season_start_day character varying DEFAULT '09-01'::character varying NOT NULL
+    season_start_day character varying DEFAULT '09-01'::character varying NOT NULL,
+    full_name character varying
 );
 
 
@@ -733,6 +734,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250530100236'),
 ('20250525064404'),
 ('20250521141526'),
 ('20250515081850'),

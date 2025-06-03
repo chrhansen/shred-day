@@ -30,7 +30,7 @@ describe('Ski Days List Page', () => {
     // --- Log in ---
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).its('status').should('eq', 200); // Ensure login succeeded
 
@@ -230,7 +230,7 @@ describe('Season Dropdown Functionality', () => {
     // Log in
     cy.request({
       method: 'POST',
-      url: `${Cypress.env('apiUrl')}/api/v1/session`,
+      url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: testUserEmail, password: PASSWORD },
     }).its('status').should('eq', 200);
 
