@@ -3,13 +3,15 @@ require 'rails_helper'
 RSpec.describe DraftDay, type: :model do
   let(:user) { create(:user) } # Needed for photo_import typically
   let(:photo_import) { create(:photo_import, user: user) }
+  let(:text_import) { create(:text_import, user: user) }
   let(:resort) { create(:resort) }
   let(:existing_day) { create(:day, user: user, resort: resort, date: Date.today) } # For merge tests
 
   subject { build(:draft_day, photo_import: photo_import, resort: resort) } # Assuming a basic :draft_day factory
 
   describe 'associations' do
-    it { should belong_to(:photo_import) }
+    it { should belong_to(:photo_import).optional }
+    it { should belong_to(:text_import).optional }
     it { should belong_to(:resort) }
     it { should have_many(:photos) }
     it { should belong_to(:day).optional } # Test optionality
@@ -67,10 +69,32 @@ RSpec.describe DraftDay, type: :model do
       expect(subject.errors[:date]).to include("can't be blank")
     end
 
-    it 'is invalid without a photo_import' do # Assuming photo_import is mandatory
+    it 'is invalid without either photo_import or text_import' do
       subject.photo_import = nil
+      subject.text_import = nil
       expect(subject).not_to be_valid
-      expect(subject.errors[:photo_import]).to include("must exist")
+      expect(subject.errors[:base]).to include("Must belong to either photo_import or text_import")
+    end
+
+    it 'is invalid with both photo_import and text_import' do
+      subject.photo_import = photo_import
+      subject.text_import = text_import
+      expect(subject).not_to be_valid
+      expect(subject.errors[:base]).to include("Cannot belong to both photo_import and text_import")
+    end
+
+    it 'is valid with only photo_import' do
+      subject.photo_import = photo_import
+      subject.text_import = nil
+      subject.date = Date.today
+      expect(subject).to be_valid
+    end
+
+    it 'is valid with only text_import' do
+      subject.photo_import = nil
+      subject.text_import = text_import
+      subject.date = Date.today
+      expect(subject).to be_valid
     end
 
     it 'is invalid without a resort' do # Assuming resort is mandatory

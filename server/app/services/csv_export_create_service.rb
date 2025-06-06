@@ -49,7 +49,8 @@ class CsvExportCreateService
           when 'day_id'
             day.id
           when 'notes'
-            day.notes
+            # Sanitize notes to prevent CSV corruption from embedded newlines
+            day.notes&.gsub(/\r\n?|\n/, ' ')
           when 'photo_count'
             day.photos.count
           else

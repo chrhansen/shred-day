@@ -8,7 +8,9 @@ class User < ApplicationRecord
   has_many :skis, dependent: :destroy
   has_many :photos, dependent: :destroy
   has_many :photo_imports, dependent: :destroy
+  has_many :text_imports, dependent: :destroy
   has_many :draft_days, through: :photo_imports
+  has_many :draft_days, through: :text_imports
 
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")

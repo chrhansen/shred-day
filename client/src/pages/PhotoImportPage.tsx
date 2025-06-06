@@ -316,7 +316,12 @@ export default function PhotoImportPage() {
           </h1>
           <div className="w-auto min-w-[100px] text-right">
             {displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip') && (
-                <Button onClick={handleSaveImport} disabled={anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport}>
+                <Button
+                  onClick={handleSaveImport}
+                  disabled={anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport}
+                  size="sm"
+                  className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+                >
                     {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save Import
                 </Button>

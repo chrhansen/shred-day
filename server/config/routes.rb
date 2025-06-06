@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       resources :photo_imports, only: [:create, :show, :update, :destroy] do
         resources :photos, only: [:create, :destroy, :update], module: :photo_imports
       end
+      resources :text_imports, only: [:create, :show, :update, :destroy]
       resources :draft_days, only: [:update]
 
       resources :days, only: [:create, :index, :show, :update, :destroy]

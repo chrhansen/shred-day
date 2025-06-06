@@ -9,6 +9,7 @@ import { type SkiPhoto } from "@/types/ski";
 import { resortService, type Resort } from "@/services/resortService";
 import debounce from 'lodash.debounce';
 import { toast } from "sonner";
+import { ResortSearchDropdown } from "@/components/ResortSearchDropdown";
 
 interface PhotoItemProps {
   photo: SkiPhoto;
@@ -32,6 +33,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
   const [resortSearchResults, setResortSearchResults] = useState<Resort[]>([]);
   const [isSearchingResorts, setIsSearchingResorts] = useState(false);
   const [showResortSearchResults, setShowResortSearchResults] = useState(false);
+  const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
 
   const debouncedResortSearch = useCallback(
     debounce(async (query: string) => {
@@ -66,6 +68,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
   const handleResortInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     setEditedResortName(newName);
+    setActiveSearchIndex(-1);
     if (newName === "") {
         setSelectedResortId(null);
         setShowResortSearchResults(false);
@@ -80,6 +83,7 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
     setResortSearchResults([]);
     setShowResortSearchResults(false);
     setResortSearchQuery("");
+    setActiveSearchIndex(-1);
   };
 
   const handleSave = () => {
@@ -163,19 +167,14 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
                 />
                 {isSearchingResorts && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />}
               </div>
-              {showResortSearchResults && resortSearchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {resortSearchResults.map((resort) => (
-                    <button
-                      key={resort.id}
-                      className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                      onClick={() => handleSelectResort(resort)}
-                    >
-                      {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <ResortSearchDropdown
+                results={resortSearchResults}
+                isVisible={showResortSearchResults}
+                onSelect={handleSelectResort}
+                onClose={() => setShowResortSearchResults(false)}
+                activeIndex={activeSearchIndex}
+                onActiveIndexChange={setActiveSearchIndex}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -203,7 +202,14 @@ export function PhotoItem({ photo, onUpdate, onDeletePhoto }: PhotoItemProps) {
 
             <div className="flex justify-end gap-2 mt-2">
               <Button type="button" variant="ghost" onClick={handleCancel}>Cancel</Button>
-              <Button type="button" onClick={handleSave}>Save Changes</Button>
+              <Button 
+                type="button" 
+                onClick={handleSave}
+                size="sm"
+                className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+              >
+                Save Changes
+              </Button>
             </div>
           </div>
         ) : (
