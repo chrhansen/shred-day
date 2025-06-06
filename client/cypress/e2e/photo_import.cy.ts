@@ -68,9 +68,12 @@ describe('Photo Import', () => {
     // Wait for the UI to update and show 'Duplicate'
     cy.get('[data-testid^="draft-day-"]').should('contain', 'Duplicate');
 
-    // Re-select the action toggle after UI update, ensure it exists and force click
-    cy.get('[data-testid="ski-day-action-toggle"]').should('exist').click({ force: true });
-    cy.get('[data-testid="action-skip"]').should('exist').click({ force: true });
+    // Ensure dropdown is closed before next interaction
+    cy.get('[data-testid="action-duplicate"]').should('not.exist');
+    
+    // Re-select the action toggle after UI update
+    cy.get('[data-testid="ski-day-action-toggle"]').click();
+    cy.get('[data-testid="action-skip"]').should('be.visible').click();
 
     // Verify the decision was made
     cy.get('[data-testid^="draft-day-"]').should('contain', 'Skip');
