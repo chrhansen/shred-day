@@ -6,7 +6,15 @@
       "Bash(bundle exec rails:*)",
       "Bash(bin/rails:*)",
       "Bash(grep:*)",
-      "Bash(npx cypress run:*)"
+      "Bash(npx cypress run:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)"
     ],
     "deny": []
   }
