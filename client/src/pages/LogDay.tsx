@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SelectionPill } from "@/components/SelectionPill";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Loader2, Plus, Check, X, Search } from "lucide-react";
+import { ResortSearchDropdown } from "@/components/ResortSearchDropdown";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -29,6 +30,7 @@ export default function LogDay() {
   const [searchResults, setSearchResults] = useState<Resort[]>([]);
   const [isSearchingResorts, setIsSearchingResorts] = useState<boolean>(false);
   const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
+  const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [selectedSkis, setSelectedSkis] = useState<string[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isAddingSkiInline, setIsAddingSkiInline] = useState(false);
@@ -135,6 +137,7 @@ export default function LogDay() {
   const handleResortInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = event.target.value;
     setResortQuery(newQuery);
+    setActiveSearchIndex(-1);
   };
 
   const handleToggleRecentResort = (resort: Resort) => {
@@ -153,6 +156,7 @@ export default function LogDay() {
     setIsSearchingMode(false);
     setResortQuery('');
     setSearchResults([]);
+    setActiveSearchIndex(-1);
   };
 
   // --- Upload Photo Function (Now calls service) ---
@@ -423,25 +427,20 @@ export default function LogDay() {
                   </div>
                   <div className="relative w-full min-h-[1rem]">
                     {(!isSearchingResorts && resortQuery.length >= 2) && (
-                      <div
-                        className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                        data-testid="resort-search-results"
-                      >
-                        {searchResults.length > 0 ? (
-                          searchResults.map((resort) => (
-                            <button
-                              key={resort.id}
-                              className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                              onClick={() => handleSelectResortFromSearch(resort)}
-                              data-testid={`resort-option-${resort.name.toLowerCase().replace(/\s+/g, '-')}`}
-                            >
-                              {resort.name} <span className="text-xs text-slate-400">({resort.region}, {resort.country})</span>
-                            </button>
-                          ))
-                        ) : (
+                      searchResults.length > 0 ? (
+                        <ResortSearchDropdown
+                          results={searchResults}
+                          isVisible={true}
+                          onSelect={handleSelectResortFromSearch}
+                          onClose={() => { setIsSearchingMode(false); setResortQuery(''); setSearchResults([]); }}
+                          activeIndex={activeSearchIndex}
+                          onActiveIndexChange={setActiveSearchIndex}
+                        />
+                      ) : (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
                           <p className="text-sm text-slate-500 px-4 py-2">(No resorts match "{resortQuery}")</p>
-                        )}
-                      </div>
+                        </div>
+                      )
                     )}
                   </div>
                   <Button

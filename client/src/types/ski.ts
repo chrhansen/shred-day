@@ -94,6 +94,7 @@ export interface DraftDay {
   decision?: "pending" | "merge" | "duplicate" | "skip"; // Align with SkiDayActionToggle
   resort?: Resort | null; // The determined resort for this draft day (can be null if group is by date only initially)
   photos?: ServerPhoto[];
+  original_text?: string | null; // Changed from originalText to match backend
   day_id?: string | null; // Add day_id from backend response
   // photoCount can be photos.length
   skiDayExists?: boolean; // If backend can determine this for the group

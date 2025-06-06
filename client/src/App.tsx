@@ -11,6 +11,7 @@ import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
 import CallbackPage from "./pages/CallbackPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
+import TextImportPage from "@/pages/TextImportPage";
 import CsvExportPage from "@/pages/CsvExportPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -55,6 +56,9 @@ const AppRoutes = () => {
           <Route path="/settings/skis" element={<ProtectedRoute><SkisPage /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><DaysListPage /></ProtectedRoute>} />
           <Route path="/photo-imports/:importId" element={<ProtectedRoute><PhotoImportPage /></ProtectedRoute>} />
+          <Route path="/text-import" element={<ProtectedRoute><TextImportPage /></ProtectedRoute>} />
+          <Route path="/text-imports/new" element={<ProtectedRoute><TextImportPage /></ProtectedRoute>} />
+          <Route path="/text-imports/:importId" element={<ProtectedRoute><TextImportPage /></ProtectedRoute>} />
           <Route path="/csv-export" element={<ProtectedRoute><CsvExportPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>

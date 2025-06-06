@@ -11,6 +11,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
+
+
+--
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -269,13 +283,16 @@ CREATE TABLE public.days_skis (
 
 CREATE TABLE public.draft_days (
     id character varying DEFAULT public.gen_id('drd'::text) NOT NULL,
-    photo_import_id character varying NOT NULL,
+    photo_import_id character varying,
     resort_id character varying NOT NULL,
     day_id character varying,
     date date NOT NULL,
     decision integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    text_import_id character varying,
+    original_text text,
+    CONSTRAINT single_import_type CHECK ((((photo_import_id IS NOT NULL) AND (text_import_id IS NULL)) OR ((photo_import_id IS NULL) AND (text_import_id IS NOT NULL))))
 );
 
 
@@ -324,7 +341,8 @@ CREATE TABLE public.resorts (
     country character varying,
     region character varying,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    normalized_name text
 );
 
 
@@ -345,6 +363,20 @@ CREATE TABLE public.skis (
     id character varying DEFAULT public.gen_id('ski'::text) NOT NULL,
     name character varying,
     user_id character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: text_imports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.text_imports (
+    id character varying DEFAULT public.gen_id('ti'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    status integer DEFAULT 0 NOT NULL,
+    original_text text,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -475,6 +507,14 @@ ALTER TABLE ONLY public.skis
 
 
 --
+-- Name: text_imports text_imports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.text_imports
+    ADD CONSTRAINT text_imports_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -560,6 +600,13 @@ CREATE INDEX index_draft_days_on_resort_id ON public.draft_days USING btree (res
 
 
 --
+-- Name: index_draft_days_on_text_import_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_draft_days_on_text_import_id ON public.draft_days USING btree (text_import_id);
+
+
+--
 -- Name: index_photo_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -602,10 +649,24 @@ CREATE INDEX index_photos_on_user_id ON public.photos USING btree (user_id);
 
 
 --
+-- Name: index_resorts_on_normalized_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_resorts_on_normalized_name ON public.resorts USING gist (normalized_name public.gist_trgm_ops);
+
+
+--
 -- Name: index_skis_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_skis_on_user_id ON public.skis USING btree (user_id);
+
+
+--
+-- Name: index_text_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_text_imports_on_user_id ON public.text_imports USING btree (user_id);
 
 
 --
@@ -728,12 +789,32 @@ ALTER TABLE ONLY public.draft_days
 
 
 --
+-- Name: text_imports fk_rails_ccd0cfcda0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.text_imports
+    ADD CONSTRAINT fk_rails_ccd0cfcda0 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: draft_days fk_rails_eb6dded8d4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_days
+    ADD CONSTRAINT fk_rails_eb6dded8d4 FOREIGN KEY (text_import_id) REFERENCES public.text_imports(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250604122754'),
+('20250603123517'),
+('20250603123305'),
+('20250603121554'),
 ('20250530100236'),
 ('20250525064404'),
 ('20250521141526'),

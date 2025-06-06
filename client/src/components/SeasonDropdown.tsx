@@ -28,7 +28,7 @@ export default function SeasonDropdown({ selectedSeason, seasonsData, onSeasonCh
           <ChevronDown className="ml-1 h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center">
+      <DropdownMenuContent align="center" className="max-h-96 overflow-y-auto">
         {seasonsData.map((season) => (
           <DropdownMenuItem key={season.value} onClick={() => onSeasonChange(season.value)}>
             <div className="flex flex-col">
