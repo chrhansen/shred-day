@@ -8,12 +8,12 @@ class Api::V1::DraftDaysController < ApplicationController
       return
     end
 
-    draft_day.update(draft_day_params)
+    result = DraftDayUpdateService.new(draft_day, draft_day_params).update_draft_day
 
-    if draft_day.valid?
-      render json: draft_day, serializer: Api::V1::DraftDaySerializer
+    if result.updated?
+      render json: result.draft_day, serializer: Api::V1::DraftDaySerializer
     else
-      render json: { errors: draft_day.errors }, status: :unprocessable_entity
+      render json: { errors: result.draft_day.errors }, status: :unprocessable_entity
     end
   end
 
