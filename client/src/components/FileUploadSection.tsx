@@ -65,6 +65,7 @@ export function FileUploadSection({
           className="hidden"
           id="file-upload"
           disabled={isDisabled || !!inputText}
+          data-testid="file-upload-input"
         />
         <label
           htmlFor="file-upload"

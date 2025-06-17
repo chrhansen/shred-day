@@ -40,7 +40,7 @@ describe('Text Import Page', () => {
     cy.location('pathname').should('eq', TEXT_IMPORT_URL);
 
     // Verify page content
-    cy.contains('h1', 'Import Ski Days from Text/CSV').should('be.visible');
+    cy.get('[data-testid="text-import-title"]').should('be.visible').and('contain', 'Import Ski Days from Text/CSV');
   });
 
   it('should import ski days from text input', () => {
@@ -51,10 +51,10 @@ describe('Text Import Page', () => {
 2025-01-16 Vail
 2025-01-17 Breckenridge`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
 
     // Click Parse Ski Days button
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for the import to be created and processed
     cy.wait('@createTextImport');
@@ -97,7 +97,7 @@ describe('Text Import Page', () => {
     // Enter text with one ski day
     const importText = `2025-02-10 Aspen`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
@@ -151,7 +151,7 @@ describe('Text Import Page', () => {
 2025-03-03 Cypress Mountain`;
 
     // Create and upload file
-    cy.get('input[type="file"]').selectFile({
+    cy.get('[data-testid="file-upload-input"]').selectFile({
       contents: Cypress.Buffer.from(fileContent),
       fileName: 'ski-days.txt',
       mimeType: 'text/plain'
@@ -161,7 +161,7 @@ describe('Text Import Page', () => {
     cy.contains('ski-days.txt').should('be.visible');
 
     // Click Parse Ski Days button
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -184,14 +184,14 @@ describe('Text Import Page', () => {
 Jan 16 Vail
 Feb 1 Breckenridge`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
 
     // Select last season from season dropdown
     cy.get('button').contains('This Season').click();
     cy.contains('Last Season').click();
 
     // Click Parse Ski Days button
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -211,7 +211,7 @@ Feb 1 Breckenridge`;
     // Enter text with ski days
     const importText = `2025-04-01 Alta`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
@@ -236,7 +236,7 @@ Feb 1 Breckenridge`;
     const importText = `2025-05-01 Aspn Mountain
 2025-05-02 Vail Resrt`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
@@ -259,7 +259,7 @@ Feb 1 Breckenridge`;
 2025-13-45 Invalid Date
 2025-06-01 Aspen Mountain`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing

@@ -79,7 +79,7 @@ export default function TextImportPage() {
           </Button>
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center">
+        <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center" data-testid="text-import-title">
           Import Ski Days from Text/CSV
         </h1>
 
@@ -123,6 +123,7 @@ export default function TextImportPage() {
               onClick={handleParse}
               disabled={(!inputText.trim() && !selectedFile) || isProcessing}
               className="w-full"
+              data-testid="parse-button"
             >
               {isProcessing ? (
                 <>

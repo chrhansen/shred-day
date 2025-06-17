@@ -24,6 +24,7 @@ Sep. 21, Stubai, Atomic S9, with Viggo
 2025-02-01: Revelstoke powder day`}
         className="min-h-[200px]"
         disabled={isDisabled || !!selectedFile}
+        data-testid="text-import-input"
       />
     </div>
   );
