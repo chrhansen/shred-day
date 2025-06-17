@@ -20,6 +20,8 @@ describe('Text Import Page', () => {
     });
 
     // Intercept API calls
+    cy.intercept('GET', '/api/v1/days*').as('getDays');
+    cy.intercept('GET', '/api/v1/account').as('getAccount');
     cy.intercept('POST', '/api/v1/text_imports').as('createTextImport');
     cy.intercept('GET', '/api/v1/text_imports/*').as('getTextImport');
     cy.intercept('PATCH', '/api/v1/text_imports/*').as('updateTextImport');
@@ -29,6 +31,10 @@ describe('Text Import Page', () => {
 
   it('should navigate to text import page from navbar', () => {
     cy.visit(ROOT_URL);
+    
+    // Wait for initial data to load
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
 
     // Click the hamburger menu icon to open the drawer
     cy.get('[aria-label="Open menu"]').should('be.visible').click();
@@ -45,6 +51,9 @@ describe('Text Import Page', () => {
 
   it('should import ski days from text input', () => {
     cy.visit(TEXT_IMPORT_URL);
+    
+    // Wait for page to be ready
+    cy.get('[data-testid="text-import-title"]').should('be.visible');
 
     // Enter text with ski days
     const importText = `2025-01-15 Aspen Mountain
