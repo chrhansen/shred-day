@@ -53,8 +53,8 @@ describe('Text Import Page', () => {
 
     cy.get('textarea').type(importText);
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for the import to be created and processed
     cy.wait('@createTextImport');
@@ -98,7 +98,7 @@ describe('Text Import Page', () => {
     const importText = `2025-02-10 Aspen`;
 
     cy.get('textarea').type(importText);
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -160,8 +160,8 @@ describe('Text Import Page', () => {
     // File should be selected
     cy.contains('ski-days.txt').should('be.visible');
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -190,8 +190,8 @@ Feb 1 Breckenridge`;
     cy.get('button').contains('This Season').click();
     cy.contains('Last Season').click();
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -212,7 +212,7 @@ Feb 1 Breckenridge`;
     const importText = `2025-04-01 Alta`;
 
     cy.get('textarea').type(importText);
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -237,7 +237,7 @@ Feb 1 Breckenridge`;
 2025-05-02 Vail Resrt`;
 
     cy.get('textarea').type(importText);
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -260,7 +260,7 @@ Feb 1 Breckenridge`;
 2025-06-01 Aspen Mountain`;
 
     cy.get('textarea').type(importText);
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    cy.contains('button', 'Parse Ski Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
