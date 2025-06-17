@@ -20,13 +20,12 @@ export function ActivitySelection({
         {activities.map((activity) => (
           <SelectionPill
             key={activity}
-            isSelected={selectedActivity === activity}
+            label={activity}
+            selected={selectedActivity === activity}
             onClick={() => onSelect(activity)}
             disabled={isDisabled}
             data-testid={`activity-${activity.toLowerCase()}`}
-          >
-            {activity}
-          </SelectionPill>
+          />
         ))}
       </div>
     </div>

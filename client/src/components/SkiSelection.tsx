@@ -64,13 +64,12 @@ export function SkiSelection({
           userSkis?.map((ski) => (
             <SelectionPill
               key={ski.id}
-              isSelected={selectedSkis.includes(ski.id)}
+              label={ski.name}
+              selected={selectedSkis.includes(ski.id)}
               onClick={() => onToggleSki(ski.id)}
               disabled={isDisabled}
               data-testid={`ski-option-${ski.name.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              {ski.name}
-            </SelectionPill>
+            />
           ))
         )}
         

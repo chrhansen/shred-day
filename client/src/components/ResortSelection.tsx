@@ -50,13 +50,12 @@ export function ResortSelection({
           recentResorts?.map((resort) => (
             <SelectionPill
               key={resort.id}
-              isSelected={selectedResort?.id === resort.id}
+              label={resort.name}
+              selected={selectedResort?.id === resort.id}
               onClick={() => onToggleRecent(resort)}
               disabled={isDisabled}
               data-testid={`recent-resort-${resort.name.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              {resort.name}
-            </SelectionPill>
+            />
           ))
         )}
         
@@ -83,23 +82,25 @@ export function ResortSelection({
               </Button>
             </div>
             
-            {searchResults.length > 0 ? (
-              <ResortSearchDropdown
-                results={searchResults}
-                isVisible={true}
-                onSelect={onSelectFromSearch}
-                activeIndex={activeSearchIndex}
-                onActiveIndexChange={onSearchIndexChange}
-              />
-            ) : isSearchingResorts ? (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
-                <p className="text-sm text-slate-500 px-4 py-2">Searching...</p>
-              </div>
-            ) : resortQuery.length >= 2 ? (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
-                <p className="text-sm text-slate-500 px-4 py-2">(No resorts match "{resortQuery}")</p>
-              </div>
-            ) : null}
+            <div className="relative">
+              {searchResults.length > 0 ? (
+                <ResortSearchDropdown
+                  results={searchResults}
+                  isVisible={true}
+                  onSelect={onSelectFromSearch}
+                  activeIndex={activeSearchIndex}
+                  onActiveIndexChange={onSearchIndexChange}
+                />
+              ) : isSearchingResorts ? (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
+                  <p className="text-sm text-slate-500 px-4 py-2">Searching...</p>
+                </div>
+              ) : resortQuery.length >= 2 ? (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
+                  <p className="text-sm text-slate-500 px-4 py-2">(No resorts match "{resortQuery}")</p>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : (
           <Button
