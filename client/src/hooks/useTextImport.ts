@@ -21,11 +21,12 @@ export function useTextImport() {
   const [commitSummary, setCommitSummary] = useState({ newDays: 0, mergeDays: 0, skippedDays: 0 });
   const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
 
-  // Fetch existing text import if importId is provided
+  // Fetch existing text import if importId is provided (and it's not "new")
+  const isNewImport = importId === 'new' || !importId;
   const { data: existingTextImport, isLoading: isLoadingExisting } = useQuery({
     queryKey: ['textImport', importId],
     queryFn: () => textImportService.getTextImport(importId!),
-    enabled: !!importId,
+    enabled: !!importId && importId !== 'new',
   });
 
   // Update state when existing text import is loaded
@@ -201,7 +202,7 @@ export function useTextImport() {
     setIsConfirmCancelOpen,
     
     // Loading states
-    isLoadingExisting,
+    isLoadingExisting: isNewImport ? false : isLoadingExisting,
     isProcessing,
     isCommitting,
     isCancelling,
