@@ -65,10 +65,10 @@ describe('Create and Edit a Ski Day', () => {
 
     // Select Resort
     cy.get('[data-testid="find-resort-button"]').should('not.be.disabled').click();
-    
+
     // Set up intercept with wildcard to catch any resort search
     cy.intercept('GET', '/api/v1/resorts*').as('searchSpecificResort');
-    
+
     cy.get('[data-testid="resort-search-input"]').should('not.be.disabled').type(RESORT_A_NAME);
 
     cy.wait('@searchSpecificResort').then((interception) => {
@@ -99,7 +99,7 @@ describe('Create and Edit a Ski Day', () => {
       // Assuming your API returns the created day object with an 'id' field
       expect(interception.response?.body?.id).to.exist;
       newDayId = interception.response?.body?.id;
-      
+
       // Log the date from the response to debug timezone issues
       const responseDate = interception.response?.body?.date;
       cy.log('Created day date from API:', responseDate);
@@ -125,9 +125,15 @@ describe('Create and Edit a Ski Day', () => {
         cy.get(`[data-testid="ski-day-item-${newDayId}"]`)
           .should('contain.text', RESORT_A_NAME)
           .and(($el) => {
-            // Check for either Jun 14 or Jun 15 due to potential timezone differences
             const text = $el.text();
-            expect(text).to.match(/Jun 1[45]/);
+
+            // Build a month-agnostic regex that tolerates a one-day timezone shift
+            const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
+            const day = selectedDate.getDate();
+            const dayVariants = [day - 1, day];
+            const dateRegex = new RegExp(`${monthShort} (${dayVariants[0]}|${dayVariants[1]})`);
+
+            expect(text).to.match(dateRegex);
           });
     })
   });
