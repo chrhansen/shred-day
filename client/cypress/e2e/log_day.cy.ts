@@ -203,7 +203,7 @@ describe('Create and Edit a Ski Day', () => {
       // Dynamically determine the expected date format
       const testYear = 2025;
       const testMonth = 2; // 0-indexed for March
-      const testDay = 20;
+      const testDay = 10;
       const dateForDisplay = new Date(testYear, testMonth, testDay);
       const currentRunYear = new Date().getFullYear();
       const expectedDisplayDate = dateForDisplay.getFullYear() === currentRunYear

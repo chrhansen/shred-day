@@ -8,6 +8,7 @@ import { ResortSelection } from "@/components/ResortSelection";
 import { SkiSelection } from "@/components/SkiSelection";
 import { ActivitySelection } from "@/components/ActivitySelection";
 import { useLogDay } from "@/hooks/useLogDay";
+import type { PhotoPreview } from "@/types/ski";
 
 const ACTIVITIES = ["Friends", "Training"];
 
@@ -218,8 +219,20 @@ export default function LogDay() {
             <h2 className="text-lg font-medium text-slate-800 mb-4">Upload Photos (Optional)</h2>
             <InteractivePhotoUploader
               photos={photos}
-              onPhotosChange={handlePhotosChange}
-              disabled={isProcessing || isLoading}
+              onFilesSelected={(files) => {
+                const newPhotos = files.map(file => ({
+                  id: crypto.randomUUID(),
+                  originalFile: file,
+                  previewUrl: null,
+                  serverId: null,
+                  uploadStatus: 'uploading' as const,
+                }));
+                handlePhotosChange([...photos, ...newPhotos]);
+              }}
+              onRemovePhoto={(id) => {
+                setPhotos(prev => prev.filter(p => p.id !== id));
+              }}
+              isProcessing={isProcessing || isLoading}
             />
           </div>
 
