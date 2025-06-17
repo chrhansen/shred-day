@@ -39,6 +39,9 @@ describe('Text Import Page', () => {
     // Wait for initial data to load
     cy.wait('@getDays');
     cy.wait('@getAccount');
+    
+    // Ensure the page has loaded and user is authenticated
+    cy.get('body').should('be.visible');
 
     // Click the hamburger menu icon to open the drawer
     cy.get('[aria-label="Open menu"]').should('be.visible').click();
@@ -54,6 +57,12 @@ describe('Text Import Page', () => {
   });
 
   it('should import ski days from text input', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
     
     // Wait for page to be ready
@@ -105,13 +114,19 @@ describe('Text Import Page', () => {
   });
 
   it('should allow editing draft days before committing', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with one ski day
     const importText = `2025-02-10 Aspen`;
 
     cy.get('[data-testid="text-import-input"]').type(importText);
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -156,7 +171,16 @@ describe('Text Import Page', () => {
   });
 
   it('should handle file upload', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
+    
+    // Wait for page to be ready
+    cy.get('[data-testid="text-import-title"]').should('be.visible');
 
     // Create a test file content
     const fileContent = `2025-03-01 Whistler Blackcomb
@@ -190,6 +214,12 @@ describe('Text Import Page', () => {
   });
 
   it('should handle season offset for dates without year', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with dates without years
@@ -219,13 +249,19 @@ Feb 1 Breckenridge`;
   });
 
   it('should allow canceling an import', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with ski days
     const importText = `2025-04-01 Alta`;
 
     cy.get('[data-testid="text-import-input"]').type(importText);
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -243,6 +279,12 @@ Feb 1 Breckenridge`;
   });
 
   it('should handle resort fuzzy matching', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with misspelled resort names
@@ -250,7 +292,7 @@ Feb 1 Breckenridge`;
 2025-05-02 Vail Resrt`;
 
     cy.get('[data-testid="text-import-input"]').type(importText);
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -265,6 +307,12 @@ Feb 1 Breckenridge`;
   });
 
   it('should show parsing results with errors', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with mix of valid and invalid lines
@@ -273,7 +321,7 @@ Feb 1 Breckenridge`;
 2025-06-01 Aspen Mountain`;
 
     cy.get('[data-testid="text-import-input"]').type(importText);
-    cy.contains('button', 'Parse Ski Days').click();
+    cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
     cy.wait('@createTextImport');

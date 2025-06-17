@@ -131,7 +131,7 @@ export default function TextImportPage() {
                   Parsing...
                 </>
               ) : (
-                'Parse Ski Days'
+                'Parse and Create Draft Days'
               )}
             </Button>
 
