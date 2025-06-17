@@ -83,15 +83,23 @@ export function ResortSelection({
               </Button>
             </div>
             
-            {(searchResults.length > 0 || isSearchingResorts) && (
+            {searchResults.length > 0 ? (
               <ResortSearchDropdown
-                searchResults={searchResults}
-                isLoading={isSearchingResorts}
+                results={searchResults}
+                isVisible={true}
                 onSelect={onSelectFromSearch}
                 activeIndex={activeSearchIndex}
                 onActiveIndexChange={onSearchIndexChange}
               />
-            )}
+            ) : isSearchingResorts ? (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
+                <p className="text-sm text-slate-500 px-4 py-2">Searching...</p>
+              </div>
+            ) : resortQuery.length >= 2 ? (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
+                <p className="text-sm text-slate-500 px-4 py-2">(No resorts match "{resortQuery}")</p>
+              </div>
+            ) : null}
           </div>
         ) : (
           <Button
