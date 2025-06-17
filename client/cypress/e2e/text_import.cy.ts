@@ -10,15 +10,19 @@ describe('Text Import Page', () => {
     const userEmail = `test-textimport-${Date.now()}@example.com`;
     cy.createUser(userEmail, PASSWORD);
 
-    // Log in via API to get session cookie set for subsequent requests
+    // Log in via API and set the session cookie
     cy.request({
       method: 'POST',
       url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).then((resp) => {
       expect(resp.status).to.eq(200);
+      // Cookie should be automatically handled by Cypress
     });
 
+    // Visit the root page first to ensure session is established
+    cy.visit('/');
+    
     // Intercept API calls
     cy.intercept('GET', '/api/v1/days*').as('getDays');
     cy.intercept('GET', '/api/v1/account').as('getAccount');

@@ -32,7 +32,7 @@ export function ImportConfirmationDialogs({
     <>
       {/* Commit Confirmation Dialog */}
       <AlertDialog open={isConfirmCommitOpen} onOpenChange={setIsConfirmCommitOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent data-testid="confirm-import-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Import</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
@@ -53,14 +53,14 @@ export function ImportConfirmationDialogs({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirmCommit}>Import Ski Days</AlertDialogAction>
+            <AlertDialogAction onClick={onConfirmCommit}>Proceed with Import</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={isConfirmCancelOpen} onOpenChange={setIsConfirmCancelOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent data-testid="confirm-cancel-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Import?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -72,7 +72,7 @@ export function ImportConfirmationDialogs({
           <AlertDialogFooter>
             <AlertDialogCancel>Keep Working</AlertDialogCancel>
             <AlertDialogAction onClick={onConfirmCancel} className="bg-red-600 hover:bg-red-700">
-              Cancel Import
+              Yes, Cancel Import
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

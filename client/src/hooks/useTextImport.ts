@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { textImportService, type TextImport } from "@/services/textImportService";
-import { type DraftDay } from "@/types/ski";
+import { type DraftDay } from "@/types/api";
 import { toast } from "sonner";
 
 export function useTextImport() {

@@ -149,8 +149,7 @@ export default function TextImportPage() {
           <div className="space-y-6">
             <TextDraftDayList
               draftDays={draftDays}
-              onEdit={handleDraftEdit}
-              existingDayCount={textImport?.draft_days?.filter(d => d.skiDayExists).length || 0}
+              onDraftEdit={handleDraftEdit}
             />
 
             <div className="flex justify-between items-center pt-6 border-t">
@@ -179,7 +178,7 @@ export default function TextImportPage() {
                       Importing...
                     </>
                   ) : (
-                    'Import Ski Days'
+                    `Commit ${draftDays.filter(d => d.decision !== 'skip').length} Days`
                   )}
                 </Button>
               </div>
