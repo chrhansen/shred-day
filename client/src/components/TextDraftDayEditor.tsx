@@ -5,7 +5,7 @@ import { Calendar, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { type DraftDay } from "@/types/ski";
+import { type DraftDay } from "@/types/api";
 import { resortService, type Resort } from "@/services/resortService";
 import debounce from 'lodash.debounce';
 import { toast } from "sonner";

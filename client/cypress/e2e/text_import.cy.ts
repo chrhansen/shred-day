@@ -10,16 +10,22 @@ describe('Text Import Page', () => {
     const userEmail = `test-textimport-${Date.now()}@example.com`;
     cy.createUser(userEmail, PASSWORD);
 
-    // Log in via API to get session cookie set for subsequent requests
+    // Log in via API and set the session cookie
     cy.request({
       method: 'POST',
       url: `${Cypress.env('apiUrl')}/api/v1/sessions`,
       body: { email: userEmail, password: PASSWORD }
     }).then((resp) => {
       expect(resp.status).to.eq(200);
+      // Cookie should be automatically handled by Cypress
     });
 
+    // Visit the root page first to ensure session is established
+    cy.visit('/');
+    
     // Intercept API calls
+    cy.intercept('GET', '/api/v1/days*').as('getDays');
+    cy.intercept('GET', '/api/v1/account').as('getAccount');
     cy.intercept('POST', '/api/v1/text_imports').as('createTextImport');
     cy.intercept('GET', '/api/v1/text_imports/*').as('getTextImport');
     cy.intercept('PATCH', '/api/v1/text_imports/*').as('updateTextImport');
@@ -29,6 +35,13 @@ describe('Text Import Page', () => {
 
   it('should navigate to text import page from navbar', () => {
     cy.visit(ROOT_URL);
+    
+    // Wait for initial data to load
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Ensure the page has loaded and user is authenticated
+    cy.get('body').should('be.visible');
 
     // Click the hamburger menu icon to open the drawer
     cy.get('[aria-label="Open menu"]').should('be.visible').click();
@@ -40,21 +53,30 @@ describe('Text Import Page', () => {
     cy.location('pathname').should('eq', TEXT_IMPORT_URL);
 
     // Verify page content
-    cy.contains('h1', 'Import Ski Days from Text/CSV').should('be.visible');
+    cy.get('[data-testid="text-import-title"]').should('be.visible').and('contain', 'Import Ski Days from Text/CSV');
   });
 
   it('should import ski days from text input', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
+    
+    // Wait for page to be ready
+    cy.get('[data-testid="text-import-title"]').should('be.visible');
 
     // Enter text with ski days
     const importText = `2025-01-15 Aspen Mountain
 2025-01-16 Vail
 2025-01-17 Breckenridge`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for the import to be created and processed
     cy.wait('@createTextImport');
@@ -92,12 +114,18 @@ describe('Text Import Page', () => {
   });
 
   it('should allow editing draft days before committing', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with one ski day
     const importText = `2025-02-10 Aspen`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
@@ -143,7 +171,16 @@ describe('Text Import Page', () => {
   });
 
   it('should handle file upload', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
+    
+    // Wait for page to be ready
+    cy.get('[data-testid="text-import-title"]').should('be.visible');
 
     // Create a test file content
     const fileContent = `2025-03-01 Whistler Blackcomb
@@ -151,7 +188,7 @@ describe('Text Import Page', () => {
 2025-03-03 Cypress Mountain`;
 
     // Create and upload file
-    cy.get('input[type="file"]').selectFile({
+    cy.get('[data-testid="file-upload-input"]').selectFile({
       contents: Cypress.Buffer.from(fileContent),
       fileName: 'ski-days.txt',
       mimeType: 'text/plain'
@@ -160,8 +197,8 @@ describe('Text Import Page', () => {
     // File should be selected
     cy.contains('ski-days.txt').should('be.visible');
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -177,6 +214,12 @@ describe('Text Import Page', () => {
   });
 
   it('should handle season offset for dates without year', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with dates without years
@@ -184,14 +227,14 @@ describe('Text Import Page', () => {
 Jan 16 Vail
 Feb 1 Breckenridge`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
 
     // Select last season from season dropdown
     cy.get('button').contains('This Season').click();
     cy.contains('Last Season').click();
 
-    // Click Parse and Create Draft Days button
-    cy.contains('button', 'Parse and Create Draft Days').click();
+    // Click Parse Ski Days button
+    cy.get('[data-testid="parse-button"]').click();
 
     // Wait for processing
     cy.wait('@createTextImport');
@@ -206,12 +249,18 @@ Feb 1 Breckenridge`;
   });
 
   it('should allow canceling an import', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with ski days
     const importText = `2025-04-01 Alta`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
@@ -230,13 +279,19 @@ Feb 1 Breckenridge`;
   });
 
   it('should handle resort fuzzy matching', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with misspelled resort names
     const importText = `2025-05-01 Aspn Mountain
 2025-05-02 Vail Resrt`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing
@@ -252,6 +307,12 @@ Feb 1 Breckenridge`;
   });
 
   it('should show parsing results with errors', () => {
+    // First visit root to ensure auth is established
+    cy.visit(ROOT_URL);
+    cy.wait('@getDays');
+    cy.wait('@getAccount');
+    
+    // Now navigate to text import page
     cy.visit(TEXT_IMPORT_URL);
 
     // Enter text with mix of valid and invalid lines
@@ -259,7 +320,7 @@ Feb 1 Breckenridge`;
 2025-13-45 Invalid Date
 2025-06-01 Aspen Mountain`;
 
-    cy.get('textarea').type(importText);
+    cy.get('[data-testid="text-import-input"]').type(importText);
     cy.contains('button', 'Parse and Create Draft Days').click();
 
     // Wait for processing

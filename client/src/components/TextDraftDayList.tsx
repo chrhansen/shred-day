@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import { type DraftDay } from "@/types/ski";
+import { type DraftDay } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { useState } from "react";
