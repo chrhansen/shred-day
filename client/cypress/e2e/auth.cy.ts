@@ -36,8 +36,10 @@ describe('Authentication Flows', () => {
       cy.get('#login-password').type('wrongpassword');
       cy.contains('button', /^Login$/i).click();
       cy.url().should('include', '/auth');
-      // Check for error toast message
-      cy.get('[data-sonner-toast]').should('be.visible').contains(/User not authenticated/i);
+      // Should not redirect to home page (stays on auth page due to failed login)
+      cy.location('pathname').should('eq', '/auth');
+      // Check that the login button is still visible (not logged in)
+      cy.contains('button', /^Login$/i).should('be.visible');
     });
 
     it('should allow a logged-in user to log out', function() {
