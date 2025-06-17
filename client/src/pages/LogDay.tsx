@@ -258,7 +258,7 @@ export default function LogDay() {
       setSelectedResort(dayToEdit.resort);
 
       // Map existing photo data from the fetched day
-      const existingPhotos: PhotoPreview[] = dayToEdit.photos?.map((p: any) => ({
+      const existingPhotos: PhotoPreview[] = dayToEdit.photos?.map((p) => ({
         id: crypto.randomUUID(),
         originalFile: null,
         previewUrl: p.preview_url, // Use preview URL from serializer

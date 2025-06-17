@@ -19,6 +19,7 @@ export class ValidationError extends Error {
 }
 
 import { API_BASE_URL } from './config';
+import type { QueryParams, RequestBody } from '@/types/api';
 
 // Default options for fetch requests
 const defaultFetchOptions: RequestInit = {
@@ -72,9 +73,10 @@ type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 interface ApiRequestOptions {
   method?: HttpMethod;
-  body?: any;
+  body?: RequestBody;
   headers?: Record<string, string>;
   skipAuth?: boolean;
+  params?: QueryParams;
 }
 
 interface ApiClientConfig {
@@ -92,7 +94,7 @@ export class ApiClient {
   }
 
   // Build URL with query parameters
-  private buildUrl(endpoint: string, params?: Record<string, any>): string {
+  private buildUrl(endpoint: string, params?: QueryParams): string {
     const url = `${this.baseUrl}${endpoint}`;
     
     if (!params || Object.keys(params).length === 0) return url;
@@ -109,7 +111,7 @@ export class ApiClient {
   }
 
   // Main request method
-  async request<T = any>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+  async request<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
     const { method = 'GET', body, headers = {}, skipAuth = false } = options;
 
     const requestOptions: RequestInit = {
@@ -156,29 +158,29 @@ export class ApiClient {
   }
 
   // Convenience methods
-  async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(endpoint: string, params?: QueryParams): Promise<T> {
     const url = params ? this.buildUrl(endpoint, params).replace(this.baseUrl, '') : endpoint;
     return this.request<T>(url, { method: 'GET' });
   }
 
-  async post<T = any>(endpoint: string, body?: any, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
+  async post<T>(endpoint: string, body?: RequestBody, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'POST', body });
   }
 
-  async patch<T = any>(endpoint: string, body?: any, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
+  async patch<T>(endpoint: string, body?: RequestBody, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'PATCH', body });
   }
 
-  async put<T = any>(endpoint: string, body?: any, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
+  async put<T>(endpoint: string, body?: RequestBody, options?: Omit<ApiRequestOptions, 'method' | 'body'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'PUT', body });
   }
 
-  async delete<T = any>(endpoint: string, options?: Omit<ApiRequestOptions, 'method'>): Promise<T> {
+  async delete<T>(endpoint: string, options?: Omit<ApiRequestOptions, 'method'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 
   // Special method for FormData uploads
-  async uploadFormData<T = any>(endpoint: string, formData: FormData): Promise<T> {
+  async uploadFormData<T>(endpoint: string, formData: FormData): Promise<T> {
     return this.post<T>(endpoint, formData);
   }
 }

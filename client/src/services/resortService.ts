@@ -1,16 +1,8 @@
 import { apiClient } from '@/lib/apiClient';
+import type { Resort } from '@/types/api';
 
-// Define the Resort type based on backend response
-export interface Resort {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  country: string;
-  region: string;
-  created_at: string; // Or Date if you parse them
-  updated_at: string; // Or Date if you parse them
-}
+// Re-export Resort for backward compatibility
+export type { Resort };
 
 const searchResorts = async (query: string): Promise<Resort[]> => {
   return apiClient.get<Resort[]>('/api/v1/resorts', { query });
