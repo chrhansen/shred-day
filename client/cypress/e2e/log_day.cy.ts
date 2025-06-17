@@ -230,9 +230,9 @@ describe('Create and Edit a Ski Day', () => {
         .should('contain.text', SKI_B_NAME)
         .and('contain.text', EDITED_ACTIVITY)
         .and(($el) => {
-          // Check for Mar 9, 10, or 19 due to potential timezone and date calculation differences
+          // Check for Mar 19, 20, or 21 due to potential timezone and date calculation differences
           const text = $el.text();
-          expect(text).to.match(/Mar (9|10|19)/);
+          expect(text).to.match(/Mar (19|20|21)/);
         });
     });
   });

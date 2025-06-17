@@ -13,7 +13,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
                         ["https://www.shred.day", "https://shred.day"]
                       else
                         # Development origins
-                        ["http://localhost:8080", "http://127.0.0.1:8080"]
+                        ["http://localhost:8080", "http://127.0.0.1:8080", "http://localhost:8081"]
                       end
 
     origins allowed_origins
