@@ -65,10 +65,11 @@ describe('Create and Edit a Ski Day', () => {
 
     // Select Resort
     cy.get('[data-testid="find-resort-button"]').should('not.be.disabled').click();
+    
+    // Set up intercept with wildcard to catch any resort search
+    cy.intercept('GET', '/api/v1/resorts*').as('searchSpecificResort');
+    
     cy.get('[data-testid="resort-search-input"]').should('not.be.disabled').type(RESORT_A_NAME);
-
-    // Make the intercept more specific for this search
-    cy.intercept('GET', `/api/v1/resorts?query=${encodeURIComponent(RESORT_A_NAME)}`).as('searchSpecificResort');
 
     cy.wait('@searchSpecificResort').then((interception) => {
       cy.log("Specific Search Resorts API Response Status:", interception.response?.statusCode?.toString());

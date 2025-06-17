@@ -1,5 +1,5 @@
 import { ColumnConfig } from '@/components/ColumnSelector';
-import { API_BASE_URL, defaultFetchOptions, handleApiError } from './skiService'; // Import helpers
+import { apiClient, API_BASE_URL } from '@/lib/apiClient';
 
 export interface SeasonData {
   id: string; // Will be numeric like "0", "-1"
@@ -12,22 +12,25 @@ export interface CsvExportPageData {
 }
 
 const getExportPageData = async (): Promise<CsvExportPageData> => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/csv_export`, {
-    ...defaultFetchOptions,
-    method: 'GET',
-  });
-  if (!response.ok) await handleApiError(response);
-  return await response.json();
+  return apiClient.get<CsvExportPageData>('/api/v1/csv_export');
 };
 
-// Placeholder for the actual export function
+// Special handling for CSV download - need to use fetch directly to get blob
 const downloadCsvFile = async (selectedSeasonIds: string[], columns: ColumnConfig[]): Promise<Blob> => {
   const response = await fetch(`${API_BASE_URL}/api/v1/csv_export`, {
-    ...defaultFetchOptions,
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'text/csv',
+    },
+    credentials: 'include',
     body: JSON.stringify({ season_ids: selectedSeasonIds, columns }),
   });
-  if (!response.ok) await handleApiError(response);
+  
+  if (!response.ok) {
+    throw new Error(`Export failed with status ${response.status}`);
+  }
+  
   return await response.blob(); // Expecting a blob (the CSV file) from the server
 };
 

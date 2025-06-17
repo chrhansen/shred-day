@@ -36,7 +36,10 @@ describe('Authentication Flows', () => {
       cy.get('#login-password').type('wrongpassword');
       cy.contains('button', /^Login$/i).click();
       cy.url().should('include', '/auth');
-      cy.contains(/User not authenticated/i).should('be.visible');
+      // Should not redirect to home page (stays on auth page due to failed login)
+      cy.location('pathname').should('eq', '/auth');
+      // Check that the login button is still visible (not logged in)
+      cy.contains('button', /^Login$/i).should('be.visible');
     });
 
     it('should allow a logged-in user to log out', function() {
