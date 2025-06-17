@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/apiClient';
 import { type PhotoImport, type DraftDay as UIDraftDay } from '@/types/ski';
+import type { PhotoUploadResponse } from '@/types/api';
 
 const PHOTO_IMPORTS_API_PATH = '/api/v1/photo_imports';
 
@@ -33,7 +34,7 @@ async function updatePhotoInImport(
   importId: string,
   photoId: string,
   updateData: { taken_at?: string; resort_id?: string }
-): Promise<{ id: string; preview_url: string | null; full_url: string; filename: string | null; taken_at?: string | null; resort?: any | null; latitude?: number | null; longitude?: number | null; exif_state?: string | null; }> {
+): Promise<PhotoUploadResponse> {
   return apiClient.patch(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos/${photoId}`, { photo: updateData });
 }
 

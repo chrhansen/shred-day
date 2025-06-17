@@ -1,17 +1,10 @@
 import { apiClient } from '@/lib/apiClient';
-import { type DraftDay } from '@/types/ski';
+import type { TextImport, DraftDay } from '@/types/api';
 
 const TEXT_IMPORTS_API_PATH = '/api/v1/text_imports';
 
-export interface TextImport {
-  id: string;
-  user_id: string;
-  status: "waiting" | "processing" | "committed" | "canceled" | "failed";
-  original_text?: string | null;
-  created_at: string;
-  updated_at: string;
-  draft_days?: DraftDay[];
-}
+// Re-export for backward compatibility
+export type { TextImport };
 
 /**
  * Creates a new text import session on the server.

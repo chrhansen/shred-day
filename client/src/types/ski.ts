@@ -1,4 +1,4 @@
-import { Resort } from "@/services/resortService";
+import type { Resort } from "@/types/api";
 
 // Detailed type for GET /days/:id, POST /days, PATCH /days/:id responses
 export interface SkiDayDetail {
