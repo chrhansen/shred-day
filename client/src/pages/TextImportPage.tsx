@@ -24,13 +24,13 @@ export default function TextImportPage() {
     commitSummary,
     isConfirmCancelOpen,
     setIsConfirmCancelOpen,
-    
+
     // Loading states
     isLoadingExisting,
     isProcessing,
     isCommitting,
     isCancelling,
-    
+
     // Actions
     handleParse,
     handleDraftEdit,
@@ -49,7 +49,7 @@ export default function TextImportPage() {
   for (let offset = 0; offset >= -4; offset--) {
     const displayName = getSeasonDisplayName(offset);
     const dateRange = getFormattedSeasonDateRange(offset, seasonStartDay);
-    seasonsDataForDropdown.push({ value: offset.toString(), label: `${displayName} (${dateRange})` });
+    seasonsDataForDropdown.push({ value: offset.toString(), displayName, dateRange });
   }
   const selectedSeasonDisplayName = getSeasonDisplayName(selectedSeason);
 
@@ -110,9 +110,9 @@ export default function TextImportPage() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-slate-700">Select Season</h3>
               <SeasonDropdown
-                seasons={seasonsDataForDropdown}
-                selectedValue={selectedSeason.toString()}
-                onValueChange={(value) => handleSeasonChange(parseInt(value, 10))}
+                seasonsData={seasonsDataForDropdown}
+                selectedSeason={selectedSeasonDisplayName}
+                onSeasonChange={(value) => handleSeasonChange(parseInt(value, 10))}
               />
               <p className="text-xs text-slate-500">
                 Imported days will be assigned to the {selectedSeasonDisplayName} season
@@ -167,8 +167,8 @@ export default function TextImportPage() {
                 <Button
                   onClick={handleCommit}
                   disabled={
-                    draftDays.filter(d => d.decision !== 'skip').length === 0 || 
-                    isCommitting || 
+                    draftDays.filter(d => d.decision !== 'skip').length === 0 ||
+                    isCommitting ||
                     isCancelling
                   }
                 >
