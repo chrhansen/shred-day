@@ -1,4 +1,4 @@
-import { AuthenticationError, handleApiError, API_BASE_URL, defaultFetchOptions } from './skiService'; // Import helpers
+import { apiClient } from '@/lib/apiClient';
 
 // Define the Resort type based on backend response
 export interface Resort {
@@ -13,17 +13,7 @@ export interface Resort {
 }
 
 const searchResorts = async (query: string): Promise<Resort[]> => {
-  // Construct URL string directly, handling potentially empty API_BASE_URL
-  const endpoint = `${API_BASE_URL}/api/v1/resorts?query=${encodeURIComponent(query)}`;
-
-  const response = await fetch(endpoint, {
-    ...defaultFetchOptions,
-    method: 'GET',
-  });
-
-  if (!response.ok) await handleApiError(response); // Use helper
-
-  return await response.json();
+  return apiClient.get<Resort[]>('/api/v1/resorts', { query });
 };
 
 export const resortService = {

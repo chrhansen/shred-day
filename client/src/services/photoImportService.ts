@@ -1,4 +1,4 @@
-import { API_BASE_URL, defaultFetchOptions, handleApiError, AuthenticationError } from './skiService'; // Assuming skiService has these common utilities
+import { apiClient } from '@/lib/apiClient';
 import { type PhotoImport, type DraftDay as UIDraftDay } from '@/types/ski';
 
 const PHOTO_IMPORTS_API_PATH = '/api/v1/photo_imports';
@@ -7,37 +7,14 @@ const PHOTO_IMPORTS_API_PATH = '/api/v1/photo_imports';
  * Creates a new photo import session on the server.
  */
 async function createPhotoImport(): Promise<PhotoImport> {
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}`, {
-    ...defaultFetchOptions,
-    method: 'POST',
-    // No body needed as per the current backend controller create action
-  });
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json() as PhotoImport;
+  return apiClient.post<PhotoImport>(PHOTO_IMPORTS_API_PATH);
 }
 
 /**
  * Fetches details of a specific photo import session.
  */
 async function getPhotoImport(importId: string): Promise<PhotoImport> {
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}`, {
-    ...defaultFetchOptions,
-    method: 'GET',
-  });
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json() as PhotoImport;
+  return apiClient.get<PhotoImport>(`${PHOTO_IMPORTS_API_PATH}/${importId}`);
 }
 
 /**
@@ -46,35 +23,7 @@ async function getPhotoImport(importId: string): Promise<PhotoImport> {
 async function addPhotoToImport(importId: string, file: File): Promise<{ id: string; preview_url: string | null; full_url: string; filename: string | null }> {
   const formData = new FormData();
   formData.append('file', file);
-
-  const customHeaders = new Headers(); // Initialize as Headers object
-  customHeaders.append('Accept', 'application/json');
-
-  // Safely check for and copy Authorization header if it exists in defaultFetchOptions
-  if (defaultFetchOptions.headers) {
-    const tempHeaders = new Headers(defaultFetchOptions.headers); // Normalize to Headers object to safely get() values
-    const authHeader = tempHeaders.get('Authorization');
-    if (authHeader) {
-      customHeaders.append('Authorization', authHeader);
-    }
-  }
-
-  const requestOptions: RequestInit = {
-    credentials: defaultFetchOptions.credentials,
-    method: 'POST',
-    headers: customHeaders,
-    body: formData,
-  };
-
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}/photos`, requestOptions);
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json(); // Expects the created photo object with preview_url etc.
+  return apiClient.uploadFormData(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos`, formData);
 }
 
 /**
@@ -85,58 +34,14 @@ async function updatePhotoInImport(
   photoId: string,
   updateData: { taken_at?: string; resort_id?: string }
 ): Promise<{ id: string; preview_url: string | null; full_url: string; filename: string | null; taken_at?: string | null; resort?: any | null; latitude?: number | null; longitude?: number | null; exif_state?: string | null; }> {
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}/photos/${photoId}`, {
-    ...defaultFetchOptions, // Ensures Content-Type: application/json
-    method: 'PATCH',
-    body: JSON.stringify({ photo: updateData }), // Backend expects params nested under 'photo' key
-  });
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json(); // Expects the updated photo object
+  return apiClient.patch(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos/${photoId}`, { photo: updateData });
 }
 
 /**
  * Deletes a photo from a specific photo import session.
  */
 async function deletePhotoFromImport(importId: string, photoId: string): Promise<void> {
-  const customHeaders = new Headers(); // Initialize as Headers object
-  customHeaders.append('Accept', 'application/json');
-
-  // Safely check for and copy Authorization header
-  if (defaultFetchOptions.headers) {
-    const tempHeaders = new Headers(defaultFetchOptions.headers);
-    const authHeader = tempHeaders.get('Authorization');
-    if (authHeader) {
-      customHeaders.append('Authorization', authHeader);
-    }
-    // Copy other necessary headers from defaultFetchOptions if needed (e.g., X-CSRF-Token)
-  }
-
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}/photos/${photoId}`, {
-    // Do not spread defaultFetchOptions directly if it contains Content-Type for DELETE
-    credentials: defaultFetchOptions.credentials,
-    method: 'DELETE',
-    headers: customHeaders,
-  });
-
-  if (response.status === 204) { // Successfully deleted, no content
-    return;
-  }
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response); // Will throw for other errors like 404, 500
-  }
-  // Should not happen for a successful DELETE with 204, but as a fallback:
-  if (response.ok) return;
-
-  throw new Error(`Failed to delete photo. Status: ${response.status}`);
+  await apiClient.delete(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos/${photoId}`);
 }
 
 /**
@@ -144,81 +49,24 @@ async function deletePhotoFromImport(importId: string, photoId: string): Promise
  */
 async function updateDraftDayDecision(
   draftDayId: string,
-  decision: "merge" | "duplicate" | "skip" // Or your SkiDayUserAction type if defined globally
-): Promise<UIDraftDay> { // Assuming backend returns the updated DraftDay object (UIDraftDay is from ski.ts)
-  const response = await fetch(`${API_BASE_URL}/api/v1/draft_days/${draftDayId}`, {
-    ...defaultFetchOptions, // For Content-Type: application/json
-    method: 'PATCH',
-    body: JSON.stringify({ draft_day: { decision: decision } }), // Backend expects { draft_day: { decision: ... } }
-  });
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json() as UIDraftDay; // Or whatever your backend DraftDay type is named
+  decision: "merge" | "duplicate" | "skip"
+): Promise<UIDraftDay> {
+  return apiClient.patch<UIDraftDay>(`/api/v1/draft_days/${draftDayId}`, { draft_day: { decision } });
 }
 
 /**
  * Commits the photo import, triggering backend processing of decisions.
  */
 async function commitPhotoImport(importId: string): Promise<PhotoImport> {
-  // The backend PhotoImportUpdateService is triggered by an update to photo_import.
-  // It expects the photo_import to be in 'waiting?' state to start processing.
-  // However, from the frontend, when the user hits "Save Import", the import is likely
-  // in 'ready_for_review' or 'waiting' (if they made decisions without all photos processed).
-  // We will PATCH to status: 'committed' to signify the user's intent to finalize.
-  // The backend service will then take over, potentially moving through 'processing' to 'completed'.
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}`, {
-    ...defaultFetchOptions,
-    method: 'PATCH',
-    body: JSON.stringify({ photo_import: { status: 'committed' } }),
-  });
-
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  return await response.json() as PhotoImport; // Expects the updated PhotoImport object
+  return apiClient.patch<PhotoImport>(`${PHOTO_IMPORTS_API_PATH}/${importId}`, { photo_import: { status: 'committed' } });
 }
 
 /**
  * Cancels and deletes a photo import session.
  */
 async function cancelPhotoImport(importId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}${PHOTO_IMPORTS_API_PATH}/${importId}`, {
-    ...defaultFetchOptions, // defaultFetchOptions should be fine for DELETE
-    method: 'DELETE',
-    headers: {
-      'Accept': 'application/json',
-      // Safely add Authorization header if present in defaultFetchOptions
-      ...(defaultFetchOptions.headers instanceof Headers ?
-          (defaultFetchOptions.headers.get('Authorization') ? { 'Authorization': defaultFetchOptions.headers.get('Authorization')! } : {}) :
-          ((defaultFetchOptions.headers as Record<string, string>)?.Authorization ? { 'Authorization': (defaultFetchOptions.headers as Record<string, string>).Authorization } : {})
-      ),
-    }
-  });
-
-  if (response.status === 204) { // Successfully deleted, no content
-    return;
-  }
-  if (response.status === 401) {
-    throw new AuthenticationError('User not authenticated');
-  }
-  if (!response.ok) {
-    await handleApiError(response);
-  }
-  if (response.ok) return; // Should have been 204
-
-  throw new Error(`Failed to cancel photo import. Status: ${response.status}`);
+  await apiClient.delete(`${PHOTO_IMPORTS_API_PATH}/${importId}`);
 }
-
-// Future functions might include:
-// - getPhotoImportDraftDays(importId: string): Promise<DraftDay[]>
 
 export const photoImportService = {
   createPhotoImport,

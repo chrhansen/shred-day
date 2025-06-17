@@ -1,15 +1,8 @@
-import { AuthenticationError, handleApiError, API_BASE_URL, defaultFetchOptions } from './skiService';
-import { Resort } from './resortService'; // Import Resort type
+import { apiClient } from '@/lib/apiClient';
+import { Resort } from './resortService';
 
 async function getRecentResorts(): Promise<Resort[]> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recent_resorts`, {
-    ...defaultFetchOptions,
-    method: 'GET',
-  });
-
-  if (!response.ok) await handleApiError(response);
-
-  return await response.json();
+  return apiClient.get<Resort[]>('/api/v1/recent_resorts');
 }
 
 // Add other user-related service functions here if needed
