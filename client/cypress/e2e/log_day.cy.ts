@@ -655,4 +655,51 @@ describe('Create and Edit a Ski Day', () => {
     cy.location('pathname').should('eq', DAYS_LIST_URL);
     cy.contains('Ski day logged successfully!').should('be.visible');
   });
+
+  it('should highlight dates with existing ski days on calendar', function() {
+    // Create a ski day for a specific date first
+    const existingDate = new Date();
+    existingDate.setDate(10); // Set to 10th of current month
+    const formattedDate = existingDate.toISOString().split('T')[0];
+    
+    cy.intercept('POST', '/api/v1/days*').as('createDay');
+    
+    // Create a ski day via API
+    cy.request({
+      method: 'POST',
+      url: `${Cypress.env('apiUrl')}/api/v1/days`,
+      body: {
+        day: {
+          date: formattedDate,
+          resort_id: this.resortAId,
+          ski_ids: [this.skiAId],
+          activity: INITIAL_ACTIVITY,
+          photo_ids: []
+        }
+      }
+    }).then((response) => {
+      expect(response.status).to.eq(201);
+    });
+
+    // Visit the log day page
+    cy.visit(LOG_DAY_URL);
+    cy.wait(['@getSkis', '@getRecentResorts', '@getDaysList']);
+
+    // Wait for the calendar to be visible
+    cy.contains('Date').should('be.visible');
+    
+    // Check that the calendar is visible (using the actual class from react-day-picker)
+    cy.get('[class*="rdp"]').should('be.visible');
+    
+    // Find the button for the 10th day and check it has the hasSkiDay modifier class
+    cy.get('[class*="rdp"] button').each(($btn) => {
+      const dayText = $btn.text().trim();
+      if (dayText === '10') {
+        // Check that this day has the special styling for existing ski days
+        cy.wrap($btn).should('have.class', 'bg-blue-100');
+        cy.wrap($btn).should('have.class', 'font-bold');
+        cy.wrap($btn).should('have.class', 'text-blue-900');
+      }
+    });
+  });
 });

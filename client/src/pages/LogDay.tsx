@@ -43,6 +43,7 @@ export default function LogDay() {
     userSkis,
     recentResorts,
     isEditMode,
+    daysWithSkiing,
     
     // Loading states
     isLoadingSkis,
@@ -172,6 +173,12 @@ export default function LogDay() {
             disabled={isProcessing || isLoading}
             month={displayedMonth}
             onMonthChange={setDisplayedMonth}
+            modifiers={{
+              hasSkiDay: (date) => daysWithSkiing.has(format(date, 'yyyy-MM-dd'))
+            }}
+            modifiersClassNames={{
+              hasSkiDay: "bg-blue-100 font-bold text-blue-900"
+            }}
           />
         </div>
 
