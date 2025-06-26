@@ -4,7 +4,7 @@ import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types
 import { SkiDayDetail } from "@/components/SkiDayDetail";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { skiService } from "@/services/skiService";
@@ -88,19 +88,27 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
         data-testid={`ski-day-item-${day.id}`}
         onClick={handleItemClick}
       >
-        <Avatar className="h-24 w-24 rounded-sm shadow-md flex-shrink-0">
-          {day.photos && day.photos.length > 0 ? (
-            <img
-              src={day.photos[0].preview_url}
-              alt={`${day.resort_name} photo`}
-              className="h-full w-full object-cover rounded-sm"
-            />
-          ) : (
-            <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-sm">
-              {initials}
-            </AvatarFallback>
+        <div className="relative h-24 w-24 flex-shrink-0">
+          <Avatar className="h-full w-full rounded-sm shadow-md">
+            {day.photos && day.photos.length > 0 ? (
+              <img
+                src={day.photos[0].preview_url}
+                alt={`${day.resort_name} photo`}
+                className="h-full w-full object-cover rounded-sm"
+              />
+            ) : (
+              <AvatarFallback className="bg-slate-100 text-slate-500 text-lg rounded-sm">
+                {initials}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          {day.photos && day.photos.length > 1 && (
+            <div className="absolute bottom-1 right-1 bg-black/30 text-white px-1.5 py-0.5 rounded text-xs font-medium flex items-center gap-0.5">
+              <Camera className="h-3 w-3" />
+              <span>{day.photos.length}</span>
+            </div>
           )}
-        </Avatar>
+        </div>
         <div className="flex-1 min-w-0 ml-1">
           <div className="text-lg font-medium text-slate-800 truncate leading-none -mt-0.5">{day.resort_name}</div>
           <div className="text-base text-slate-500 flex items-center gap-1.5">
