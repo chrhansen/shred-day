@@ -685,6 +685,9 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait(['@getSkis', '@getRecentResorts', '@getDaysList']);
 
+    // Wait for the calendar to be visible
+    cy.contains('Date').should('be.visible');
+    
     // Check that the date with existing ski day has the special styling
     cy.get('.react-day-picker').should('be.visible');
     
