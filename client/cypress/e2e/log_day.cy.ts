@@ -688,11 +688,11 @@ describe('Create and Edit a Ski Day', () => {
     // Wait for the calendar to be visible
     cy.contains('Date').should('be.visible');
     
-    // Check that the date with existing ski day has the special styling
-    cy.get('.react-day-picker').should('be.visible');
+    // Check that the calendar is visible (using the actual class from react-day-picker)
+    cy.get('[class*="rdp"]').should('be.visible');
     
     // Find the button for the 10th day and check it has the hasSkiDay modifier class
-    cy.get('.react-day-picker button').each(($btn) => {
+    cy.get('[class*="rdp"] button').each(($btn) => {
       const dayText = $btn.text().trim();
       if (dayText === '10') {
         // Check that this day has the special styling for existing ski days
