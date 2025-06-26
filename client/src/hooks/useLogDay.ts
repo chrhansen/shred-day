@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
@@ -7,6 +7,7 @@ import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import debounce from 'lodash.debounce';
 import { type PhotoPreview } from "@/types/ski";
+import { format } from "date-fns";
 
 export function useLogDay() {
   const navigate = useNavigate();
@@ -44,6 +45,18 @@ export function useLogDay() {
     queryFn: () => skiService.getDay(dayId!),
     enabled: isEditMode,
   });
+
+  // Fetch all days to show on calendar
+  const { data: allDays } = useQuery({
+    queryKey: ['days', 'all'],
+    queryFn: () => skiService.getDays(),
+  });
+
+  // Create a set of dates that have ski days
+  const daysWithSkiing = useMemo(() => {
+    if (!allDays) return new Set<string>();
+    return new Set(allDays.map(day => day.date));
+  }, [allDays]);
 
   // Mutations
   const { mutate: saveDay, isPending: isSaving } = useMutation({
@@ -239,6 +252,7 @@ export function useLogDay() {
     dayToEdit,
     isEditMode,
     dayId,
+    daysWithSkiing,
     
     // Loading states
     isLoadingSkis,
