@@ -138,7 +138,8 @@ export function useLogDay() {
   // Load edit data
   useEffect(() => {
     if (isEditMode && dayToEdit) {
-      const editDate = new Date(dayToEdit.date.replace(/-/g, '/'));
+      const [year, month, day] = dayToEdit.date.split('-').map(Number);
+      const editDate = new Date(year, month - 1, day);
       setDate(editDate);
       setDisplayedMonth(editDate);
       setSelectedSkis(dayToEdit.skis ? dayToEdit.skis.map(ski => ski.id) : []);
@@ -204,7 +205,7 @@ export function useLogDay() {
       .map(p => p.serverId!);
 
     const formData = {
-      date: date.toISOString().split('T')[0],
+      date: format(date, 'yyyy-MM-dd'),
       resort_id: selectedResort.id,
       ski_ids: selectedSkis,
       activity: selectedActivity,
