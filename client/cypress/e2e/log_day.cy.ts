@@ -141,12 +141,20 @@ describe('Create and Edit a Ski Day', () => {
   it('should allow editing an existing ski day', function() {
 
     // --- Test-specific setup: Create the day to edit ---
+    // Calculate a date in the current season (after Sept 1)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const inCurrentSeasonYear = currentMonth >= 9;
+    const currentSeasonYear = inCurrentSeasonYear ? currentYear : currentYear - 1;
+    const testDate = `${currentSeasonYear}-10-10`; // Oct 10 in current season
+
     // We need to access aliases set in beforeEach (resortAId, skiAId)
     cy.get('@resortAId').then(resortAId => {
       cy.get('@skiAId').then(skiAId => {
           const initialDayPayload = {
               day: {
-                  date: '2025-03-10',
+                  date: testDate,
                   resort_id: resortAId,
                   ski_ids: [skiAId],
                   activity: INITIAL_ACTIVITY
@@ -188,8 +196,8 @@ describe('Create and Edit a Ski Day', () => {
     cy.wait('@getRecentResorts');
 
     // 5. Verify initial form state
-    // Verify the calendar is showing the correct month (March 2025) first
-    cy.get('#react-day-picker-1').should('contain.text', 'March 2025');
+    // Verify the calendar is showing the correct month (October currentSeasonYear) first
+    cy.get('#react-day-picker-1').should('contain.text', `October ${currentSeasonYear}`);
     // Now verify the 10th is the active tile using the aria-selected attribute
     cy.get('button[aria-selected="true"]').should('contain.text', '10');
     // Target the testid for the RECENT resort pill
@@ -216,23 +224,23 @@ describe('Create and Edit a Ski Day', () => {
     cy.wait('@getDaysList');
     cy.get('@dayId').then(dayId => {
       // Dynamically determine the expected date format
-      const testYear = 2025;
-      const testMonth = 2; // 0-indexed for March
-      const testDay = 10;
-      const dateForDisplay = new Date(testYear, testMonth, testDay);
+      // Date was edited to the 20th (line 211), so we expect Oct 20
+      const testMonth = 9; // 0-indexed for October
+      const testDay = 20;
+      const dateForDisplay = new Date(currentSeasonYear, testMonth, testDay);
       const currentRunYear = new Date().getFullYear();
       const expectedDisplayDate = dateForDisplay.getFullYear() === currentRunYear
-        ? dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // e.g., "Mar 20"
-        : dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 20, 2025"
+        ? dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // e.g., "Oct 20"
+        : dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Oct 20, 2025"
 
       // Use the new data-testid selector
       cy.get(`[data-testid="ski-day-item-${dayId}"]`)
         .should('contain.text', SKI_B_NAME)
         .and('contain.text', EDITED_ACTIVITY)
         .and(($el) => {
-          // Check for Mar 19, 20, or 21 due to potential timezone and date calculation differences
+          // Check for Oct 19, 20, or 21 due to potential timezone and date calculation differences
           const text = $el.text();
-          expect(text).to.match(/Mar (19|20|21)/);
+          expect(text).to.match(/Oct (19|20|21)/);
         });
     });
   });

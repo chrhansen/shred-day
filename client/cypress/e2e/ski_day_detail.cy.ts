@@ -9,8 +9,15 @@ describe('Ski Day Detail Popover', () => {
   let skiId: string;
   let dayWithPhotosId: string;
 
+  // Calculate dates in current season (after Sept 1)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const inCurrentSeasonYear = currentMonth >= 9;
+  const currentSeasonYear = inCurrentSeasonYear ? currentYear : currentYear - 1;
+
   const dayDataWithPhotos = {
-    date: '2025-07-20',
+    date: `${currentSeasonYear}-11-20`,
     activity: 'Photo Session',
     photos: [
       { id: 'photo1', preview_url: 'https://via.placeholder.com/400x300.png?text=Photo+1', full_url: 'https://via.placeholder.com/800x600.png?text=Photo+1' },
@@ -109,9 +116,13 @@ describe('Ski Day Detail Popover', () => {
   });
 
   it('should display correct ski day details', function() {
+    // Calculate expected date string for Nov 20 in current season
+    const testDate = new Date(currentSeasonYear, 10, 20); // month is 0-indexed
+    const expectedDateString = testDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
     cy.get('[data-testid="ski-day-detail-modal"]').within(() => {
       cy.contains('h2', resortName).should('be.visible');
-      cy.contains('p', 'Sunday, July 20, 2025').should('be.visible'); // Ensure date format matches component output
+      cy.contains('p', expectedDateString).should('be.visible'); // Dynamic date format
       // Updated assertion for skis
       cy.contains('h3', 'Skis Used').next('ul').find('li').should('have.length', 1).first().should('contain.text', "PhotoSkis");
       cy.contains('h3', 'Activity').next('p').should('contain.text', dayDataWithPhotos.activity);
@@ -184,12 +195,13 @@ describe('Ski Day Detail Popover', () => {
         const skiIdString = String(sIdFromAlias);   // Ensure string type
         let dayWithNoNotesId: string;
 
+        const noNotesDate = `${currentSeasonYear}-11-21`; // Nov 21 in current season
         cy.request({
           method: 'POST',
           url: `${Cypress.env('apiUrl')}/api/v1/days`,
           body: {
             day: {
-              date: '2025-07-21',
+              date: noNotesDate,
               resort_id: resortIdString,
               ski_ids: [skiIdString],
               activity: 'Quick Run',
@@ -207,7 +219,7 @@ describe('Ski Day Detail Popover', () => {
 
           const dayWithoutNotesFixture = {
             id: dayWithNoNotesId,
-            date: '2025-07-21',
+            date: noNotesDate,
             activity: 'Quick Run',
             notes: null,
             photos: [],

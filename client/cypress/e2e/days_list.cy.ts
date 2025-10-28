@@ -13,10 +13,21 @@ describe('Ski Days List Page', () => {
   const DAYS_LIST_URL = '/';
   const SKI_A_NAME = "Test Ski A";
   const SKI_B_NAME = "Test Ski B";
-  const DAY1_DATE = '2025-04-15';
   const DAY1_ACTIVITY = 'Friends';
-  const DAY2_DATE = '2025-04-10';
   const DAY2_ACTIVITY = 'Training';
+
+  // Calculate dates dynamically to always fall in current season (after Sept 1)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // Determine which year's season we're in based on Sept 1 start
+  const inCurrentSeasonYear = currentMonth >= 9;
+  const currentSeasonYear = inCurrentSeasonYear ? currentYear : currentYear - 1;
+
+  // Create dates in current season (always after Sept 1, before today)
+  const DAY1_DATE = `${currentSeasonYear}-10-15`; // Oct 15
+  const DAY2_DATE = `${currentSeasonYear}-10-10`; // Oct 10
 
   beforeEach(() => {
     // Create user
@@ -192,7 +203,9 @@ describe('Ski Days List Page', () => {
     cy.get('[data-testid="ski-day-detail-modal"]').should('be.visible');
 
     // Optional: Check for some content within the modal to be more specific
-    cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', 'April 15, 2025');
+    const day1TestDate = new Date(DAY1_DATE.replace(/-/g, '/'));
+    const expectedModalDate = day1TestDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', expectedModalDate);
     cy.get('@resortName').then(resortName => {
       cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', resortName);
     });
@@ -205,19 +218,26 @@ describe('Season Dropdown Functionality', () => {
   const CUSTOM_SEASON_START_DAY = '10-15'; // October 15th
   const DAYS_LIST_URL = '/'; // Define DAYS_LIST_URL here
 
-  // Define dates relative to a consistent "today" for testing display logic
-  // Let's assume "today" is Dec 1, 2024 for season name calculations.
-  // Current Season (0) for season_start_day 10-15 and "today" Dec 1, 2024 is: Oct 15, 2024 - Oct 14, 2025
-  const DAY_CURRENT_SEASON_DATE = '2024-11-20';
-  const DAY_CURRENT_SEASON_ACTIVITY = 'Day in Current Season (2024/25)';
+  // Calculate dates dynamically based on current date and Oct 15 season start
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
 
-  // Previous Season (-1) is: Oct 15, 2023 - Oct 14, 2024
-  const DAY_PREVIOUS_SEASON_DATE = '2023-12-20';
-  const DAY_PREVIOUS_SEASON_ACTIVITY = 'Day in Previous Season (2023/24)';
+  // For Oct 15 season start: if we're past Oct 15, we're in current year's season
+  const inCurrentSeasonYear = (currentMonth > 10) || (currentMonth === 10 && now.getDate() >= 15);
+  const currentSeasonYear = inCurrentSeasonYear ? currentYear : currentYear - 1;
+  const lastSeasonYear = currentSeasonYear - 1;
+  const twoSeasonsAgoYear = currentSeasonYear - 2;
 
-  // Two Seasons Ago (-2) is: Oct 15, 2022 - Oct 14, 2023
-  const DAY_TWO_SEASONS_AGO_DATE = '2022-11-20';
-  const DAY_TWO_SEASONS_AGO_ACTIVITY = 'Day in Two Seasons Ago (2022/23)';
+  // Create dates that clearly fall within each season (Nov 20 is always after Oct 15)
+  const DAY_CURRENT_SEASON_DATE = `${currentSeasonYear}-11-20`;
+  const DAY_CURRENT_SEASON_ACTIVITY = `Day in Current Season (${currentSeasonYear}/${(currentSeasonYear + 1).toString().slice(-2)})`;
+
+  const DAY_PREVIOUS_SEASON_DATE = `${lastSeasonYear}-12-20`;
+  const DAY_PREVIOUS_SEASON_ACTIVITY = `Day in Previous Season (${lastSeasonYear}/${(lastSeasonYear + 1).toString().slice(-2)})`;
+
+  const DAY_TWO_SEASONS_AGO_DATE = `${twoSeasonsAgoYear}-11-20`;
+  const DAY_TWO_SEASONS_AGO_ACTIVITY = `Day in Two Seasons Ago (${twoSeasonsAgoYear}/${(twoSeasonsAgoYear + 1).toString().slice(-2)})`;
 
   let testUserEmail: string;
   let resortId: string;
