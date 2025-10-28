@@ -33,10 +33,17 @@ describe('CSV Export Page', () => {
     cy.get('@resortId').then(resortId => {
       const now = new Date();
       const currentYear = now.getFullYear();
-      // Ensure dates fall clearly within seasons based on '09-01' start
-      // e.g., Nov 15 for current season, Nov 15 last year for last season
-      const currentSeasonDayDate = `${currentYear - 1}-11-15`;
-      const lastSeasonDayDate = `${currentYear - 2}-11-15`;
+      const currentMonth = now.getMonth() + 1;
+
+      // Determine which year's season we're in based on Sept 1 start
+      // If before Sept 1, we're still in last year's season
+      const inCurrentSeasonYear = currentMonth >= 9;
+      const currentSeasonYear = inCurrentSeasonYear ? currentYear : currentYear - 1;
+      const lastSeasonYear = currentSeasonYear - 1;
+
+      // Create dates that clearly fall within each season (Nov 15 is always after Sept 1)
+      const currentSeasonDayDate = `${currentSeasonYear}-11-15`;
+      const lastSeasonDayDate = `${lastSeasonYear}-11-15`;
 
       cy.log(`Creating day for current season: ${currentSeasonDayDate}`);
       cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: currentSeasonDayDate, resort_id: resortId } });
