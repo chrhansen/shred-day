@@ -11,12 +11,15 @@ class User < ApplicationRecord
   has_many :text_imports, dependent: :destroy
   has_many :draft_days, through: :photo_imports
   has_many :draft_days, through: :text_imports
+  has_many :tags, dependent: :destroy
 
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")
       .group("resorts.id") # Group by primary key is usually sufficient
       .order("MAX(days.date) DESC")
     }, through: :days, source: :resort
+
+  after_commit :ensure_default_tags, on: :create
 
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -33,5 +36,13 @@ class User < ApplicationRecord
     rescue ArgumentError
       errors.add(:season_start_day, "must be a valid date in MM-DD format (e.g., 09-15)")
     end
+  end
+
+  private
+
+  def ensure_default_tags
+    Tags::EnsureDefaultTagsService.new(self).call
+  rescue StandardError => e
+    Rails.logger.error("Failed to seed default tags for user #{id}: #{e.message}")
   end
 end

@@ -4,7 +4,9 @@ FactoryBot.define do
     date { Date.today } # Default to today's date
     association :user # Associate with user factory
     association :resort # Associate with resort factory
-    activity { "Test Activity" } # Add a default activity if needed/desired
+    transient do
+      tag_names { [] }
+    end
 
     # Optional: Add a trait to easily create days with skis if needed in many tests
     trait :with_skis do
@@ -15,6 +17,13 @@ FactoryBot.define do
         evaluator.skis_count.times do
           day.skis << create(:ski, user: day.user)
         end
+      end
+    end
+
+    after(:create) do |day, evaluator|
+      evaluator.tag_names.each do |tag_name|
+        tag = day.user.tags.find_or_create_by!(name: tag_name)
+        TagDay.find_or_create_by!(day: day, tag: tag)
       end
     end
   end

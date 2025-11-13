@@ -28,12 +28,16 @@ export const DayCard: React.FC<DayCardProps> = ({ day }) => {
           <h3 className="text-lg font-semibold text-slate-800 truncate" title={day.resort_name}> {day.resort_name}</h3>
           <div className="flex items-center text-sm text-slate-500">
             <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-            <span className="truncate" title={day.ski_name}>{day.ski_name}</span>
+            <span className="truncate" title={day.ski_names.join(', ')}>
+              {day.ski_names.join(', ')}
+            </span>
           </div>
-          <div className="flex items-center text-sm text-slate-500">
-            <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-            <span>{day.activity}</span>
-          </div>
+          {day.labels && day.labels.length > 0 && (
+            <div className="flex items-center text-sm text-slate-500">
+              <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+              <span>{day.labels.map((label) => label.name).join(', ')}</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -18,7 +18,7 @@ describe('Ski Day Detail Popover', () => {
 
   const dayDataWithPhotos = {
     date: `${currentSeasonYear}-11-20`,
-    activity: 'Photo Session',
+    labels: [{ id: 'label-photo', name: 'Photo Session' }],
     photos: [
       { id: 'photo1', preview_url: 'https://via.placeholder.com/400x300.png?text=Photo+1', full_url: 'https://via.placeholder.com/800x600.png?text=Photo+1' },
       { id: 'photo2', preview_url: 'https://via.placeholder.com/400x300.png?text=Photo+2', full_url: 'https://via.placeholder.com/800x600.png?text=Photo+2' },
@@ -65,7 +65,6 @@ describe('Ski Day Detail Popover', () => {
             date: dayDataWithPhotos.date,
             resort_id: rId, // Use resolved alias value
             ski_id: sId,    // Use resolved alias value
-            activity: dayDataWithPhotos.activity,
             photos: dayDataWithPhotos.photos,
             notes: dayDataWithPhotos.notes
           }
@@ -90,7 +89,7 @@ describe('Ski Day Detail Popover', () => {
       const detailedFixture = {
         id: dayWithPhotosId,
         date: dayDataWithPhotos.date,
-        activity: dayDataWithPhotos.activity,
+        labels: dayDataWithPhotos.labels,
         notes: dayDataWithPhotos.notes,
         photos: dayDataWithPhotos.photos,
         resort: { id: "mockResortId", name: resortName },
@@ -123,9 +122,10 @@ describe('Ski Day Detail Popover', () => {
     cy.get('[data-testid="ski-day-detail-modal"]').within(() => {
       cy.contains('h2', resortName).should('be.visible');
       cy.contains('p', expectedDateString).should('be.visible'); // Dynamic date format
-      // Updated assertion for skis
       cy.contains('h3', 'Skis Used').next('ul').find('li').should('have.length', 1).first().should('contain.text', "PhotoSkis");
-      cy.contains('h3', 'Activity').next('p').should('contain.text', dayDataWithPhotos.activity);
+      cy.contains('h3', 'Labels').parent().within(() => {
+        cy.contains(dayDataWithPhotos.labels[0].name).should('be.visible');
+      });
       cy.contains('h3', 'Notes').next('p').should('contain.text', dayDataWithPhotos.notes);
     });
   });
@@ -159,7 +159,7 @@ describe('Ski Day Detail Popover', () => {
     const dayWithoutPhotosFixture = {
       id: dayWithPhotosId, // Use the same ID, we're just changing its content for this fetch
       date: dayDataWithPhotos.date,
-      activity: dayDataWithPhotos.activity,
+      labels: dayDataWithPhotos.labels,
       notes: dayDataWithPhotos.notes,
       photos: [],
       resort: { id: "mockResortId", name: resortName },
@@ -204,7 +204,6 @@ describe('Ski Day Detail Popover', () => {
               date: noNotesDate,
               resort_id: resortIdString,
               ski_ids: [skiIdString],
-              activity: 'Quick Run',
               notes: null
             }
           },
@@ -220,7 +219,7 @@ describe('Ski Day Detail Popover', () => {
           const dayWithoutNotesFixture = {
             id: dayWithNoNotesId,
             date: noNotesDate,
-            activity: 'Quick Run',
+            labels: [{ id: 'label-quick-run', name: 'Quick Run' }],
             notes: null,
             photos: [],
             resort: { id: resortIdString, name: resortName },

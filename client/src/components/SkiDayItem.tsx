@@ -115,9 +115,13 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
             <span>#{day.day_number}</span> <span className="w-1 h-1 bg-slate-300 rounded-full" /> {displayDate}
           </div>
           <div className="text-base text-slate-500 flex items-center gap-2 flex-wrap">
-            {day.ski_names && <span>{day.ski_names.join('/')}</span>}
-            {day.ski_names && day.activity && <span className="w-1 h-1 bg-slate-300 rounded-full" />}
-            {day.activity && <span>{day.activity}</span>}
+            {day.ski_names && day.ski_names.length > 0 && <span>{day.ski_names.join('/')}</span>}
+            {day.ski_names && day.ski_names.length > 0 && day.labels && day.labels.length > 0 && (
+              <span className="w-1 h-1 bg-slate-300 rounded-full" />
+            )}
+            {day.labels && day.labels.length > 0 && (
+              <span>{day.labels.map((label) => label.name).join(', ')}</span>
+            )}
           </div>
         </div>
         {/* Vertically stacked and right-aligned for actions menu */}

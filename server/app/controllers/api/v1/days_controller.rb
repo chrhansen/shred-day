@@ -16,31 +16,56 @@ class Api::V1::DaysController < ApplicationController
 
   # POST /api/v1/days
   def create
-    result = Days::CreateDayService.new(current_user, day_params.except(:photo_ids, :ski_ids)).create_day
+    result = nil
 
-    if result.created?
+    Day.transaction do
+      result = Days::CreateDayService.new(current_user, day_params.except(:photo_ids, :ski_ids, :tag_ids)).create_day
+      unless result.created?
+        render json: { errors: result.day.errors }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
+      tag_sync_result = Days::SyncTagsService.new(day: result.day, user: current_user, tag_ids: day_params[:tag_ids]).sync
+      unless tag_sync_result.synced?
+        render json: { errors: { tag_ids: tag_sync_result.errors } }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.skis << @skis
-      result.day.reload(include: [:ski, :resort, :photos])
-
-      render json: result.day, status: :created
-    else
-      render json: { errors: result.day.errors }, status: :unprocessable_entity
+      result.day.reload(include: [:skis, :resort, :photos, :tags])
     end
+
+    return if performed?
+
+    render json: result.day, status: :created
   end
 
   # PATCH /api/v1/days/:id
   def update
-    result = Days::UpdateDayService.new(@day, day_params.except(:photo_ids)).update_day
+    result = nil
 
-    if result.updated?
+    Day.transaction do
+      result = Days::UpdateDayService.new(@day, day_params.except(:photo_ids, :tag_ids)).update_day
+
+      unless result.updated?
+        render json: { errors: @day.errors }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
+      tag_sync_result = Days::SyncTagsService.new(day: result.day, user: current_user, tag_ids: day_params[:tag_ids]).sync
+      unless tag_sync_result.synced?
+        render json: { errors: { tag_ids: tag_sync_result.errors } }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
-      result.day.reload(include: [:ski, :resort, :photos])
-
-      render json: result.day, status: :ok
-    else
-      render json: { errors: @day.errors }, status: :unprocessable_entity
+      result.day.reload(include: [:skis, :resort, :photos, :tags])
     end
+
+    return if performed?
+
+    render json: result.day, status: :ok
   end
 
   # DELETE /api/v1/days/:id
@@ -68,7 +93,7 @@ class Api::V1::DaysController < ApplicationController
   end
 
   def set_day
-    @day = current_user.days.includes(:skis, :resort, :photos).find(params[:id])
+    @day = current_user.days.includes(:skis, :resort, :photos, :tags).find(params[:id])
     # Preload associations and photo attachments
     # Use attachment names for eager loading
   rescue ActiveRecord::RecordNotFound
@@ -79,7 +104,7 @@ class Api::V1::DaysController < ApplicationController
   def day_params
     # Allow an array of photo_ids instead of photo files
     params.require(:day).permit(
-      :date, :resort_id, :activity, :notes, photo_ids: [], ski_ids: []
+      :date, :resort_id, :notes, photo_ids: [], ski_ids: [], tag_ids: []
     )
   end
 end

@@ -9,7 +9,7 @@ export const skiService = {
     return apiClient.get<SkiStats>('/api/v1/stats');
   },
 
-  async logDay(dayData: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }): Promise<SkiDayDetail> {
+  async logDay(dayData: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }): Promise<SkiDayDetail> {
     return apiClient.post<SkiDayDetail>('/api/v1/days', { day: dayData });
   },
 
@@ -62,7 +62,7 @@ export const skiService = {
   async updateDay(
     dayId: string,
     dayData: Partial<Omit<SkiDayDetail, 'id' | 'resort' | 'photos' | 'skis'>> &
-             { resort_id?: string; ski_ids?: string[]; activity?: string; photo_ids?: string[] }
+             { resort_id?: string; ski_ids?: string[]; tag_ids?: string[]; photo_ids?: string[] }
   ): Promise<SkiDayDetail> {
     return apiClient.patch<SkiDayDetail>(`/api/v1/days/${dayId}`, { day: dayData });
   },

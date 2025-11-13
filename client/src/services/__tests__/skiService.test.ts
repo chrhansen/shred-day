@@ -357,7 +357,7 @@ describe('skiService', () => {
         date: '2024-01-15',
         resort_id: 'res_1',
         ski_ids: ['ski_1', 'ski_2'],
-        activity: 'alpine',
+        tag_ids: ['tag_1'],
         photo_ids: [],
       };
       const expectedResponse = {
@@ -366,7 +366,7 @@ describe('skiService', () => {
         resort: { id: 'res_1', name: 'Vail' },
         skis: [],
         photos: [],
-        activity: 'alpine',
+        labels: [{ id: 'tag_1', name: 'alpine' }],
       };
       
       (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse(expectedResponse));

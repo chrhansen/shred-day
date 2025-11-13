@@ -2,7 +2,7 @@ module Api
   module V1
     # Serializer specifically for the /-index action (list view)
     class DayEntrySerializer < ActiveModel::Serializer
-      attributes :id, :date, :activity, :created_at, :updated_at, :day_number
+      attributes :id, :date, :created_at, :updated_at, :day_number
 
       # Include associated names directly as expected by SkiDayEntry type
 
@@ -16,6 +16,10 @@ module Api
 
       attribute :resort_name do
         object.resort&.name
+      end
+
+      attribute :labels do
+        object.tags.map { |tag| { id: tag.id, name: tag.name } }
       end
 
       # Use has_many with the dedicated PhotoSerializer

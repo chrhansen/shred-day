@@ -11,7 +11,7 @@ class Days::IndexDayService
     start_date, end_date = OffsetDateRangeConverterService.new(@user.season_start_day).date_range(season_offset)
 
     # Filter days by the calculated date range
-    days = @user.days.includes(:skis, :resort, photos: { image_attachment: :blob })
+    days = @user.days.includes(:skis, :resort, :tags, photos: { image_attachment: :blob })
                      .where(date: start_date..end_date)
                      .order(date: :desc)
 

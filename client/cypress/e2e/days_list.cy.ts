@@ -45,6 +45,17 @@ describe('Ski Days List Page', () => {
       body: { email: userEmail, password: PASSWORD }
     }).its('status').should('eq', 200); // Ensure login succeeded
 
+    // 1b. Fetch default labels for later use
+    cy.request(`${Cypress.env('apiUrl')}/api/v1/tags`).then((response) => {
+      const tags = response.body;
+      const friendsTag = tags.find((tag: { name: string }) => tag.name === 'With Friends');
+      const trainingTag = tags.find((tag: { name: string }) => tag.name === 'Combat Training');
+      expect(friendsTag, 'Expected default label "With Friends"').to.exist;
+      expect(trainingTag, 'Expected default label "Combat Training"').to.exist;
+      cy.wrap(friendsTag.id).as('withFriendsTagId');
+      cy.wrap(trainingTag.id).as('combatTrainingTagId');
+    });
+
     // --- Set up data sequentially AFTER login ---
 
     // 1. Find Resort
@@ -67,12 +78,16 @@ describe('Ski Days List Page', () => {
     // 4. Create Days
     cy.get('@resortId').then(resortId => {
       cy.get('@skiAId').then(skiAId => {
-        cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY1_DATE, resort_id: resortId, ski_ids: [skiAId], activity: DAY1_ACTIVITY } })
-          .its('body.id').as('day1Id');
+        cy.get('@withFriendsTagId').then(labelId => {
+          cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY1_DATE, resort_id: resortId, ski_ids: [skiAId], tag_ids: [labelId] } })
+            .its('body.id').as('day1Id');
+        });
       });
       cy.get('@skiBId').then(skiBId => {
-        cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY2_DATE, resort_id: resortId, ski_ids: [skiBId], activity: DAY2_ACTIVITY } })
-          .its('body.id').as('day2Id');
+        cy.get('@combatTrainingTagId').then(labelId => {
+          cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY2_DATE, resort_id: resortId, ski_ids: [skiBId], tag_ids: [labelId] } })
+            .its('body.id').as('day2Id');
+        });
       });
     });
   });
@@ -289,9 +304,9 @@ describe('Season Dropdown Functionality', () => {
 
     // Create days in different seasons AFTER all IDs are resolved
     cy.then(() => {
-      cy.logDay({ date: DAY_CURRENT_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_CURRENT_SEASON_ACTIVITY });
-      cy.logDay({ date: DAY_PREVIOUS_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_PREVIOUS_SEASON_ACTIVITY });
-      cy.logDay({ date: DAY_TWO_SEASONS_AGO_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_TWO_SEASONS_AGO_ACTIVITY });
+      cy.logDay({ date: DAY_CURRENT_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], labels: [DAY_CURRENT_SEASON_ACTIVITY] });
+      cy.logDay({ date: DAY_PREVIOUS_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], labels: [DAY_PREVIOUS_SEASON_ACTIVITY] });
+      cy.logDay({ date: DAY_TWO_SEASONS_AGO_DATE, resort_id: resortId, ski_ids: [skiId], labels: [DAY_TWO_SEASONS_AGO_ACTIVITY] });
     });
   });
 
@@ -314,7 +329,7 @@ describe('Season Dropdown Functionality', () => {
   });
 
   it('should change season, update URL, and filter days when a new season is selected from dropdown', function() {
-    // cy.clock(new Date(2024, 11, 1).getTime()); // Clock might not be needed if we rely on activity name
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Clock might not be needed if we rely on label name
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getAccountDetails');
     cy.wait('@getDaysApi').its('request.url').should('not.include', 'season='); // Default to current (season 0)

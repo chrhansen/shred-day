@@ -4,6 +4,8 @@ class Day < ApplicationRecord
   has_many :photos, dependent: :destroy
   has_many :draft_days, dependent: :destroy
   has_and_belongs_to_many :skis
+  has_many :tag_days, dependent: :destroy
+  has_many :tags, through: :tag_days
 
   # Validations
   validates :date, :resort, :user, presence: true

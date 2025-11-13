@@ -6,11 +6,9 @@ import { format } from "date-fns";
 import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
 import { ResortSelection } from "@/components/ResortSelection";
 import { SkiSelection } from "@/components/SkiSelection";
-import { ActivitySelection } from "@/components/ActivitySelection";
+import { LabelSelection } from "@/components/LabelSelection";
 import { useLogDay } from "@/hooks/useLogDay";
 import type { PhotoPreview } from "@/types/ski";
-
-const ACTIVITIES = ["Friends", "Training"];
 
 export default function LogDay() {
   const navigate = useNavigate();
@@ -32,16 +30,17 @@ export default function LogDay() {
     setActiveSearchIndex,
     selectedSkis,
     setSelectedSkis,
-    selectedActivity,
-    setSelectedActivity,
+    selectedLabelIds,
     photos,
     setPhotos,
     isUploading,
     setIsUploading,
+    deletingLabelId,
     
     // Data
     userSkis,
     recentResorts,
+    userLabels,
     isEditMode,
     daysWithSkiing,
     
@@ -49,11 +48,13 @@ export default function LogDay() {
     isLoadingSkis,
     isLoadingRecentResorts,
     isLoadingDayToEdit,
+    isLoadingLabels,
     isProcessing,
     isLoading,
     
     // Errors
     skisError,
+    labelsError,
     dayToEditError,
     
     // Actions
@@ -62,6 +63,11 @@ export default function LogDay() {
     uploadPhoto,
     setSearchResults,
     isAddingSki,
+    toggleLabelSelection,
+    createLabel,
+    removeLabel,
+    isAddingLabel,
+    isDeletingLabel,
   } = useLogDay();
 
   // Event handlers
@@ -90,6 +96,18 @@ export default function LogDay() {
     );
   };
 
+  const handleToggleLabel = (labelId: string) => {
+    toggleLabelSelection(labelId);
+  };
+
+  const handleAddLabel = (labelName: string) => {
+    createLabel(labelName);
+  };
+
+  const handleDeleteLabel = (labelId: string) => {
+    removeLabel(labelId);
+  };
+
   const handlePhotosChange = (newPhotos: typeof photos) => {
     setPhotos(newPhotos);
     
@@ -106,7 +124,7 @@ export default function LogDay() {
     }
   };
 
-  const formIsValid = selectedResort && selectedActivity && selectedSkis.length > 0;
+  const formIsValid = Boolean(selectedResort) && selectedSkis.length > 0;
 
   // Loading states
   if (isLoading && isEditMode) {
@@ -126,6 +144,17 @@ export default function LogDay() {
       <div className="min-h-screen bg-white p-4 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Failed to load skis data</p>
+          <Button onClick={() => navigate('/')}>Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (labelsError) {
+    return (
+      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Failed to load labels</p>
           <Button onClick={() => navigate('/')}>Go Back</Button>
         </div>
       </div>
@@ -213,12 +242,18 @@ export default function LogDay() {
             isAddingSki={isAddingSki}
           />
 
-          {/* Activity Selection */}
-          <ActivitySelection
-            activities={ACTIVITIES}
-            selectedActivity={selectedActivity}
+          {/* Label Selection */}
+          <LabelSelection
+            labels={userLabels}
+            selectedLabelIds={selectedLabelIds}
+            isLoading={isLoadingLabels}
             isDisabled={isProcessing || isLoading}
-            onSelect={setSelectedActivity}
+            deletingLabelId={deletingLabelId}
+            onToggleLabel={handleToggleLabel}
+            onAddLabel={handleAddLabel}
+            onDeleteLabel={handleDeleteLabel}
+            isAddingLabel={isAddingLabel}
+            isDeletingLabel={isDeletingLabel}
           />
 
           {/* Photo Upload Section */}

@@ -48,7 +48,7 @@ declare global {
     interface Chainable {
       createUser(email: string, password?: string): Chainable<Response<any>>
       login(email: string, password?: string): Chainable<void>
-      logDay(dayData: { date: string; resort_id: any; ski_ids: any; activity?: string; }): Chainable<Response<any>>
+      logDay(dayData: { date: string; resort_id: any; ski_ids: any; tag_ids?: string[]; labels?: string[]; notes?: string }): Chainable<Response<any>>
     }
   }
 }
@@ -82,14 +82,43 @@ Cypress.Commands.add('login', (email, password = 'password123') => {
 
 // Add command to log a day via API
 Cypress.Commands.add('logDay', (dayData) => {
-  // Note: This assumes the user is already logged in via API context (cookie is set)
-  cy.request({
-    method: 'POST',
-    url: `${Cypress.env('apiUrl')}/api/v1/days`, // Use env var
-    body: {
-      day: dayData // Pass the provided data nested under 'day' key
-    },
-    failOnStatusCode: false // Allow checking status manually
+  const { labels = [], ...rest } = dayData as { labels?: string[] };
+
+  if (rest.tag_ids || !labels.length) {
+    cy.request({
+      method: 'POST',
+      url: `${Cypress.env('apiUrl')}/api/v1/days`,
+      body: { day: rest },
+      failOnStatusCode: false,
+    });
+    return;
+  }
+
+  cy.request(`${Cypress.env('apiUrl')}/api/v1/tags`).then((response) => {
+    const tags: Array<{ id: string; name: string }> = response.body;
+    const tagIds: string[] = [];
+
+    cy.wrap(labels).each((labelName) => {
+      const existing = tags.find((tag) => tag.name === labelName);
+      if (existing) {
+        tagIds.push(existing.id);
+        return;
+      }
+
+      return cy
+        .request('POST', `${Cypress.env('apiUrl')}/api/v1/tags`, { tag: { name: labelName } })
+        .then((res) => {
+          tags.push(res.body);
+          tagIds.push(res.body.id);
+        });
+    }).then(() => {
+      cy.request({
+        method: 'POST',
+        url: `${Cypress.env('apiUrl')}/api/v1/days`,
+        body: { day: { ...rest, tag_ids: tagIds } },
+        failOnStatusCode: false,
+      });
+    });
   });
 });
 

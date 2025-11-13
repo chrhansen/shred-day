@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       resource :google_sign_in_flow, only: [:update, :create], controller: :google_sign_in_flow
 
       resources :skis, only: [:index, :create, :update, :destroy]
+      resources :tags, only: [:index, :create, :destroy]
       resources :resorts, only: [:index] # GET /api/v1/resorts?query=... (Search Resorts)
       resources :recent_resorts, only: [:index] # GET /api/v1/recent_resorts
 

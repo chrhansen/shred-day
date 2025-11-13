@@ -146,8 +146,21 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
               )}
             </div>
             <div>
-              <h3 className="text-sm font-medium text-slate-500 mb-1">Activity</h3>
-              <p className="text-slate-800">{day.activity}</p>
+              <h3 className="text-sm font-medium text-slate-500 mb-1">Labels</h3>
+              {day.labels && day.labels.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {day.labels.map((label) => (
+                    <span
+                      key={label.id}
+                      className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium"
+                    >
+                      {label.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-800 italic">No labels added.</p>
+              )}
             </div>
           </div>
           <div>
