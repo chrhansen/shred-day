@@ -18,7 +18,7 @@ module Api
         object.resort&.name
       end
 
-      attribute :labels do
+      attribute :tags do
         object.tags.map { |tag| { id: tag.id, name: tag.name } }
       end
 

@@ -7,7 +7,7 @@ import { userService } from "@/services/userService";
 import { tagService } from "@/services/tagService";
 import { toast } from "sonner";
 import debounce from 'lodash.debounce';
-import { type PhotoPreview, type Label } from "@/types/ski";
+import { type PhotoPreview, type Tag } from "@/types/ski";
 import { format } from "date-fns";
 
 export function useLogDay() {
@@ -26,10 +26,10 @@ export function useLogDay() {
   const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [selectedSkis, setSelectedSkis] = useState<string[]>([]);
-  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [deletingLabelId, setDeletingLabelId] = useState<string | null>(null);
+  const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
 
   // Queries
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
@@ -37,8 +37,8 @@ export function useLogDay() {
     queryFn: skiService.getSkis,
   });
 
-  const { data: userLabels, isLoading: isLoadingLabels, error: labelsError } = useQuery({
-    queryKey: ['labels'],
+  const { data: userTags, isLoading: isLoadingTags, error: tagsError } = useQuery({
+    queryKey: ['tags'],
     queryFn: tagService.getTags,
   });
 
@@ -114,36 +114,36 @@ export function useLogDay() {
     },
   });
 
-  const { mutate: addLabel, isPending: isAddingLabel } = useMutation({
+  const { mutate: addTag, isPending: isAddingTag } = useMutation({
     mutationFn: (name: string) => tagService.createTag({ name }),
-    onSuccess: (newLabel) => {
-      queryClient.setQueryData<Label[]>(['labels'], (prev) => {
-        const next = prev ? [...prev, newLabel] : [newLabel];
+    onSuccess: (newTag) => {
+      queryClient.setQueryData<Tag[]>(['tags'], (prev) => {
+        const next = prev ? [...prev, newTag] : [newTag];
         return next.sort((a, b) => a.name.localeCompare(b.name));
       });
-      toast.success(`Label "${newLabel.name}" added successfully!`);
-      setSelectedLabelIds((prev) => [...prev, newLabel.id]);
+      toast.success(`Tag "${newTag.name}" added successfully!`);
+      setSelectedTagIds((prev) => [...prev, newTag.id]);
     },
     onError: (error) => {
-      console.error("Add Label error:", error);
-      const message = error instanceof Error ? error.message : "Failed to add label";
+      console.error("Add Tag error:", error);
+      const message = error instanceof Error ? error.message : "Failed to add tag";
       toast.error(message);
     },
   });
 
-  const { mutate: deleteLabel, isPending: isDeletingLabel } = useMutation({
-    mutationFn: (labelId: string) => tagService.deleteTag(labelId),
-    onSuccess: (_data, labelId) => {
-      queryClient.setQueryData<Label[]>(['labels'], (prev) => prev ? prev.filter((label) => label.id !== labelId) : prev);
-      setSelectedLabelIds((prev) => prev.filter((id) => id !== labelId));
-      toast.success("Label removed");
+  const { mutate: deleteTag, isPending: isDeletingTag } = useMutation({
+    mutationFn: (tagId: string) => tagService.deleteTag(tagId),
+    onSuccess: (_data, tagId) => {
+      queryClient.setQueryData<Tag[]>(['tags'], (prev) => prev ? prev.filter((tag) => tag.id !== tagId) : prev);
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+      toast.success("Tag removed");
     },
     onError: (error) => {
-      console.error("Delete Label error:", error);
-      const message = error instanceof Error ? error.message : "Failed to delete label";
+      console.error("Delete Tag error:", error);
+      const message = error instanceof Error ? error.message : "Failed to delete tag";
       toast.error(message);
     },
-    onSettled: () => setDeletingLabelId(null),
+    onSettled: () => setDeletingTagId(null),
   });
 
   // Resort search logic
@@ -182,7 +182,7 @@ export function useLogDay() {
       setDate(editDate);
       setDisplayedMonth(editDate);
       setSelectedSkis(dayToEdit.skis ? dayToEdit.skis.map(ski => ski.id) : []);
-      setSelectedLabelIds(dayToEdit.labels ? dayToEdit.labels.map(label => label.id) : []);
+      setSelectedTagIds(dayToEdit.tags ? dayToEdit.tags.map(tag => tag.id) : []);
       setSelectedResort(dayToEdit.resort);
 
       // Map existing photo data from the fetched day
@@ -233,19 +233,19 @@ export function useLogDay() {
     }
   };
 
-  const toggleLabelSelection = (labelId: string) => {
-    setSelectedLabelIds((prev) =>
-      prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId]
+  const toggleTagSelection = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
   };
 
-  const createLabel = (name: string) => {
-    addLabel(name);
+  const createTag = (name: string) => {
+    addTag(name);
   };
 
-  const removeLabel = (labelId: string) => {
-    setDeletingLabelId(labelId);
-    deleteLabel(labelId);
+  const removeTag = (tagId: string) => {
+    setDeletingTagId(tagId);
+    deleteTag(tagId);
   };
 
   const handleSubmit = () => {
@@ -262,7 +262,7 @@ export function useLogDay() {
       date: format(date, 'yyyy-MM-dd'),
       resort_id: selectedResort.id,
       ski_ids: selectedSkis,
-      tag_ids: selectedLabelIds,
+      tag_ids: selectedTagIds,
       photo_ids: uploadedPhotoIds,
     };
 
@@ -273,8 +273,8 @@ export function useLogDay() {
     }
   };
 
-  const isProcessing = isSaving || isUpdating || isAddingSki || isAddingLabel || isDeletingLabel;
-  const isLoading = isLoadingSkis || isLoadingRecentResorts || isLoadingDayToEdit || isLoadingLabels;
+  const isProcessing = isSaving || isUpdating || isAddingSki || isAddingTag || isDeletingTag;
+  const isLoading = isLoadingSkis || isLoadingRecentResorts || isLoadingDayToEdit || isLoadingTags;
 
   return {
     // State
@@ -294,18 +294,18 @@ export function useLogDay() {
     setActiveSearchIndex,
     selectedSkis,
     setSelectedSkis,
-    selectedLabelIds,
-    setSelectedLabelIds,
+    selectedTagIds,
+    setSelectedTagIds,
     photos,
     setPhotos,
     isUploading,
     setIsUploading,
-    deletingLabelId,
+    deletingTagId,
     
     // Data
     userSkis,
     recentResorts,
-    userLabels,
+    userTags,
     dayToEdit,
     isEditMode,
     dayId,
@@ -315,13 +315,13 @@ export function useLogDay() {
     isLoadingSkis,
     isLoadingRecentResorts,
     isLoadingDayToEdit,
-    isLoadingLabels,
+    isLoadingTags,
     isProcessing,
     isLoading,
     
     // Errors
     skisError,
-    labelsError,
+    tagsError,
     dayToEditError,
     
     // Actions
@@ -330,10 +330,10 @@ export function useLogDay() {
     uploadPhoto,
     setSearchResults,
     isAddingSki,
-    toggleLabelSelection,
-    createLabel,
-    removeLabel,
-    isAddingLabel,
-    isDeletingLabel,
+    toggleTagSelection,
+    createTag,
+    removeTag,
+    isAddingTag,
+    isDeletingTag,
   };
 }

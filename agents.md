@@ -54,3 +54,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
 
 ## Git
 1. Use the Github CLI `gh` to interact with Github, the origin
+
+## Engineering Notes
+- Seed default user tags by invoking `EnsureDefaultTagsService` from the controller (avoid model callbacks for this logic).
+- Service objects should expose clearly named methods (e.g., `create_default_tags`) instead of a generic `.call` to keep intent obvious at call sites.

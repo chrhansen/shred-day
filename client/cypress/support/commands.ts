@@ -48,7 +48,7 @@ declare global {
     interface Chainable {
       createUser(email: string, password?: string): Chainable<Response<any>>
       login(email: string, password?: string): Chainable<void>
-      logDay(dayData: { date: string; resort_id: any; ski_ids: any; tag_ids?: string[]; labels?: string[]; notes?: string }): Chainable<Response<any>>
+      logDay(dayData: { date: string; resort_id: any; ski_ids: any; tag_ids?: string[]; tags?: string[]; notes?: string }): Chainable<Response<any>>
     }
   }
 }
@@ -82,9 +82,9 @@ Cypress.Commands.add('login', (email, password = 'password123') => {
 
 // Add command to log a day via API
 Cypress.Commands.add('logDay', (dayData) => {
-  const { labels = [], ...rest } = dayData as { labels?: string[] };
+  const { tags = [], ...rest } = dayData as { tags?: string[] };
 
-  if (rest.tag_ids || !labels.length) {
+  if (rest.tag_ids || !tags.length) {
     cy.request({
       method: 'POST',
       url: `${Cypress.env('apiUrl')}/api/v1/days`,
@@ -95,20 +95,20 @@ Cypress.Commands.add('logDay', (dayData) => {
   }
 
   cy.request(`${Cypress.env('apiUrl')}/api/v1/tags`).then((response) => {
-    const tags: Array<{ id: string; name: string }> = response.body;
+    const existingTags: Array<{ id: string; name: string }> = response.body;
     const tagIds: string[] = [];
 
-    cy.wrap(labels).each((labelName) => {
-      const existing = tags.find((tag) => tag.name === labelName);
+    cy.wrap(tags).each((tagName) => {
+      const existing = existingTags.find((tag) => tag.name === tagName);
       if (existing) {
         tagIds.push(existing.id);
         return;
       }
 
       return cy
-        .request('POST', `${Cypress.env('apiUrl')}/api/v1/tags`, { tag: { name: labelName } })
+        .request('POST', `${Cypress.env('apiUrl')}/api/v1/tags`, { tag: { name: tagName } })
         .then((res) => {
-          tags.push(res.body);
+          existingTags.push(res.body);
           tagIds.push(res.body.id);
         });
     }).then(() => {

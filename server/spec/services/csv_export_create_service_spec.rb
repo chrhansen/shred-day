@@ -34,7 +34,7 @@ RSpec.describe CsvExportCreateService do
         { id: 'date', label: 'Date', enabled: true },
         { id: 'resort_name', label: 'Resort', enabled: true },
         { id: 'skis', label: 'Skis', enabled: true },
-        { id: 'labels', label: 'Labels', enabled: true },
+        { id: 'tags', label: 'Tags', enabled: true },
         { id: 'season', label: 'Season', enabled: true },
         { id: 'day_number', label: 'Day #', enabled: true },
         { id: 'day_id', label: 'Day ID', enabled: true },
@@ -87,9 +87,9 @@ RSpec.describe CsvExportCreateService do
 
       it 'only includes enabled columns in the specified order' do
         travel_to Date.new(2023, 10, 15) do
-          # Only date, labels, season are enabled, and in a different order
+          # Only date, tags, season are enabled, and in a different order
           custom_columns = [
-            { id: 'labels', label: 'My Labels', enabled: "true" }, # Service checks for string "true"
+            { id: 'tags', label: 'My Tags', enabled: "true" }, # Service checks for string "true"
             { id: 'skis', label: 'Skis Used', enabled: "false" },
             { id: 'season', label: 'The Season', enabled: "true" },
             { id: 'date', label: 'Ski Date', enabled: "true" }

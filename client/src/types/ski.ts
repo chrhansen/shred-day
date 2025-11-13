@@ -1,6 +1,6 @@
 import type { Resort } from "@/types/api";
 
-export interface Label {
+export interface Tag {
   id: string;
   name: string;
 }
@@ -9,7 +9,7 @@ export interface Label {
 export interface SkiDayDetail {
   id: string;
   date: string; // Keep as string for consistency with API response
-  labels: Label[];
+  tags: Tag[];
   notes?: string | null;
   // resort_id and ski_id are removed, access via nested objects
   user_id?: string;
@@ -68,7 +68,7 @@ export interface AccountDetails {
 export interface SkiDayEntry {
   id: string;
   date: string; // API returns string, we can parse it later
-  labels: Label[];
+  tags: Tag[];
   ski_names: string[];
   resort_name: string;
   has_notes: boolean;

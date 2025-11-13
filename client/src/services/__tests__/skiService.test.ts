@@ -366,7 +366,7 @@ describe('skiService', () => {
         resort: { id: 'res_1', name: 'Vail' },
         skis: [],
         photos: [],
-        labels: [{ id: 'tag_1', name: 'alpine' }],
+        tags: [{ id: 'tag_1', name: 'alpine' }],
       };
       
       (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse(expectedResponse));

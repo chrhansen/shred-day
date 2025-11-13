@@ -1,5 +1,5 @@
 class CreateTagsAndTagDays < ActiveRecord::Migration[8.0]
-  DEFAULT_LABELS = ["With Friends", "Combat Training", "Bluebird"].freeze
+  DEFAULT_TAGS = ["With Friends", "Training", "Bluebird"].freeze
 
   class MigrationUser < ApplicationRecord
     self.table_name = "users"
@@ -49,8 +49,8 @@ class CreateTagsAndTagDays < ActiveRecord::Migration[8.0]
 
     say_with_time "Seeding default tags for all users" do
       MigrationUser.find_each do |user|
-        DEFAULT_LABELS.each do |label|
-          MigrationTag.find_or_create_by!(user_id: user.id, name: label)
+        DEFAULT_TAGS.each do |tag_name|
+          MigrationTag.find_or_create_by!(user_id: user.id, name: tag_name)
         end
       end
     end

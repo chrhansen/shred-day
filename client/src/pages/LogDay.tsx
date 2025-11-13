@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
 import { ResortSelection } from "@/components/ResortSelection";
 import { SkiSelection } from "@/components/SkiSelection";
-import { LabelSelection } from "@/components/LabelSelection";
+import { TagSelection } from "@/components/TagSelection";
 import { useLogDay } from "@/hooks/useLogDay";
 import type { PhotoPreview } from "@/types/ski";
 
@@ -30,17 +30,17 @@ export default function LogDay() {
     setActiveSearchIndex,
     selectedSkis,
     setSelectedSkis,
-    selectedLabelIds,
+    selectedTagIds,
     photos,
     setPhotos,
     isUploading,
     setIsUploading,
-    deletingLabelId,
+    deletingTagId,
     
     // Data
     userSkis,
     recentResorts,
-    userLabels,
+    userTags,
     isEditMode,
     daysWithSkiing,
     
@@ -48,13 +48,13 @@ export default function LogDay() {
     isLoadingSkis,
     isLoadingRecentResorts,
     isLoadingDayToEdit,
-    isLoadingLabels,
+    isLoadingTags,
     isProcessing,
     isLoading,
     
     // Errors
     skisError,
-    labelsError,
+    tagsError,
     dayToEditError,
     
     // Actions
@@ -63,11 +63,11 @@ export default function LogDay() {
     uploadPhoto,
     setSearchResults,
     isAddingSki,
-    toggleLabelSelection,
-    createLabel,
-    removeLabel,
-    isAddingLabel,
-    isDeletingLabel,
+    toggleTagSelection,
+    createTag,
+    removeTag,
+    isAddingTag,
+    isDeletingTag,
   } = useLogDay();
 
   // Event handlers
@@ -96,16 +96,16 @@ export default function LogDay() {
     );
   };
 
-  const handleToggleLabel = (labelId: string) => {
-    toggleLabelSelection(labelId);
+  const handleToggleTag = (tagId: string) => {
+    toggleTagSelection(tagId);
   };
 
-  const handleAddLabel = (labelName: string) => {
-    createLabel(labelName);
+  const handleAddTag = (tagName: string) => {
+    createTag(tagName);
   };
 
-  const handleDeleteLabel = (labelId: string) => {
-    removeLabel(labelId);
+  const handleDeleteTag = (tagId: string) => {
+    removeTag(tagId);
   };
 
   const handlePhotosChange = (newPhotos: typeof photos) => {
@@ -150,11 +150,11 @@ export default function LogDay() {
     );
   }
 
-  if (labelsError) {
+  if (tagsError) {
     return (
       <div className="min-h-screen bg-white p-4 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load labels</p>
+          <p className="text-red-600 mb-4">Failed to load tags</p>
           <Button onClick={() => navigate('/')}>Go Back</Button>
         </div>
       </div>
@@ -242,18 +242,18 @@ export default function LogDay() {
             isAddingSki={isAddingSki}
           />
 
-          {/* Label Selection */}
-          <LabelSelection
-            labels={userLabels}
-            selectedLabelIds={selectedLabelIds}
-            isLoading={isLoadingLabels}
+          {/* Tag Selection */}
+          <TagSelection
+            tags={userTags}
+            selectedTagIds={selectedTagIds}
+            isLoading={isLoadingTags}
             isDisabled={isProcessing || isLoading}
-            deletingLabelId={deletingLabelId}
-            onToggleLabel={handleToggleLabel}
-            onAddLabel={handleAddLabel}
-            onDeleteLabel={handleDeleteLabel}
-            isAddingLabel={isAddingLabel}
-            isDeletingLabel={isDeletingLabel}
+            deletingTagId={deletingTagId}
+            onToggleTag={handleToggleTag}
+            onAddTag={handleAddTag}
+            onDeleteTag={handleDeleteTag}
+            isAddingTag={isAddingTag}
+            isDeletingTag={isDeletingTag}
           />
 
           {/* Photo Upload Section */}

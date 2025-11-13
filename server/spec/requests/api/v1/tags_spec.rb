@@ -4,7 +4,7 @@ RSpec.describe "Api::V1::Tags", type: :request do
   let!(:user) { create(:user) }
   let!(:resort) { create(:resort) }
   let!(:tag_one) { create(:tag, user: user, name: "With Friends") }
-  let!(:tag_two) { create(:tag, user: user, name: "Combat Training") }
+  let!(:tag_two) { create(:tag, user: user, name: "Training") }
 
   before do
     post api_v1_sessions_path, params: { email: user.email, password: user.password }
@@ -18,13 +18,13 @@ RSpec.describe "Api::V1::Tags", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json.size).to eq(2)
-      expect(json.first["name"]).to eq("Combat Training") # Alphabetical order
+      expect(json.first["name"]).to eq("Training") # Alphabetical order
       expect(json.last["name"]).to eq("With Friends")
     end
   end
 
   describe "POST /api/v1/tags" do
-    it "creates a new label" do
+    it "creates a new tag" do
       post api_v1_tags_path, params: { tag: { name: "Powder Day" } }
 
       expect(response).to have_http_status(:created)
@@ -43,14 +43,14 @@ RSpec.describe "Api::V1::Tags", type: :request do
   end
 
   describe "DELETE /api/v1/tags/:id" do
-    it "removes an unused label" do
+    it "removes an unused tag" do
       delete api_v1_tag_path(tag_two)
 
       expect(response).to have_http_status(:no_content)
       expect(user.tags.exists?(tag_two.id)).to be_falsey
     end
 
-    it "prevents deletion if the label is attached to a day" do
+    it "prevents deletion if the tag is attached to a day" do
       day = create(:day, user: user, resort: resort, tag_names: [tag_one.name])
 
       expect {

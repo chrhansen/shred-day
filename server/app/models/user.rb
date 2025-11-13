@@ -19,8 +19,6 @@ class User < ApplicationRecord
       .order("MAX(days.date) DESC")
     }, through: :days, source: :resort
 
-  after_commit :ensure_default_tags, on: :create
-
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
@@ -38,11 +36,4 @@ class User < ApplicationRecord
     end
   end
 
-  private
-
-  def ensure_default_tags
-    Tags::EnsureDefaultTagsService.new(self).call
-  rescue StandardError => e
-    Rails.logger.error("Failed to seed default tags for user #{id}: #{e.message}")
-  end
 end

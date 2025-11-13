@@ -13,7 +13,7 @@ module Api
       has_many :photos, serializer: Api::V1::PhotoSerializer
       has_many :skis, serializer: Api::V1::SkiSerializer
 
-      attribute :labels do
+      attribute :tags do
         object.tags.map { |tag| { id: tag.id, name: tag.name } }
       end
     end

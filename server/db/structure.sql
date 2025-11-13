@@ -262,7 +262,8 @@ CREATE TABLE public.days (
     user_id character varying NOT NULL,
     resort_id character varying NOT NULL,
     notes text,
-    day_number integer
+    day_number integer,
+    activity character varying
 );
 
 
@@ -273,32 +274,6 @@ CREATE TABLE public.days (
 CREATE TABLE public.days_skis (
     day_id character varying NOT NULL,
     ski_id character varying NOT NULL
-);
-
-
---
--- Name: tags; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.tags (
-    id character varying DEFAULT public.gen_id('tag'::text) NOT NULL,
-    user_id character varying NOT NULL,
-    name character varying NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: tag_days; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.tag_days (
-    id character varying DEFAULT public.gen_id('tgdy'::text) NOT NULL,
-    day_id character varying NOT NULL,
-    tag_id character varying NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -481,22 +456,6 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.days
     ADD CONSTRAINT days_pkey PRIMARY KEY (id);
-
-
---
--- Name: tag_days tag_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_days
-    ADD CONSTRAINT tag_days_pkey PRIMARY KEY (id);
-
-
---
--- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tags
-    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
 
 
 --
@@ -690,20 +649,6 @@ CREATE INDEX index_photos_on_user_id ON public.photos USING btree (user_id);
 
 
 --
--- Name: index_tag_days_on_day_id_and_tag_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_tag_days_on_day_id_and_tag_id ON public.tag_days USING btree (day_id, tag_id);
-
-
---
--- Name: index_tags_on_user_id_and_lower_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_tags_on_user_id_and_lower_name ON public.tags USING btree (user_id, lower(name));
-
-
---
 -- Name: index_resorts_on_normalized_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -820,30 +765,6 @@ ALTER TABLE ONLY public.active_storage_attachments
 
 
 --
--- Name: tags fk_rails_c52d1a8b77; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tags
-    ADD CONSTRAINT fk_rails_c52d1a8b77 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: tag_days fk_rails_d1e4f274a3; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_days
-    ADD CONSTRAINT fk_rails_d1e4f274a3 FOREIGN KEY (day_id) REFERENCES public.days(id) ON DELETE CASCADE;
-
-
---
--- Name: tag_days fk_rails_fa6cb8d1e0; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_days
-    ADD CONSTRAINT fk_rails_fa6cb8d1e0 FOREIGN KEY (tag_id) REFERENCES public.tags(id);
-
-
---
 -- Name: photos fk_rails_c79d76afc0; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -915,3 +836,4 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250421073910'),
 ('20250418205653'),
 ('20250418111834');
+

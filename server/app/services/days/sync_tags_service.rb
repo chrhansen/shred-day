@@ -20,7 +20,7 @@ module Days
 
       tags = @user.tags.where(id: normalized_ids).to_a
       if tags.size != normalized_ids.size
-        return Result.new(false, ["One or more labels were not found"])
+        return Result.new(false, ["One or more tags were not found"])
       end
 
       @day.tags = tags
