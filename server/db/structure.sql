@@ -257,6 +257,7 @@ CREATE TABLE public.ar_internal_metadata (
 CREATE TABLE public.days (
     id character varying DEFAULT public.gen_id('day'::text) NOT NULL,
     date date,
+    activity character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
@@ -836,4 +837,3 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250421073910'),
 ('20250418205653'),
 ('20250418111834');
-
