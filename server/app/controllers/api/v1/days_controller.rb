@@ -16,56 +16,37 @@ class Api::V1::DaysController < ApplicationController
 
   # POST /api/v1/days
   def create
-    result = nil
+    result = Days::CreateDayService.new(
+      current_user,
+      day_params.except(:photo_ids, :ski_ids, :tag_ids),
+      tag_ids: day_params[:tag_ids]
+    ).create_day
 
-    Day.transaction do
-      result = Days::CreateDayService.new(current_user, day_params.except(:photo_ids, :ski_ids, :tag_ids)).create_day
-      unless result.created?
-        render json: { errors: result.day.errors }, status: :unprocessable_entity
-        raise ActiveRecord::Rollback
-      end
-
-      tag_sync_result = Days::SyncTagsService.new(day: result.day, user: current_user, tag_ids: day_params[:tag_ids]).sync
-      unless tag_sync_result.synced?
-        render json: { errors: { tag_ids: tag_sync_result.errors } }, status: :unprocessable_entity
-        raise ActiveRecord::Rollback
-      end
-
+    if result.created?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.skis << @skis
       result.day.reload(include: [:skis, :resort, :photos, :tags])
+      render json: result.day, status: :created
+    else
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
     end
-
-    return if performed?
-
-    render json: result.day, status: :created
   end
 
   # PATCH /api/v1/days/:id
   def update
-    result = nil
+    result = Days::UpdateDayService.new(
+      @day,
+      day_params.except(:photo_ids, :tag_ids),
+      tag_ids: day_params[:tag_ids]
+    ).update_day
 
-    Day.transaction do
-      result = Days::UpdateDayService.new(@day, day_params.except(:photo_ids, :tag_ids)).update_day
-
-      unless result.updated?
-        render json: { errors: @day.errors }, status: :unprocessable_entity
-        raise ActiveRecord::Rollback
-      end
-
-      tag_sync_result = Days::SyncTagsService.new(day: result.day, user: current_user, tag_ids: day_params[:tag_ids]).sync
-      unless tag_sync_result.synced?
-        render json: { errors: { tag_ids: tag_sync_result.errors } }, status: :unprocessable_entity
-        raise ActiveRecord::Rollback
-      end
-
+    if result.updated?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.reload(include: [:skis, :resort, :photos, :tags])
+      render json: result.day, status: :ok
+    else
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
     end
-
-    return if performed?
-
-    render json: result.day, status: :ok
   end
 
   # DELETE /api/v1/days/:id
