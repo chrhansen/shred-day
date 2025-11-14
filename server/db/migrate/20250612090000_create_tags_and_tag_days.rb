@@ -7,7 +7,7 @@ class CreateTagsAndTagDays < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :tags, [:user_id, :name], unique: true, name: "index_tags_on_user_id_and_name"
+    add_index :tags, [:user_id, :name], unique: true
 
     create_table :tag_days, id: :string, default: -> { "gen_id('tgdy')" } do |t|
       t.references :day, null: false, type: :string, foreign_key: { on_delete: :cascade }
