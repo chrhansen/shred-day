@@ -5,7 +5,7 @@ class Tag < ApplicationRecord
 
   before_validation :normalize_name
 
-  validates :name, presence: true, length: { maximum: 30 }
+  validates :name, presence: true, length: { maximum: 40 }
   validates :name, uniqueness: { scope: :user_id, case_sensitive: false }
 
   private
