@@ -101,7 +101,7 @@ RSpec.describe CsvExportCreateService do
           expect(result.created?).to be true
           csv_data = CSV.parse(result.csv_string)
           expect(csv_data.length).to eq(2) # Header + day1
-          expect(csv_data[0]).to eq(["My Labels", "The Season", "Ski Date"])
+          expect(csv_data[0]).to eq(["My Tags", "The Season", "Ski Date"])
           expect(csv_data[1]).to eq([day1.tags.map(&:name).join(', '), "0", day1.date.iso8601])
         end
       end
