@@ -263,8 +263,7 @@ CREATE TABLE public.days (
     user_id character varying NOT NULL,
     resort_id character varying NOT NULL,
     notes text,
-    day_number integer,
-    activity character varying
+    day_number integer
 );
 
 
@@ -939,4 +938,3 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250421073910'),
 ('20250418205653'),
 ('20250418111834');
-
