@@ -41,7 +41,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
   - Rails:
     - service objects for business logic, see server/app/services/
       - Service objects should expose clearly named methods (e.g., `create_default_tags`) instead of a generic `.call` to keep intent obvious at call sites.
-      - Service objects must return a simple `Result` object (see `ExifExtractService`) exposing an `extracted?`- or `created?`-style predicate (again avoid the generic `success?`) incl. any relevant data (e.g., `result.day`, `result.tags`) so callers can reason about outcomes consistently.
+      - Service objects must return a simple `Result` Ruby-object, not just a struct, (see `Result`-class example in `ExifExtractService`) exposing an `extracted?`- or `created?`-style predicate (avoid a generic `success?`) incl. any relevant data (e.g., `result.day`, `result.tags`) so callers can reason about outcomes consistently.
     - Models:
       - Avoid model callbacks whenever possible, especially if the callback relates to business logic. Models should just deal with writing and reading data from the database. Instead of callbacks use service objects for business logic.
     - serializers for consistent JSON
