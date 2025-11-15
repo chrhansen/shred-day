@@ -68,7 +68,7 @@ export interface AccountDetails {
 export interface SkiDayEntry {
   id: string;
   date: string; // API returns string, we can parse it later
-  tags: Tag[];
+  tag_names: string[];
   ski_names: string[];
   resort_name: string;
   has_notes: boolean;

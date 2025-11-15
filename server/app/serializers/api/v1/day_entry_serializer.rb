@@ -18,8 +18,8 @@ module Api
         object.resort&.name
       end
 
-      attribute :tags do
-        object.tags.map { |tag| { id: tag.id, name: tag.name } }
+      attribute :tag_names do
+        object.tags.map(&:name)
       end
 
       # Use has_many with the dedicated PhotoSerializer

@@ -32,10 +32,10 @@ export const DayCard: React.FC<DayCardProps> = ({ day }) => {
               {day.ski_names.join(', ')}
             </span>
           </div>
-          {day.tags && day.tags.length > 0 && (
+          {day.tag_names && day.tag_names.length > 0 && (
             <div className="flex items-center text-sm text-slate-500">
               <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-              <span>{day.tags.map((tag) => tag.name).join(', ')}</span>
+              <span>{day.tag_names.join(', ')}</span>
             </div>
           )}
         </div>
