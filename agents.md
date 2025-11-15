@@ -58,3 +58,4 @@ Use this document as the single source of truth for onboarded coding agents. It 
 ## Engineering Notes
 - Seed default user tags by invoking `EnsureDefaultTagsService` from the controller (avoid model callbacks for this logic).
 - Service objects should expose clearly named methods (e.g., `create_default_tags`) instead of a generic `.call` to keep intent obvious at call sites.
+- Service objects must return a simple `Result` object (see `ExifExtractService`) exposing a `success?`-style predicate plus any relevant data (e.g., `result.day`, `result.tags`) so callers can reason about outcomes consistently.
