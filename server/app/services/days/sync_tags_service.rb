@@ -1,18 +1,5 @@
 module Days
   class SyncTagsService
-    class Result
-      attr_reader :errors
-
-      def initialize(synced:, errors:)
-        @synced = synced
-        @errors = errors
-      end
-
-      def synced?
-        @synced
-      end
-    end
-
     def initialize(day:, user:, tag_ids:)
       @day = day
       @user = user
@@ -38,6 +25,19 @@ module Days
       Result.new(synced: true, errors: nil)
     rescue ActiveRecord::RecordInvalid => e
       Result.new(synced: false, errors: [e.message])
+    end
+
+    class Result
+      attr_reader :errors
+
+      def initialize(synced:, errors:)
+        @synced = synced
+        @errors = errors
+      end
+
+      def synced?
+        @synced
+      end
     end
   end
 end
