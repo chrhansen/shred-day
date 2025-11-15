@@ -1,18 +1,4 @@
 class EnsureDefaultTagsService
-  class Result
-    attr_reader :tags, :errors
-
-    def initialize(created:, tags:, errors:)
-      @created = created
-      @tags = tags
-      @errors = errors
-    end
-
-    def created?
-      @created
-    end
-  end
-
   DEFAULT_TAGS = ["With Friends", "Training", "Bluebird"].freeze
 
   def initialize(user, default_tags: DEFAULT_TAGS)
@@ -31,5 +17,19 @@ class EnsureDefaultTagsService
   rescue StandardError => e
     Rails.logger.error("Failed to seed default tags for user #{@user&.id}: #{e.message}")
     Result.new(created: false, tags: [], errors: [e.message])
+  end
+
+  class Result
+    attr_reader :tags, :errors
+
+    def initialize(created:, tags:, errors:)
+      @created = created
+      @tags = tags
+      @errors = errors
+    end
+
+    def created?
+      @created
+    end
   end
 end
