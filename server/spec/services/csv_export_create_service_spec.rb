@@ -13,7 +13,7 @@ RSpec.describe CsvExportCreateService do
   let!(:day1) do
     travel_to Date.new(2023, 10, 15) do
       range = offset_converter.date_range(0) # Current season: Sep 1, 2023 - Aug 31, 2024
-      d = create(:day, user: user, date: range[0] + 10.days, resort: resort1, skis: [ski1], tag_names: ["Cruising"])
+      d = create(:day, :with_tags, user: user, date: range[0] + 10.days, resort: resort1, skis: [ski1], tag_names: ["Cruising"])
       create_list(:photo, 2, day: d, user: user) # Add 2 photos to day1
       DayNumberUpdaterService.new(user: user, affected_dates: [d.date]).update! # Ensure day_number is set
       d.reload # Reload to get updated day_number
@@ -22,7 +22,7 @@ RSpec.describe CsvExportCreateService do
   let!(:day2) do
     travel_to Date.new(2023, 10, 15) do
       range = offset_converter.date_range(-1) # Last season: Sep 1, 2022 - Aug 31, 2023
-      d = create(:day, user: user, date: range[0] + 20.days, resort: resort1, skis: [ski1, ski2], tag_names: ["Exploring"])
+      d = create(:day, :with_tags, user: user, date: range[0] + 20.days, resort: resort1, skis: [ski1, ski2], tag_names: ["Exploring"])
       DayNumberUpdaterService.new(user: user, affected_dates: [d.date]).update!
       d.reload
     end

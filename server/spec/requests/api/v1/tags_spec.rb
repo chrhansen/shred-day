@@ -51,7 +51,7 @@ RSpec.describe "Api::V1::Tags", type: :request do
     end
 
     it "prevents deletion if the tag is attached to a day" do
-      day = create(:day, user: user, resort: resort, tag_names: [tag_one.name])
+      day = create(:day, :with_tags, user: user, resort: resort, tag_names: [tag_one.name])
 
       expect {
         delete api_v1_tag_path(tag_one)

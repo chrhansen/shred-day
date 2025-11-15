@@ -84,8 +84,8 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
           day1_date = current_season_range[0] + 5.days
           day2_date = current_season_range[0] + 10.days
 
-          create(:day, user: user, date: day1_date, resort: resort1, skis: [ski1], tag_names: ["Resort Skiing"], notes: "Fun day!")
-          create(:day, user: user, date: day2_date, resort: resort1, skis: [ski1, ski2], tag_names: ["Powder Day"])
+          create(:day, :with_tags, user: user, date: day1_date, resort: resort1, skis: [ski1], tag_names: ["Resort Skiing"], notes: "Fun day!")
+          create(:day, :with_tags, user: user, date: day2_date, resort: resort1, skis: [ski1, ski2], tag_names: ["Powder Day"])
           DayNumberUpdaterService.new(user: user, affected_dates: [day1_date, day2_date]).update!
 
 

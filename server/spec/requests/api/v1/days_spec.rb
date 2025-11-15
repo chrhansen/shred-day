@@ -9,7 +9,7 @@ RSpec.describe "Api::V1::Days", type: :request do
   let!(:ski2) { create(:ski, user: user, name: "Test Ski 2") } # For update tests and multiple skis
   let!(:friends_tag) { create(:tag, user: user, name: "Friends") }
   let!(:training_tag) { create(:tag, user: user, name: "Training") }
-  let!(:day) { create(:day, user: user, resort: resort, skis: [ski1], notes: "This is just a test", tag_names: ["Friends"], date: Date.yesterday) } # Create a day for show/update
+  let!(:day) { create(:day, :with_tags, user: user, resort: resort, skis: [ski1], notes: "This is just a test", tag_names: ["Friends"], date: Date.yesterday) } # Create a day for show/update
   let!(:other_day) { create(:day, user: other_user, resort: resort, skis: [ski1]) } # Day belonging to another user
   let!(:resort_b) { create(:resort) } # For variety
   let(:target_date) { Date.today } # A specific date for testing limits
@@ -117,7 +117,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         before do
           # Create 3 existing days for the target date
           3.times do |i|
-            create(:day, user: user, date: target_date, resort: resort, skis: [ski1], tag_names: ["Label #{i}"])
+            create(:day, :with_tags, user: user, date: target_date, resort: resort, skis: [ski1], tag_names: ["Label #{i}"])
           end
         end
 
@@ -426,7 +426,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         before do
           # Create 3 existing days for date_a
           3.times do |i|
-            create(:day, user: user, date: date_a, resort: resort, skis: [ski1], tag_names: ["Label A#{i}"])
+            create(:day, :with_tags, user: user, date: date_a, resort: resort, skis: [ski1], tag_names: ["Label A#{i}"])
           end
         end
 
@@ -450,9 +450,9 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       context "when updating an existing day on a date with 3 entries (no date change)" do
         let!(:date_full) { Date.today }
-        let!(:day1) { create(:day, user: user, date: date_full, resort: resort, skis: [ski1], tag_names: ["Act 1"]) }
-        let!(:day2) { create(:day, user: user, date: date_full, resort: resort, skis: [ski2], tag_names: ["Act 2"]) }
-        let!(:day3) { create(:day, user: user, date: date_full, resort: resort_b, skis: [ski1], tag_names: ["Act 3"]) }
+        let!(:day1) { create(:day, :with_tags, user: user, date: date_full, resort: resort, skis: [ski1], tag_names: ["Act 1"]) }
+        let!(:day2) { create(:day, :with_tags, user: user, date: date_full, resort: resort, skis: [ski2], tag_names: ["Act 2"]) }
+        let!(:day3) { create(:day, :with_tags, user: user, date: date_full, resort: resort_b, skis: [ski1], tag_names: ["Act 3"]) }
         let!(:updated_tag) { create(:tag, user: user, name: "Updated Act 2") }
 
         let(:update_params_no_date_change) do
@@ -590,9 +590,9 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       context "with season filtering" do
         let!(:user_with_custom_season) { create(:user, season_start_day: "10-01") } # October 1st season start
-        let!(:current_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2024, 11, 15), resort: resort, skis: [ski1], tag_names: ["Current Season"]) }
-        let!(:previous_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2023, 12, 15), resort: resort, skis: [ski1], tag_names: ["Previous Season"]) }
-        let!(:older_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], tag_names: ["Older Season"]) }
+        let!(:current_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2024, 11, 15), resort: resort, skis: [ski1], tag_names: ["Current Season"]) }
+        let!(:previous_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2023, 12, 15), resort: resort, skis: [ski1], tag_names: ["Previous Season"]) }
+        let!(:older_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], tag_names: ["Older Season"]) }
 
         before do
           post api_v1_sessions_path, params: { email: user_with_custom_season.email, password: user_with_custom_season.password }
