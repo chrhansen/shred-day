@@ -1,7 +1,15 @@
 class EnsureDefaultTagsService
-  Result = Struct.new(:created, :tags, :errors, keyword_init: true) do
+  class Result
+    attr_reader :tags, :errors
+
+    def initialize(created:, tags:, errors:)
+      @created = created
+      @tags = tags
+      @errors = errors
+    end
+
     def created?
-      created
+      @created
     end
   end
 
