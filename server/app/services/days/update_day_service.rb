@@ -1,19 +1,30 @@
 class Days::UpdateDayService
-  def initialize(day, params)
+  def initialize(day, params, tag_ids: nil)
     @day = day
     @params = params
+    @tag_ids = tag_ids
   end
 
   def update_day
     previous_date = @day.date
-    @day.update(@params)
+    updated = false
 
-    if @day.save
+    Day.transaction do
+      unless @day.update(@params)
+        raise ActiveRecord::Rollback
+      end
+
+      tag_result = Days::SyncTagsService.new(day: @day, user: @day.user, tag_ids: @tag_ids).sync
+      unless tag_result.synced?
+        Array(tag_result.errors).each { |error| @day.errors.add(:tag_ids, error) }
+        raise ActiveRecord::Rollback
+      end
+
       DayNumberUpdaterService.new(user: @day.user, affected_dates: [previous_date, @day.date]).update!
-      Result.new(@day, true, nil)
-    else
-      Result.new(@day, false, @day.errors)
+      updated = true
     end
+
+    Result.new(@day, updated, updated ? nil : @day.errors)
   end
 
   private

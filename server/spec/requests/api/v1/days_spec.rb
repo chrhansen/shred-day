@@ -7,7 +7,9 @@ RSpec.describe "Api::V1::Days", type: :request do
   let!(:resort) { create(:resort) }
   let!(:ski1) { create(:ski, user: user, name: "Test Ski 1") }
   let!(:ski2) { create(:ski, user: user, name: "Test Ski 2") } # For update tests and multiple skis
-  let!(:day) { create(:day, user: user, resort: resort, skis: [ski1], notes: "This is just a test", activity: "Friends", date: Date.yesterday) } # Create a day for show/update
+  let!(:friends_tag) { create(:tag, user: user, name: "Friends") }
+  let!(:training_tag) { create(:tag, user: user, name: "Training") }
+  let!(:day) { create(:day, :with_tags, user: user, resort: resort, skis: [ski1], notes: "This is just a test", tag_names: ["Friends"], date: Date.yesterday) } # Create a day for show/update
   let!(:other_day) { create(:day, user: other_user, resort: resort, skis: [ski1]) } # Day belonging to another user
   let!(:resort_b) { create(:resort) } # For variety
   let(:target_date) { Date.today } # A specific date for testing limits
@@ -28,7 +30,7 @@ RSpec.describe "Api::V1::Days", type: :request do
               date: Date.today.to_s,
               resort_id: resort.id,
               ski_ids: [ski1.id],
-              activity: "Piste skiing",
+              tag_ids: [friends_tag.id],
               notes: "This is a test note"
             }
           }
@@ -54,7 +56,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           expect(json_response['created_at'].to_datetime).to be_within(1.second).of(Day.last.created_at.to_datetime)
           expect(json_response['updated_at'].to_datetime).to be_within(1.second).of(Day.last.updated_at.to_datetime)
           expect(json_response['day_number']).to eq(Day.last.day_number)
-          expect(json_response['activity']).to eq("Piste skiing")
+          expect(json_response['tags']).to eq([{ "id" => friends_tag.id, "name" => "Friends" }])
           expect(json_response['resort']['id']).to eq(resort.id)
           expect(json_response['skis']).to be_an(Array)
           expect(json_response['skis'].length).to eq(1)
@@ -71,7 +73,7 @@ RSpec.describe "Api::V1::Days", type: :request do
               date: Date.today.to_s,
               resort_id: resort.id,
               ski_ids: [ski1.id, ski2.id],
-              activity: "All mountain"
+              tag_ids: [training_tag.id]
             }
           }
         end
@@ -115,7 +117,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         before do
           # Create 3 existing days for the target date
           3.times do |i|
-            create(:day, user: user, date: target_date, resort: resort, skis: [ski1], activity: "Activity #{i}")
+            create(:day, :with_tags, user: user, date: target_date, resort: resort, skis: [ski1], tag_names: ["Label #{i}"])
           end
         end
 
@@ -125,7 +127,7 @@ RSpec.describe "Api::V1::Days", type: :request do
               date: target_date.to_s,
               resort_id: resort_b.id, # Different resort, same date
               ski_ids: [ski1.id],
-              activity: "Fourth Entry"
+              tag_ids: [friends_tag.id]
             }
           }
         end
@@ -157,7 +159,7 @@ RSpec.describe "Api::V1::Days", type: :request do
               date: Date.today.to_s,
               resort_id: resort.id,
               ski_ids: [ski1.id],
-              activity: 'Photo Day'
+              tag_ids: [training_tag.id]
             }
           }
         end
@@ -221,7 +223,8 @@ RSpec.describe "Api::V1::Days", type: :request do
           day: {
             date: Date.today.to_s,
             resort_id: resort.id,
-            ski_ids: [ski1.id]
+            ski_ids: [ski1.id],
+            tag_ids: [friends_tag.id]
           }
         }
       end
@@ -256,7 +259,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Check standard fields
           expect(json_response['id']).to eq(day.id)
           expect(json_response['date']).to eq(day.date.to_s)
-          expect(json_response['activity']).to eq("Friends")
+          expect(json_response['tags']).to eq([{ "id" => friends_tag.id, "name" => "Friends" }])
           expect(json_response['notes']).to eq("This is just a test")
           # Check for nested objects
           expect(json_response).to have_key('resort')
@@ -314,7 +317,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         let(:valid_update_params) do
           {
             day: {
-              activity: "Training",
+              tag_ids: [training_tag.id],
               ski_ids: [ski2.id],
               notes: "This is an updated test note"
             }
@@ -324,7 +327,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         it "updates the day log" do
           patch api_v1_day_path(day), params: valid_update_params
           day.reload
-          expect(day.activity).to eq("Training")
+          expect(day.tags.map(&:name)).to eq(["Training"])
           expect(day.skis.count).to eq(1)
           expect(day.skis.first).to eq(ski2)
         end
@@ -336,7 +339,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           # Check standard fields
           expect(json_response['id']).to eq(day.id)
-          expect(json_response['activity']).to eq("Training")
+          expect(json_response['tags']).to eq([{ "id" => training_tag.id, "name" => "Training" }])
           expect(json_response['notes']).to eq("This is an updated test note")
 
           # Check for nested objects
@@ -403,14 +406,14 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       context "when the day does not exist" do
         it "returns not found status" do
-          patch api_v1_day_path("non_existent_id"), params: { day: { activity: "Test" } }
+          patch api_v1_day_path("non_existent_id"), params: { day: { tag_ids: [friends_tag.id] } }
           expect(response).to have_http_status(:not_found)
         end
       end
 
       context "when the day belongs to another user" do
         it "returns not found status" do
-          patch api_v1_day_path(other_day), params: { day: { activity: "Test" } }
+          patch api_v1_day_path(other_day), params: { day: { tag_ids: [friends_tag.id] } }
           expect(response).to have_http_status(:not_found)
         end
       end
@@ -423,7 +426,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         before do
           # Create 3 existing days for date_a
           3.times do |i|
-            create(:day, user: user, date: date_a, resort: resort, skis: [ski1], activity: "Activity A#{i}")
+            create(:day, :with_tags, user: user, date: date_a, resort: resort, skis: [ski1], tag_names: ["Label A#{i}"])
           end
         end
 
@@ -447,18 +450,19 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       context "when updating an existing day on a date with 3 entries (no date change)" do
         let!(:date_full) { Date.today }
-        let!(:day1) { create(:day, user: user, date: date_full, resort: resort, skis: [ski1], activity: "Act 1") }
-        let!(:day2) { create(:day, user: user, date: date_full, resort: resort, skis: [ski2], activity: "Act 2") }
-        let!(:day3) { create(:day, user: user, date: date_full, resort: resort_b, skis: [ski1], activity: "Act 3") }
+        let!(:day1) { create(:day, :with_tags, user: user, date: date_full, resort: resort, skis: [ski1], tag_names: ["Act 1"]) }
+        let!(:day2) { create(:day, :with_tags, user: user, date: date_full, resort: resort, skis: [ski2], tag_names: ["Act 2"]) }
+        let!(:day3) { create(:day, :with_tags, user: user, date: date_full, resort: resort_b, skis: [ski1], tag_names: ["Act 3"]) }
+        let!(:updated_tag) { create(:tag, user: user, name: "Updated Act 2") }
 
         let(:update_params_no_date_change) do
-          { day: { activity: "Updated Act 2" } } # Only change activity
+          { day: { tag_ids: [updated_tag.id] } } # Only change tags
         end
 
         it "allows the update" do
           patch api_v1_day_path(day2), params: update_params_no_date_change
           expect(response).to have_http_status(:ok)
-          expect(day2.reload.activity).to eq("Updated Act 2")
+          expect(day2.reload.tags.map(&:name)).to eq(["Updated Act 2"])
         end
       end
 
@@ -510,7 +514,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         it "does not change photos if photo_ids parameter is not provided" do
           # Expect no photos to be destroyed
           expect {
-            patch api_v1_day_path(day_to_update), params: { day: { activity: "New Activity" } } # No photo_ids key
+            patch api_v1_day_path(day_to_update), params: { day: { notes: "New notes" } } # No photo_ids key
           }.to_not change(Photo, :count)
 
           expect(response).to have_http_status(:ok)
@@ -525,7 +529,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
     context "when not authenticated" do
       it "returns unauthorized status" do
-        patch api_v1_day_path(day), params: { day: { activity: "Test" } }
+        patch api_v1_day_path(day), params: { day: { tag_ids: [friends_tag.id] } }
         expect(response).to have_http_status(:unauthorized)
       end
     end
@@ -554,7 +558,8 @@ RSpec.describe "Api::V1::Days", type: :request do
 
         expect(day_entry['id']).to eq(day.id)
         expect(day_entry).to have_key('date')
-        expect(day_entry).to have_key('activity')
+        expect(day_entry).to have_key('tag_names')
+        expect(day_entry['tag_names']).to eq(["Friends"])
         expect(day_entry).to have_key('created_at')
         expect(day_entry).to have_key('updated_at')
         expect(day_entry).to have_key('day_number')
@@ -585,9 +590,9 @@ RSpec.describe "Api::V1::Days", type: :request do
 
       context "with season filtering" do
         let!(:user_with_custom_season) { create(:user, season_start_day: "10-01") } # October 1st season start
-        let!(:current_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2024, 11, 15), resort: resort, skis: [ski1], activity: "Current Season") }
-        let!(:previous_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2023, 12, 15), resort: resort, skis: [ski1], activity: "Previous Season") }
-        let!(:older_season_day) { create(:day, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], activity: "Older Season") }
+        let!(:current_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2024, 11, 15), resort: resort, skis: [ski1], tag_names: ["Current Season"]) }
+        let!(:previous_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2023, 12, 15), resort: resort, skis: [ski1], tag_names: ["Previous Season"]) }
+        let!(:older_season_day) { create(:day, :with_tags, user: user_with_custom_season, date: Date.new(2022, 11, 10), resort: resort, skis: [ski1], tag_names: ["Older Season"]) }
 
         before do
           post api_v1_sessions_path, params: { email: user_with_custom_season.email, password: user_with_custom_season.password }
@@ -603,7 +608,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Current Season")
+          expect(json_response[0]['tag_names']).to eq(["Current Season"])
         end
 
         it "returns current season days when season=0" do
@@ -614,7 +619,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Current Season")
+          expect(json_response[0]['tag_names']).to eq(["Current Season"])
         end
 
         it "returns previous season days when season=-1" do
@@ -625,7 +630,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Previous Season")
+          expect(json_response[0]['tag_names']).to eq(["Previous Season"])
         end
 
         it "returns older season days when season=-2" do
@@ -636,7 +641,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Older Season")
+          expect(json_response[0]['tag_names']).to eq(["Older Season"])
         end
 
         it "returns empty array for seasons with no days" do
@@ -657,7 +662,7 @@ RSpec.describe "Api::V1::Days", type: :request do
 
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Current Season")
+          expect(json_response[0]['tag_names']).to eq(["Current Season"])
         end
 
         it "handles edge case when current date is day before season start" do
@@ -669,7 +674,7 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Current season should be 2023-2024 with the mocked date, so "previous_season_day" from Dec 2023 should now appear
           json_response = JSON.parse(response.body)
           expect(json_response.length).to eq(1)
-          expect(json_response[0]['activity']).to eq("Previous Season")
+          expect(json_response[0]['tag_names']).to eq(["Previous Season"])
         end
       end
     end

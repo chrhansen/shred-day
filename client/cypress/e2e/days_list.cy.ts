@@ -13,8 +13,8 @@ describe('Ski Days List Page', () => {
   const DAYS_LIST_URL = '/';
   const SKI_A_NAME = "Test Ski A";
   const SKI_B_NAME = "Test Ski B";
-  const DAY1_ACTIVITY = 'Friends';
-  const DAY2_ACTIVITY = 'Training';
+  const DAY1_TAG = 'With Friends';
+  const DAY2_TAG = 'Training';
 
   // Calculate dates dynamically to always fall in current season (after Sept 1)
   const now = new Date();
@@ -45,6 +45,17 @@ describe('Ski Days List Page', () => {
       body: { email: userEmail, password: PASSWORD }
     }).its('status').should('eq', 200); // Ensure login succeeded
 
+    // 1b. Fetch default tags for later use
+    cy.request(`${Cypress.env('apiUrl')}/api/v1/tags`).then((response) => {
+      const tags = response.body;
+      const friendsTag = tags.find((tag: { name: string }) => tag.name === 'With Friends');
+      const trainingTag = tags.find((tag: { name: string }) => tag.name === 'Training');
+      expect(friendsTag, 'Expected default tag "With Friends"').to.exist;
+      expect(trainingTag, 'Expected default tag "Training"').to.exist;
+      cy.wrap(friendsTag.id).as('withFriendsTagId');
+      cy.wrap(trainingTag.id).as('trainingTagId');
+    });
+
     // --- Set up data sequentially AFTER login ---
 
     // 1. Find Resort
@@ -67,12 +78,16 @@ describe('Ski Days List Page', () => {
     // 4. Create Days
     cy.get('@resortId').then(resortId => {
       cy.get('@skiAId').then(skiAId => {
-        cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY1_DATE, resort_id: resortId, ski_ids: [skiAId], activity: DAY1_ACTIVITY } })
-          .its('body.id').as('day1Id');
+        cy.get('@withFriendsTagId').then(labelId => {
+          cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY1_DATE, resort_id: resortId, ski_ids: [skiAId], tag_ids: [labelId] } })
+            .its('body.id').as('day1Id');
+        });
       });
       cy.get('@skiBId').then(skiBId => {
-        cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY2_DATE, resort_id: resortId, ski_ids: [skiBId], activity: DAY2_ACTIVITY } })
-          .its('body.id').as('day2Id');
+        cy.get('@trainingTagId').then(labelId => {
+          cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, { day: { date: DAY2_DATE, resort_id: resortId, ski_ids: [skiBId], tag_ids: [labelId] } })
+            .its('body.id').as('day2Id');
+        });
       });
     });
   });
@@ -97,7 +112,7 @@ describe('Ski Days List Page', () => {
         .should('contain.text', expectedDay1DisplayDate)
         .and('contain.text', resortName) // Use aliased name
         .and('contain.text', SKI_A_NAME)
-        .and('contain.text', DAY1_ACTIVITY);
+        .and('contain.text', DAY1_TAG);
 
       // Check Day 2 content
       const day2TestDate = new Date(DAY2_DATE.replace(/-/g, '/'));
@@ -109,7 +124,7 @@ describe('Ski Days List Page', () => {
         .should('contain.text', expectedDay2DisplayDate)
         .and('contain.text', resortName) // Use aliased name
         .and('contain.text', SKI_B_NAME)
-        .and('contain.text', DAY2_ACTIVITY);
+        .and('contain.text', DAY2_TAG);
     });
   });
 
@@ -231,13 +246,13 @@ describe('Season Dropdown Functionality', () => {
 
   // Create dates that clearly fall within each season (Nov 20 is always after Oct 15)
   const DAY_CURRENT_SEASON_DATE = `${currentSeasonYear}-11-20`;
-  const DAY_CURRENT_SEASON_ACTIVITY = `Day in Current Season (${currentSeasonYear}/${(currentSeasonYear + 1).toString().slice(-2)})`;
+  const DAY_CURRENT_SEASON_TAG = `Day in Current Season (${currentSeasonYear}/${(currentSeasonYear + 1).toString().slice(-2)})`;
 
   const DAY_PREVIOUS_SEASON_DATE = `${lastSeasonYear}-12-20`;
-  const DAY_PREVIOUS_SEASON_ACTIVITY = `Day in Previous Season (${lastSeasonYear}/${(lastSeasonYear + 1).toString().slice(-2)})`;
+  const DAY_PREVIOUS_SEASON_TAG = `Day in Previous Season (${lastSeasonYear}/${(lastSeasonYear + 1).toString().slice(-2)})`;
 
   const DAY_TWO_SEASONS_AGO_DATE = `${twoSeasonsAgoYear}-11-20`;
-  const DAY_TWO_SEASONS_AGO_ACTIVITY = `Day in Two Seasons Ago (${twoSeasonsAgoYear}/${(twoSeasonsAgoYear + 1).toString().slice(-2)})`;
+  const DAY_TWO_SEASONS_AGO_TAG = `Day in Two Seasons Ago (${twoSeasonsAgoYear}/${(twoSeasonsAgoYear + 1).toString().slice(-2)})`;
 
   let testUserEmail: string;
   let resortId: string;
@@ -289,9 +304,9 @@ describe('Season Dropdown Functionality', () => {
 
     // Create days in different seasons AFTER all IDs are resolved
     cy.then(() => {
-      cy.logDay({ date: DAY_CURRENT_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_CURRENT_SEASON_ACTIVITY });
-      cy.logDay({ date: DAY_PREVIOUS_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_PREVIOUS_SEASON_ACTIVITY });
-      cy.logDay({ date: DAY_TWO_SEASONS_AGO_DATE, resort_id: resortId, ski_ids: [skiId], activity: DAY_TWO_SEASONS_AGO_ACTIVITY });
+      cy.logDay({ date: DAY_CURRENT_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], tags: [DAY_CURRENT_SEASON_TAG] });
+      cy.logDay({ date: DAY_PREVIOUS_SEASON_DATE, resort_id: resortId, ski_ids: [skiId], tags: [DAY_PREVIOUS_SEASON_TAG] });
+      cy.logDay({ date: DAY_TWO_SEASONS_AGO_DATE, resort_id: resortId, ski_ids: [skiId], tags: [DAY_TWO_SEASONS_AGO_TAG] });
     });
   });
 
@@ -304,26 +319,26 @@ describe('Season Dropdown Functionality', () => {
 
     // Wait for the days to load by checking for the presence of the first ski day item
     // This assumes ski day items have a data-testid like "ski-day-item-xxxx"
-    // and DAY_PREVIOUS_SEASON_ACTIVITY is unique enough to identify the correct day
-    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
+    // and DAY_PREVIOUS_SEASON_TAG is unique enough to identify the correct day
+    cy.contains(DAY_PREVIOUS_SEASON_TAG).should('be.visible');
 
     // Now that content is loaded, check navbar and other content
     cy.get('[data-testid="navbar"]').contains('Last Season').should('be.visible');
-    cy.get('body').should('not.contain', DAY_CURRENT_SEASON_ACTIVITY);
-    cy.get('body').should('not.contain', DAY_TWO_SEASONS_AGO_ACTIVITY);
+    cy.get('body').should('not.contain', DAY_CURRENT_SEASON_TAG);
+    cy.get('body').should('not.contain', DAY_TWO_SEASONS_AGO_TAG);
   });
 
   it('should change season, update URL, and filter days when a new season is selected from dropdown', function() {
-    // cy.clock(new Date(2024, 11, 1).getTime()); // Clock might not be needed if we rely on activity name
+    // cy.clock(new Date(2024, 11, 1).getTime()); // Clock might not be needed if we rely on label name
     cy.visit(DAYS_LIST_URL);
     cy.wait('@getAccountDetails');
     cy.wait('@getDaysApi').its('request.url').should('not.include', 'season='); // Default to current (season 0)
 
     // Ensure initial content (current season day) is loaded before interacting
-    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+    cy.contains(DAY_CURRENT_SEASON_TAG).should('be.visible');
 
     cy.get('[data-testid="navbar"]').contains('This Season').should('be.visible');
-    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
+    cy.contains(DAY_PREVIOUS_SEASON_TAG).should('not.exist');
 
     // Open dropdown and select previous season
     cy.get('[data-testid="navbar"]').find('button').contains('This Season').click();
@@ -333,9 +348,9 @@ describe('Season Dropdown Functionality', () => {
     cy.url().should('include', '?season=-1');
 
     // Ensure new content is loaded before checking navbar
-    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('be.visible');
+    cy.contains(DAY_PREVIOUS_SEASON_TAG).should('be.visible');
     cy.get('[data-testid="navbar"]').contains('Last Season').should('be.visible');
-    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('not.exist');
+    cy.contains(DAY_CURRENT_SEASON_TAG).should('not.exist');
   });
 
   it('should display the correct season options in the dropdown', function() {
@@ -345,7 +360,7 @@ describe('Season Dropdown Functionality', () => {
     cy.wait('@getDaysApi'); // Initial load for current season
 
     // Ensure initial content (current season day) is loaded before interacting
-    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+    cy.contains(DAY_CURRENT_SEASON_TAG).should('be.visible');
 
     // Get the button that displays the current season and click it to open the dropdown
     cy.get('[data-testid="navbar"]').find('button').contains(getSeasonDisplayName(0)).click();
@@ -365,11 +380,11 @@ describe('Season Dropdown Functionality', () => {
     cy.wait('@getDaysApi').its('request.url').should('not.include', 'season=');
 
     // Ensure initial content (current season day) is loaded before checking navbar
-    cy.contains(DAY_CURRENT_SEASON_ACTIVITY).should('be.visible');
+    cy.contains(DAY_CURRENT_SEASON_TAG).should('be.visible');
 
     cy.get('[data-testid="navbar"]').contains('This Season').should('be.visible');
-    cy.contains(DAY_PREVIOUS_SEASON_ACTIVITY).should('not.exist');
-    cy.contains(DAY_TWO_SEASONS_AGO_ACTIVITY).should('not.exist');
+    cy.contains(DAY_PREVIOUS_SEASON_TAG).should('not.exist');
+    cy.contains(DAY_TWO_SEASONS_AGO_TAG).should('not.exist');
   });
 
 });

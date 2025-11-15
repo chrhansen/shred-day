@@ -13,7 +13,7 @@ RSpec.describe CsvExportCreateService do
   let!(:day1) do
     travel_to Date.new(2023, 10, 15) do
       range = offset_converter.date_range(0) # Current season: Sep 1, 2023 - Aug 31, 2024
-      d = create(:day, user: user, date: range[0] + 10.days, resort: resort1, skis: [ski1], activity: "Cruising")
+      d = create(:day, :with_tags, user: user, date: range[0] + 10.days, resort: resort1, skis: [ski1], tag_names: ["Cruising"])
       create_list(:photo, 2, day: d, user: user) # Add 2 photos to day1
       DayNumberUpdaterService.new(user: user, affected_dates: [d.date]).update! # Ensure day_number is set
       d.reload # Reload to get updated day_number
@@ -22,7 +22,7 @@ RSpec.describe CsvExportCreateService do
   let!(:day2) do
     travel_to Date.new(2023, 10, 15) do
       range = offset_converter.date_range(-1) # Last season: Sep 1, 2022 - Aug 31, 2023
-      d = create(:day, user: user, date: range[0] + 20.days, resort: resort1, skis: [ski1, ski2], activity: "Exploring")
+      d = create(:day, :with_tags, user: user, date: range[0] + 20.days, resort: resort1, skis: [ski1, ski2], tag_names: ["Exploring"])
       DayNumberUpdaterService.new(user: user, affected_dates: [d.date]).update!
       d.reload
     end
@@ -34,7 +34,7 @@ RSpec.describe CsvExportCreateService do
         { id: 'date', label: 'Date', enabled: true },
         { id: 'resort_name', label: 'Resort', enabled: true },
         { id: 'skis', label: 'Skis', enabled: true },
-        { id: 'activity', label: 'Activity', enabled: true },
+        { id: 'tags', label: 'Tags', enabled: true },
         { id: 'season', label: 'Season', enabled: true },
         { id: 'day_number', label: 'Day #', enabled: true },
         { id: 'day_id', label: 'Day ID', enabled: true },
@@ -62,7 +62,7 @@ RSpec.describe CsvExportCreateService do
             day1.date.iso8601,
             resort1.name,
             ski1.name,
-            day1.activity,
+            day1.tags.map(&:name).join(', '),
             "0", # Season offset for day1
             day1.day_number.to_s,
             day1.id.to_s,
@@ -75,7 +75,7 @@ RSpec.describe CsvExportCreateService do
             day2.date.iso8601,
             resort1.name,
             "#{ski1.name}, #{ski2.name}", # Skis joined
-            day2.activity,
+            day2.tags.map(&:name).join(', '),
             "-1", # Season offset for day2
             day2.day_number.to_s,
             day2.id.to_s,
@@ -87,9 +87,9 @@ RSpec.describe CsvExportCreateService do
 
       it 'only includes enabled columns in the specified order' do
         travel_to Date.new(2023, 10, 15) do
-          # Only date, activity, season are enabled, and in a different order
+          # Only date, tags, season are enabled, and in a different order
           custom_columns = [
-            { id: 'activity', label: 'My Activity', enabled: "true" }, # Service checks for string "true"
+            { id: 'tags', label: 'My Tags', enabled: "true" }, # Service checks for string "true"
             { id: 'skis', label: 'Skis Used', enabled: "false" },
             { id: 'season', label: 'The Season', enabled: "true" },
             { id: 'date', label: 'Ski Date', enabled: "true" }
@@ -101,8 +101,8 @@ RSpec.describe CsvExportCreateService do
           expect(result.created?).to be true
           csv_data = CSV.parse(result.csv_string)
           expect(csv_data.length).to eq(2) # Header + day1
-          expect(csv_data[0]).to eq(["My Activity", "The Season", "Ski Date"])
-          expect(csv_data[1]).to eq([day1.activity, "0", day1.date.iso8601])
+          expect(csv_data[0]).to eq(["My Tags", "The Season", "Ski Date"])
+          expect(csv_data[1]).to eq([day1.tags.map(&:name).join(', '), "0", day1.date.iso8601])
         end
       end
     end

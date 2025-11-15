@@ -47,7 +47,7 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
             { id: 'resort_name', label: 'Resort', enabled: true },
             { id: 'resort_country', label: 'Country', enabled: false },
             { id: 'skis', label: 'Skis', enabled: true },
-            { id: 'activity', label: 'Activity', enabled: true },
+            { id: 'tags', label: 'Tags', enabled: true },
             { id: 'season', label: 'Season', enabled: false },
             { id: 'day_number', label: 'Season Day #', enabled: true },
             { id: 'day_id', label: 'Shred Day ID', enabled: false },
@@ -84,8 +84,8 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
           day1_date = current_season_range[0] + 5.days
           day2_date = current_season_range[0] + 10.days
 
-          create(:day, user: user, date: day1_date, resort: resort1, skis: [ski1], activity: "Resort Skiing", notes: "Fun day!")
-          create(:day, user: user, date: day2_date, resort: resort1, skis: [ski1, ski2], activity: "Powder Day")
+          create(:day, :with_tags, user: user, date: day1_date, resort: resort1, skis: [ski1], tag_names: ["Resort Skiing"], notes: "Fun day!")
+          create(:day, :with_tags, user: user, date: day2_date, resort: resort1, skis: [ski1, ski2], tag_names: ["Powder Day"])
           DayNumberUpdaterService.new(user: user, affected_dates: [day1_date, day2_date]).update!
 
 
@@ -93,7 +93,7 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
             { id: "date", label: "Date", enabled: true },
             { id: "resort_name", label: "Resort", enabled: true },
             { id: "skis", label: "Skis", enabled: true },
-            { id: "activity", label: "Activity", enabled: true },
+            { id: "tags", label: "Tags", enabled: true },
             { id: "season", label: "Season", enabled: true },
             { id: "day_number", label: "Day #", enabled: true },
             { id: "notes", label: "Notes", enabled: true },
@@ -108,7 +108,7 @@ RSpec.describe "Api::V1::CsvExport", type: :request do
 
           csv_data = CSV.parse(response.body)
           expect(csv_data.length).to eq(3) # Header + 2 data rows
-          expect(csv_data[0]).to eq(["Date", "Resort", "Skis", "Activity", "Season", "Day #", "Notes"]) # Headers
+          expect(csv_data[0]).to eq(["Date", "Resort", "Skis", "Tags", "Season", "Day #", "Notes"]) # Headers
           expect(csv_data[1]).to eq([day2_date.iso8601, "Snow Valley", "Alpine Cruiser, Powder King", "Powder Day", "0", 2.to_s, nil])
           expect(csv_data[2]).to eq([day1_date.iso8601, "Snow Valley", "Alpine Cruiser", "Resort Skiing", "0", 1.to_s, "Fun day!"])
         end

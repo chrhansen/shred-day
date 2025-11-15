@@ -15,6 +15,8 @@ RSpec.describe Day, type: :model do
     it { should have_and_belong_to_many(:skis) }
     it { should belong_to(:resort) }
     it { should have_many(:photos).dependent(:destroy) }
+    it { should have_many(:tag_days).dependent(:destroy) }
+    it { should have_many(:tags).through(:tag_days) }
   end
 
   describe 'validations' do
@@ -77,12 +79,12 @@ RSpec.describe Day, type: :model do
 
     context "when updating days" do
       let!(:ski_for_update) { create(:ski, user: user) }
-      let!(:day1) { create(:day, user: user, resort: resort, date: target_date, activity: "A", skis: [ski_for_update]) }
-      let!(:day2) { create(:day, user: user, resort: resort, date: target_date, activity: "B", skis: [ski_for_update]) }
-      let!(:day3) { create(:day, user: user, resort: resort, date: target_date, activity: "C", skis: [ski_for_update]) }
+      let!(:day1) { create(:day, user: user, resort: resort, date: target_date, skis: [ski_for_update]) }
+      let!(:day2) { create(:day, user: user, resort: resort, date: target_date, skis: [ski_for_update]) }
+      let!(:day3) { create(:day, user: user, resort: resort, date: target_date, skis: [ski_for_update]) }
 
       it "allows updating an existing day without changing the date when 3 already exist" do
-        day2.activity = "Updated B"
+        day2.notes = "Updated notes"
         expect(day2).to be_valid
         expect(day2.save).to be true
       end

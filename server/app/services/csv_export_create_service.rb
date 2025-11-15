@@ -40,8 +40,8 @@ class CsvExportCreateService
             day.resort&.country
           when 'skis'
             day.skis.map(&:name).join(', ')
-          when 'activity'
-            day.activity
+          when 'tags'
+            day.tags.map(&:name).join(', ')
           when 'season'
             offset_converter_instance.season_offset(day.date).to_s
           when 'day_number'
@@ -60,8 +60,6 @@ class CsvExportCreateService
         csv << csv_row
       end
     end
-
-    csv_string
 
     if csv_string.present?
       Result.new(csv_string: csv_string, created: true, error: nil)

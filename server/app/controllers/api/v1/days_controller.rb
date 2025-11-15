@@ -16,30 +16,36 @@ class Api::V1::DaysController < ApplicationController
 
   # POST /api/v1/days
   def create
-    result = Days::CreateDayService.new(current_user, day_params.except(:photo_ids, :ski_ids)).create_day
+    result = Days::CreateDayService.new(
+      current_user,
+      day_params.except(:photo_ids, :ski_ids, :tag_ids),
+      tag_ids: day_params[:tag_ids]
+    ).create_day
 
     if result.created?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.skis << @skis
-      result.day.reload(include: [:ski, :resort, :photos])
-
+      result.day.reload(include: [:skis, :resort, :photos, :tags])
       render json: result.day, status: :created
     else
-      render json: { errors: result.day.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
     end
   end
 
   # PATCH /api/v1/days/:id
   def update
-    result = Days::UpdateDayService.new(@day, day_params.except(:photo_ids)).update_day
+    result = Days::UpdateDayService.new(
+      @day,
+      day_params.except(:photo_ids, :tag_ids),
+      tag_ids: day_params[:tag_ids]
+    ).update_day
 
     if result.updated?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
-      result.day.reload(include: [:ski, :resort, :photos])
-
+      result.day.reload(include: [:skis, :resort, :photos, :tags])
       render json: result.day, status: :ok
     else
-      render json: { errors: @day.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
     end
   end
 
@@ -68,7 +74,7 @@ class Api::V1::DaysController < ApplicationController
   end
 
   def set_day
-    @day = current_user.days.includes(:skis, :resort, :photos).find(params[:id])
+    @day = current_user.days.includes(:skis, :resort, :photos, :tags).find(params[:id])
     # Preload associations and photo attachments
     # Use attachment names for eager loading
   rescue ActiveRecord::RecordNotFound
@@ -79,7 +85,7 @@ class Api::V1::DaysController < ApplicationController
   def day_params
     # Allow an array of photo_ids instead of photo files
     params.require(:day).permit(
-      :date, :resort_id, :activity, :notes, photo_ids: [], ski_ids: []
+      :date, :resort_id, :notes, photo_ids: [], ski_ids: [], tag_ids: []
     )
   end
 end

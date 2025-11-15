@@ -4,7 +4,7 @@ module Api
       # Include url_helpers to generate attachment URLs
       include Rails.application.routes.url_helpers
 
-      attributes :id, :date, :activity, :user_id, :created_at, :updated_at, :notes, :day_number
+      attributes :id, :date, :user_id, :created_at, :updated_at, :notes, :day_number
 
       # Use belongs_to to embed the full associated objects
       belongs_to :resort
@@ -12,6 +12,10 @@ module Api
       # Use has_many with the dedicated PhotoSerializer
       has_many :photos, serializer: Api::V1::PhotoSerializer
       has_many :skis, serializer: Api::V1::SkiSerializer
+
+      attribute :tags do
+        object.tags.map { |tag| { id: tag.id, name: tag.name } }
+      end
     end
   end
 end

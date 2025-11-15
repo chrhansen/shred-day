@@ -1,10 +1,15 @@
 import type { Resort } from "@/types/api";
 
+export interface Tag {
+  id: string;
+  name: string;
+}
+
 // Detailed type for GET /days/:id, POST /days, PATCH /days/:id responses
 export interface SkiDayDetail {
   id: string;
   date: string; // Keep as string for consistency with API response
-  activity: string;
+  tags: Tag[];
   notes?: string | null;
   // resort_id and ski_id are removed, access via nested objects
   user_id?: string;
@@ -63,7 +68,7 @@ export interface AccountDetails {
 export interface SkiDayEntry {
   id: string;
   date: string; // API returns string, we can parse it later
-  activity: string;
+  tag_names: string[];
   ski_names: string[];
   resort_name: string;
   has_notes: boolean;

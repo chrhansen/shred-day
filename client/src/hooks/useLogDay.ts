@@ -4,9 +4,10 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { resortService, type Resort } from "@/services/resortService";
 import { userService } from "@/services/userService";
+import { tagService } from "@/services/tagService";
 import { toast } from "sonner";
 import debounce from 'lodash.debounce';
-import { type PhotoPreview } from "@/types/ski";
+import { type PhotoPreview, type Tag } from "@/types/ski";
 import { format } from "date-fns";
 
 export function useLogDay() {
@@ -25,14 +26,20 @@ export function useLogDay() {
   const [isSearchingMode, setIsSearchingMode] = useState<boolean>(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [selectedSkis, setSelectedSkis] = useState<string[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<string>("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
 
   // Queries
   const { data: userSkis, isLoading: isLoadingSkis, error: skisError } = useQuery({
     queryKey: ['skis'],
     queryFn: skiService.getSkis,
+  });
+
+  const { data: userTags, isLoading: isLoadingTags, error: tagsError } = useQuery({
+    queryKey: ['tags'],
+    queryFn: tagService.getTags,
   });
 
   const { data: recentResorts, isLoading: isLoadingRecentResorts } = useQuery({
@@ -60,7 +67,7 @@ export function useLogDay() {
 
   // Mutations
   const { mutate: saveDay, isPending: isSaving } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
       skiService.logDay(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -77,7 +84,7 @@ export function useLogDay() {
   });
 
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; activity: string; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
         skiService.updateDay(dayId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -105,6 +112,38 @@ export function useLogDay() {
       const message = error instanceof Error ? error.message : "Failed to add ski";
       toast.error(message);
     },
+  });
+
+  const { mutate: addTag, isPending: isAddingTag } = useMutation({
+    mutationFn: (name: string) => tagService.createTag({ name }),
+    onSuccess: (newTag) => {
+      queryClient.setQueryData<Tag[]>(['tags'], (prev) => {
+        const next = prev ? [...prev, newTag] : [newTag];
+        return next.sort((a, b) => a.name.localeCompare(b.name));
+      });
+      toast.success(`Tag "${newTag.name}" added successfully!`);
+      setSelectedTagIds((prev) => [...prev, newTag.id]);
+    },
+    onError: (error) => {
+      console.error("Add Tag error:", error);
+      const message = error instanceof Error ? error.message : "Failed to add tag";
+      toast.error(message);
+    },
+  });
+
+  const { mutate: deleteTag, isPending: isDeletingTag } = useMutation({
+    mutationFn: (tagId: string) => tagService.deleteTag(tagId),
+    onSuccess: (_data, tagId) => {
+      queryClient.setQueryData<Tag[]>(['tags'], (prev) => prev ? prev.filter((tag) => tag.id !== tagId) : prev);
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+      toast.success("Tag removed");
+    },
+    onError: (error) => {
+      console.error("Delete Tag error:", error);
+      const message = error instanceof Error ? error.message : "Failed to delete tag";
+      toast.error(message);
+    },
+    onSettled: () => setDeletingTagId(null),
   });
 
   // Resort search logic
@@ -143,7 +182,7 @@ export function useLogDay() {
       setDate(editDate);
       setDisplayedMonth(editDate);
       setSelectedSkis(dayToEdit.skis ? dayToEdit.skis.map(ski => ski.id) : []);
-      setSelectedActivity(dayToEdit.activity);
+      setSelectedTagIds(dayToEdit.tags ? dayToEdit.tags.map(tag => tag.id) : []);
       setSelectedResort(dayToEdit.resort);
 
       // Map existing photo data from the fetched day
@@ -194,8 +233,23 @@ export function useLogDay() {
     }
   };
 
+  const toggleTagSelection = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const createTag = (name: string) => {
+    addTag(name);
+  };
+
+  const removeTag = (tagId: string) => {
+    setDeletingTagId(tagId);
+    deleteTag(tagId);
+  };
+
   const handleSubmit = () => {
-    if (!selectedResort || !selectedActivity || selectedSkis.length === 0) {
+    if (!selectedResort || selectedSkis.length === 0) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -208,7 +262,7 @@ export function useLogDay() {
       date: format(date, 'yyyy-MM-dd'),
       resort_id: selectedResort.id,
       ski_ids: selectedSkis,
-      activity: selectedActivity,
+      tag_ids: selectedTagIds,
       photo_ids: uploadedPhotoIds,
     };
 
@@ -219,8 +273,8 @@ export function useLogDay() {
     }
   };
 
-  const isProcessing = isSaving || isUpdating || isAddingSki;
-  const isLoading = isLoadingSkis || isLoadingRecentResorts || isLoadingDayToEdit;
+  const isProcessing = isSaving || isUpdating || isAddingSki || isAddingTag || isDeletingTag;
+  const isLoading = isLoadingSkis || isLoadingRecentResorts || isLoadingDayToEdit || isLoadingTags;
 
   return {
     // State
@@ -240,16 +294,18 @@ export function useLogDay() {
     setActiveSearchIndex,
     selectedSkis,
     setSelectedSkis,
-    selectedActivity,
-    setSelectedActivity,
+    selectedTagIds,
+    setSelectedTagIds,
     photos,
     setPhotos,
     isUploading,
     setIsUploading,
+    deletingTagId,
     
     // Data
     userSkis,
     recentResorts,
+    userTags,
     dayToEdit,
     isEditMode,
     dayId,
@@ -259,19 +315,25 @@ export function useLogDay() {
     isLoadingSkis,
     isLoadingRecentResorts,
     isLoadingDayToEdit,
+    isLoadingTags,
     isProcessing,
     isLoading,
     
     // Errors
     skisError,
+    tagsError,
     dayToEditError,
     
     // Actions
     handleSubmit,
     addSki,
     uploadPhoto,
-    debouncedSearch,
     setSearchResults,
     isAddingSki,
+    toggleTagSelection,
+    createTag,
+    removeTag,
+    isAddingTag,
+    isDeletingTag,
   };
 }

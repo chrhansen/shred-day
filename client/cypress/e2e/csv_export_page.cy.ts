@@ -97,8 +97,8 @@ describe('CSV Export Page', () => {
     cy.contains('button', /Customize Columns/).click();
     cy.get('#column-selector-content').should('be.visible');
 
-    // Uncheck 'Activity' (ID 'activity') - These are standard input checkboxes
-    cy.get('#column-selector-content input[type="checkbox"][id="activity"]').uncheck({ force: true });
+    // Uncheck 'Tags' (ID 'tags') - These are standard input checkboxes
+    cy.get('#column-selector-content input[type="checkbox"][id="tags"]').uncheck({ force: true });
     // Check 'Season' (ID 'season') - These are standard input checkboxes
     cy.get('#column-selector-content input[type="checkbox"][id="season"]').check({ force: true });
 
@@ -114,8 +114,8 @@ describe('CSV Export Page', () => {
 
       expect(requestPayload.season_ids).to.have.members(["0", "-1"]);
 
-      const activityColumn = requestPayload.columns.find((col: {id: string}) => col.id === 'activity');
-      expect(activityColumn, 'Activity column should not be found in payload').to.be.undefined;
+      const tagsColumn = requestPayload.columns.find((col: {id: string}) => col.id === 'tags');
+      expect(tagsColumn, 'Tags column should not be found in payload').to.be.undefined;
 
       const seasonColumn = requestPayload.columns.find((col: {id: string}) => col.id === 'season');
       expect(seasonColumn, 'Season column should be found in payload').to.exist;

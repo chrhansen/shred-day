@@ -43,7 +43,7 @@ class CsvExportShowService
       { id: 'resort_name', label: 'Resort', enabled: true },
       { id: 'resort_country', label: 'Country', enabled: false },
       { id: 'skis', label: 'Skis', enabled: true },
-      { id: 'activity', label: 'Activity', enabled: true },
+      { id: 'tags', label: 'Tags', enabled: true },
       { id: 'season', label: 'Season', enabled: false },
       { id: 'day_number', label: 'Season Day #', enabled: true },
       { id: 'day_id', label: 'Shred Day ID', enabled: false },

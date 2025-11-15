@@ -9,8 +9,6 @@ describe('Create and Edit a Ski Day', () => {
   const RESORT_A_NAME = "Le Massif";
   const SKI_A_NAME = "Test Ski Alpha";
   const SKI_B_NAME = "Test Ski Bravo";
-  const INITIAL_ACTIVITY = "Friends";
-  const EDITED_ACTIVITY = "Training";
 
   beforeEach(() => {
     // Create a unique user for each test
@@ -157,7 +155,6 @@ describe('Create and Edit a Ski Day', () => {
                   date: testDate,
                   resort_id: resortAId,
                   ski_ids: [skiAId],
-                  activity: INITIAL_ACTIVITY
               }
           };
           cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/days`, initialDayPayload)
@@ -204,13 +201,9 @@ describe('Create and Edit a Ski Day', () => {
     cy.get('[data-testid="recent-resort-le-massif"]').should('contain.text', RESORT_A_NAME);
     // Target the specific testid for the selected ski pill and check for selection class
     cy.get('[data-testid="ski-option-test-ski-alpha"].bg-gradient-to-r').should('exist');
-    // Target the specific testid for the selected activity pill and check for selection class
-    cy.get('[data-testid="activity-friends"].bg-gradient-to-r').should('exist');
-
     // 6. Modify the form
     cy.contains('button.rdp-button_reset.rdp-button', /^20$/).click();
     cy.contains('button', SKI_B_NAME).should('not.be.disabled').click();
-    cy.contains('button', EDITED_ACTIVITY).should('not.be.disabled').click();
 
     // 7. Submit the update
     cy.get('[data-testid="save-day-button"]').click();
@@ -236,7 +229,6 @@ describe('Create and Edit a Ski Day', () => {
       // Use the new data-testid selector
       cy.get(`[data-testid="ski-day-item-${dayId}"]`)
         .should('contain.text', SKI_B_NAME)
-        .and('contain.text', EDITED_ACTIVITY)
         .and(($el) => {
           // Check for Oct 19, 20, or 21 due to potential timezone and date calculation differences
           const text = $el.text();
@@ -681,7 +673,6 @@ describe('Create and Edit a Ski Day', () => {
           date: formattedDate,
           resort_id: this.resortAId,
           ski_ids: [this.skiAId],
-          activity: INITIAL_ACTIVITY,
           photo_ids: []
         }
       }

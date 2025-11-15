@@ -146,8 +146,21 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
               )}
             </div>
             <div>
-              <h3 className="text-sm font-medium text-slate-500 mb-1">Activity</h3>
-              <p className="text-slate-800">{day.activity}</p>
+              <h3 className="text-sm font-medium text-slate-500 mb-1">Tags</h3>
+              {day.tags && day.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {day.tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium"
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-800 italic">No tags added.</p>
+              )}
             </div>
           </div>
           <div>

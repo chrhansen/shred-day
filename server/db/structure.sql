@@ -369,6 +369,32 @@ CREATE TABLE public.skis (
 
 
 --
+-- Name: tag_days; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tag_days (
+    id character varying DEFAULT public.gen_id('tgdy'::text) NOT NULL,
+    day_id character varying NOT NULL,
+    tag_id character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: tags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tags (
+    id character varying DEFAULT public.gen_id('tag'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    name character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: text_imports; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -504,6 +530,22 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.skis
     ADD CONSTRAINT skis_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tag_days tag_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_days
+    ADD CONSTRAINT tag_days_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tags
+    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
 
 
 --
@@ -663,6 +705,41 @@ CREATE INDEX index_skis_on_user_id ON public.skis USING btree (user_id);
 
 
 --
+-- Name: index_tag_days_on_day_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tag_days_on_day_id ON public.tag_days USING btree (day_id);
+
+
+--
+-- Name: index_tag_days_on_day_id_and_tag_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_tag_days_on_day_id_and_tag_id ON public.tag_days USING btree (day_id, tag_id);
+
+
+--
+-- Name: index_tag_days_on_tag_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tag_days_on_tag_id ON public.tag_days USING btree (tag_id);
+
+
+--
+-- Name: index_tags_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tags_on_user_id ON public.tags USING btree (user_id);
+
+
+--
+-- Name: index_tags_on_user_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_tags_on_user_id_and_name ON public.tags USING btree (user_id, name);
+
+
+--
 -- Name: index_text_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -797,6 +874,30 @@ ALTER TABLE ONLY public.text_imports
 
 
 --
+-- Name: tag_days fk_rails_d3bbb4921d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_days
+    ADD CONSTRAINT fk_rails_d3bbb4921d FOREIGN KEY (tag_id) REFERENCES public.tags(id);
+
+
+--
+-- Name: tag_days fk_rails_d902bb5dc0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_days
+    ADD CONSTRAINT fk_rails_d902bb5dc0 FOREIGN KEY (day_id) REFERENCES public.days(id) ON DELETE CASCADE;
+
+
+--
+-- Name: tags fk_rails_e689f6d0cc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tags
+    ADD CONSTRAINT fk_rails_e689f6d0cc FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: draft_days fk_rails_eb6dded8d4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -811,6 +912,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250612090000'),
 ('20250604122754'),
 ('20250603123517'),
 ('20250603123305'),
@@ -836,4 +938,3 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250421073910'),
 ('20250418205653'),
 ('20250418111834');
-
