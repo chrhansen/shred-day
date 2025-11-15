@@ -1,7 +1,7 @@
 class EnsureDefaultTagsService
-  Result = Struct.new(:success, :tags, :errors, keyword_init: true) do
-    def success?
-      success
+  Result = Struct.new(:created, :tags, :errors, keyword_init: true) do
+    def created?
+      created
     end
   end
 
@@ -13,14 +13,15 @@ class EnsureDefaultTagsService
   end
 
   def create_default_tags
-    return Result.new(success: false, tags: [], errors: ["User is required"]) unless @user
+    return Result.new(created: false, tags: [], errors: ["User is required"]) unless @user
 
     tags = @default_tags.map do |tag_name|
       @user.tags.find_or_create_by!(name: tag_name)
     end
 
-    Result.new(success: true, tags: tags, errors: nil)
+    Result.new(created: true, tags: tags, errors: nil)
   rescue StandardError => e
-    Result.new(success: false, tags: [], errors: [e.message])
+    Rails.logger.error("Failed to seed default tags for user #{@user&.id}: #{e.message}")
+    Result.new(created: false, tags: [], errors: [e.message])
   end
 end

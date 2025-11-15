@@ -8,7 +8,7 @@ class Api::V1::UsersController < ApplicationController
 
     if user.save
       result = EnsureDefaultTagsService.new(user).create_default_tags
-      unless result.success?
+      unless result.created?
         Rails.logger.error("Failed to seed default tags for user #{user.id}: #{Array(result.errors).join(', ')}")
       end
       # Establish session immediately after sign up

@@ -34,15 +34,23 @@ Use this document as the single source of truth for onboarded coding agents. It 
 - **Frontend:** Vitest for unit/component (`npm test`), Cypress for E2E (`npx cypress open` or `npx cypress run`; requires client + server running).
 - Add or update tests whenever behavior changes, especially around active initiatives (text import parsing, Google sign-in).
 
-## Active Focus Areas
-1. Syncing with a user-owned Google Sheet
-
 ## Contribution Guidelines
 - Stay scoped: touch only files relevant to the assigned task unless plumbing makes a change unavoidable.
 - Prefer clear naming over comments; only add timeless comments when code cannot be made self-explanatory.
 - Follow existing patterns:
-  - Rails: service objects for complex flows, serializers for consistent JSON, prefixed IDs (`day_`, `usr_`, etc.).
-  - React: service layer for API calls, hooks for shared logic, TanStack Query for server state, protected routes in `App.tsx`.
+  - Rails:
+    - service objects for business logic, see server/app/services/
+      - Service objects should expose clearly named methods (e.g., `create_default_tags`) instead of a generic `.call` to keep intent obvious at call sites.
+      - Service objects must return a simple `Result` object (see `ExifExtractService`) exposing an `extracted?`- or `created?`-style predicate (again avoid the generic `success?`) incl. any relevant data (e.g., `result.day`, `result.tags`) so callers can reason about outcomes consistently.
+    - Models:
+      - Avoid model callbacks whenever possible, especially if the callback relates to business logic. Models should just deal with writing and reading data from the database. Instead of callbacks use service objects for business logic.
+    - serializers for consistent JSON
+    - Primary keys as prefixed IDs (`day_`, `usr_`, etc.), see custom function `gen_id()` in server/db/structure.sql. E.g. gen_id('tag') => e.g. `tag_GHEsao153d9A`
+  - React:
+    - service layer for API calls
+    - hooks for shared logic
+    - TanStack Query for server state
+    - protected routes in `App.tsx`.
 - Document meaningful project knowledge in `memory-bank/` when user requests or when major behavior changes.
 - Use GitHub CLI for PR interactions if needed (`gh pr create/view/merge`); never force-push.
 
@@ -54,8 +62,3 @@ Use this document as the single source of truth for onboarded coding agents. It 
 
 ## Git
 1. Use the Github CLI `gh` to interact with Github, the origin
-
-## Engineering Notes
-- Seed default user tags by invoking `EnsureDefaultTagsService` from the controller (avoid model callbacks for this logic).
-- Service objects should expose clearly named methods (e.g., `create_default_tags`) instead of a generic `.call` to keep intent obvious at call sites.
-- Service objects must return a simple `Result` object (see `ExifExtractService`) exposing a `success?`-style predicate plus any relevant data (e.g., `result.day`, `result.tags`) so callers can reason about outcomes consistently.
