@@ -257,7 +257,6 @@ CREATE TABLE public.ar_internal_metadata (
 CREATE TABLE public.days (
     id character varying DEFAULT public.gen_id('day'::text) NOT NULL,
     date date,
-    activity character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     user_id character varying NOT NULL,
@@ -912,6 +911,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251115205425'),
 ('20250612090000'),
 ('20250604122754'),
 ('20250603123517'),
@@ -938,3 +938,4 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20250421073910'),
 ('20250418205653'),
 ('20250418111834');
+

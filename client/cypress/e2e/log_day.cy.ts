@@ -9,6 +9,15 @@ describe('Create and Edit a Ski Day', () => {
   const RESORT_A_NAME = "Le Massif";
   const SKI_A_NAME = "Test Ski Alpha";
   const SKI_B_NAME = "Test Ski Bravo";
+  const TAG_WITH_FRIENDS = "With Friends";
+  const TAG_WITH_FRIENDS_TEST_ID = `tag-${TAG_WITH_FRIENDS.toLowerCase().replace(/\s+/g, '-')}`;
+
+  const selectWithFriendsTag = () => {
+    cy.get(`[data-testid="${TAG_WITH_FRIENDS_TEST_ID}"]`)
+      .should('be.visible')
+      .and('not.be.disabled')
+      .click();
+  };
 
   beforeEach(() => {
     // Create a unique user for each test
@@ -20,6 +29,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.intercept('GET', '/api/v1/recent_resorts*').as('getRecentResorts');
     cy.intercept('GET', '/api/v1/account*').as('getAccount');
     cy.intercept('GET', '/api/v1/days*').as('getDaysList');
+    cy.intercept('GET', '/api/v1/tags*').as('getTags');
 
     // Log in via API
     cy.request({
@@ -46,6 +56,13 @@ describe('Create and Edit a Ski Day', () => {
     // Create two skis for the user (needed by both tests)
     cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/skis`, { ski: { name: SKI_A_NAME } }).its('body.id').as('skiAId');
     cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/skis`, { ski: { name: SKI_B_NAME } }).its('body.id').as('skiBId');
+
+    cy.request(`${Cypress.env('apiUrl')}/api/v1/tags`).then((response) => {
+      const tags = response.body as Array<{ id: string; name: string }>;
+      const friendsTag = tags.find((tag) => tag.name === TAG_WITH_FRIENDS);
+      expect(friendsTag, `Expected default tag "${TAG_WITH_FRIENDS}"`).to.exist;
+      cy.wrap(friendsTag!.id).as('withFriendsTagId');
+    });
   });
 
   it('should navigate to log day form, fill it, and submit successfully', function() {
@@ -57,6 +74,7 @@ describe('Create and Edit a Ski Day', () => {
     // Wait for LogDay page data to load
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date - 15th of current month
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -83,8 +101,8 @@ describe('Create and Edit a Ski Day', () => {
 
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Submit Form
     cy.intercept('POST', '/api/v1/days').as('logDay');
@@ -191,6 +209,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.wait('@getDay');
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // 5. Verify initial form state
     // Verify the calendar is showing the correct month (October currentSeasonYear) first
@@ -243,6 +262,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     const getCurrentMonthYear = () => {
       // Get current date, set day to 1 to avoid month rollover issues
@@ -291,6 +311,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -305,8 +326,8 @@ describe('Create and Edit a Ski Day', () => {
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
 
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Intercept the photo upload request
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
@@ -351,6 +372,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -365,8 +387,8 @@ describe('Create and Edit a Ski Day', () => {
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
 
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Intercept photo upload
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
@@ -414,6 +436,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -428,8 +451,8 @@ describe('Create and Edit a Ski Day', () => {
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
 
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Intercept photo uploads (allow multiple calls)
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
@@ -478,6 +501,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -492,8 +516,8 @@ describe('Create and Edit a Ski Day', () => {
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
 
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Intercept photo uploads
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
@@ -553,6 +577,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
     // Select Date
     cy.contains('button[role="gridcell"]', /^15$/).click();
@@ -567,8 +592,8 @@ describe('Create and Edit a Ski Day', () => {
     // Select Ski
     cy.contains('button', SKI_A_NAME).should('not.be.disabled').click();
 
-    // Select Activity
-    cy.contains('button', /Friends/i).should('not.be.disabled').click();
+    // Select Tag
+    selectWithFriendsTag();
 
     // Intercept photo upload
     cy.intercept('POST', '/api/v1/photos').as('uploadPhoto');
@@ -607,8 +632,9 @@ describe('Create and Edit a Ski Day', () => {
     cy.visit(LOG_DAY_URL);
     cy.wait('@getSkis');
     cy.wait('@getRecentResorts');
+    cy.wait('@getTags');
 
-    // Select Date, Resort, Ski, Activity
+    // Select Date, Resort, Ski, Tag
     cy.contains('button[role="gridcell"]', /^15$/).click();
     cy.get('[data-testid="find-resort-button"]').click();
     cy.get('[data-testid="resort-search-input"]').type(RESORT_A_NAME);
@@ -616,7 +642,7 @@ describe('Create and Edit a Ski Day', () => {
     cy.wait('@searchResorts');
     cy.get(`[data-testid="resort-option-${RESORT_A_NAME.toLowerCase().replace(/\s+/g, '-')}"]`).click();
     cy.contains('button', SKI_A_NAME).click();
-    cy.contains('button', /Friends/i).click();
+    selectWithFriendsTag();
 
     // Intercept photo upload and store the server ID
     let uploadedPhotoServerId: string | null = null;
@@ -682,7 +708,7 @@ describe('Create and Edit a Ski Day', () => {
 
     // Visit the log day page
     cy.visit(LOG_DAY_URL);
-    cy.wait(['@getSkis', '@getRecentResorts', '@getDaysList']);
+    cy.wait(['@getSkis', '@getRecentResorts', '@getTags', '@getDaysList']);
 
     // Wait for the calendar to be visible
     cy.contains('Date').should('be.visible');
