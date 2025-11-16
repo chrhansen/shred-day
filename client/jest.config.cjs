@@ -10,10 +10,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        tsconfig: {
-          jsx: 'react-jsx',
-          esModuleInterop: true,
-        },
+        tsconfig: '<rootDir>/tsconfig.app.json',
       },
     ],
   },
