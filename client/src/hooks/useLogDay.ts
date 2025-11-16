@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import { resortService, type Resort } from "@/services/resortService";
@@ -14,7 +14,9 @@ export function useLogDay() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { id: dayId } = useParams<{ id?: string }>();
+  const [searchParams] = useSearchParams();
   const isEditMode = Boolean(dayId);
+  const seasonParam = searchParams.get('season');
 
   // Form state
   const [date, setDate] = useState<Date>(new Date());
@@ -67,13 +69,11 @@ export function useLogDay() {
 
   const navigateToHighlightedDay = useCallback(
     (id?: string | null) => {
-      if (id) {
-        navigate(`/#${id}`);
-      } else {
-        navigate('/');
-      }
+      const search = seasonParam ? `?season=${seasonParam}` : '';
+      const hash = id ? `#${id}` : '';
+      navigate(`/${search}${hash}`);
     },
-    [navigate]
+    [navigate, seasonParam]
   );
 
   // Mutations

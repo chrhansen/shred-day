@@ -21,9 +21,10 @@ interface SkiDayItemProps {
   onDelete: (dayId: string) => void;
   isHighlighted?: boolean;
   anchorId?: string;
+  selectedSeason?: number;
 }
 
-export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId }: SkiDayItemProps) {
+export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, selectedSeason }: SkiDayItemProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailedDayData, setDetailedDayData] = useState<SkiDayDetailType | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -75,7 +76,10 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId }: S
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening detail modal
-    navigate(`/days/${day.id}/edit`);
+    const seasonQuery = typeof selectedSeason === 'number'
+      ? `?season=${selectedSeason}`
+      : '';
+    navigate(`/days/${day.id}/edit${seasonQuery}`);
   };
 
   const currentYear = getYear(new Date());

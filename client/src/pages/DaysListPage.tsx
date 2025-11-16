@@ -111,9 +111,13 @@ export default function DaysListPage() {
     };
   }, [highlightedDayId, days, location.pathname, location.search]);
 
+  const newDayTarget = selectedSeason !== undefined
+    ? `/new?season=${selectedSeason}`
+    : '/new';
+
   const newDayButton = (
     <Button
-      onClick={() => navigate("/new")}
+      onClick={() => navigate(newDayTarget)}
       size="sm"
       className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
     >
@@ -171,6 +175,7 @@ export default function DaysListPage() {
                   onDelete={handleDeleteDay}
                   isHighlighted={highlightedDayId === day.id}
                   anchorId={day.id}
+                  selectedSeason={selectedSeason}
                 />
                 {index < days.length - 1 && <Separator className="bg-slate-100" />}
               </React.Fragment>
