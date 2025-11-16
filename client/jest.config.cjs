@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^.*/config$': '<rootDir>/src/lib/__mocks__/config.ts',
+    '^@/lib/config$': '<rootDir>/src/lib/__mocks__/config.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transform: {

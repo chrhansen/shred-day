@@ -8,6 +8,7 @@ import '@testing-library/jest-dom';
 const mockGetDays = jest.fn();
 const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
 const originalResizeObserver = globalThis.ResizeObserver;
+const originalRequestAnimationFrame = window.requestAnimationFrame;
 
 jest.mock('@/services/skiService', () => ({
   skiService: {
@@ -102,11 +103,16 @@ describe('DaysListPage', () => {
 
     scrollIntoViewMock.mockClear();
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock as typeof originalScrollIntoView;
+    window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    }) as typeof window.requestAnimationFrame;
   });
 
   afterEach(() => {
     window.HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
     (globalThis as any).ResizeObserver = originalResizeObserver;
+    window.requestAnimationFrame = originalRequestAnimationFrame;
     jest.clearAllMocks();
   });
 
