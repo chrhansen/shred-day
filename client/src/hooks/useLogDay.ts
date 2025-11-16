@@ -65,16 +65,27 @@ export function useLogDay() {
     return new Set(allDays.map(day => day.date));
   }, [allDays]);
 
+  const navigateToHighlightedDay = useCallback(
+    (id?: string | null) => {
+      if (id) {
+        navigate(`/#${id}`);
+      } else {
+        navigate('/');
+      }
+    },
+    [navigate]
+  );
+
   // Mutations
   const { mutate: saveDay, isPending: isSaving } = useMutation({
     mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
       skiService.logDay(data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       queryClient.invalidateQueries({ queryKey: ['recentResorts'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Ski day logged successfully!");
-      navigate('/');
+      navigateToHighlightedDay(result?.id);
     },
     onError: (error) => {
       console.error("Log Day error:", error);
@@ -86,12 +97,12 @@ export function useLogDay() {
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
     mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
         skiService.updateDay(dayId!, data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       queryClient.invalidateQueries({ queryKey: ['day', dayId] });
       toast.success("Ski day updated successfully!");
-      navigate('/');
+      navigateToHighlightedDay(result?.id ?? dayId);
     },
     onError: (error) => {
       console.error("Update Day error:", error);
