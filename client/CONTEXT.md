@@ -1,5 +1,19 @@
 # Shred Day Client - Context & Progress
 
+## Recent Work (2025-11-17)
+
+### Relative Date Display in Days List - COMPLETED ✅
+
+**What was done:**
+1. Updated `SkiDayItem` to show relative dates (Today/Yesterday/X days ago/In X days) for entries within ±14 days.
+2. Kept month/day formatting for older entries (and month/day/year for prior seasons) for readability.
+
+**Key Files Modified:**
+- `src/components/SkiDayItem.tsx`
+
+**Results:**
+- Days from the last couple weeks feel more contextual without losing precise dates for older trips.
+
 ## Recent Work (2025-06-17)
 
 ### Service Layer Refactoring - COMPLETED ✅
@@ -56,7 +70,6 @@
 - `src/hooks/useTextImport.ts` - Business logic for TextImport page
 - `src/components/ResortSelection.tsx` - Resort selection UI
 - `src/components/SkiSelection.tsx` - Ski selection UI
-- `src/components/ActivitySelection.tsx` - Activity selection UI
 - `src/components/TextInputSection.tsx` - Text input for imports
 - `src/components/FileUploadSection.tsx` - File upload for imports
 - `src/components/ImportConfirmationDialogs.tsx` - Import dialogs
