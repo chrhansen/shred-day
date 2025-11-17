@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
 import { Button } from '@/components/ui/button';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
@@ -17,12 +17,14 @@ export default function DaysListPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   // Initialize selectedSeason (numeric offset) from URL parameter or default to 0
   const [selectedSeason, setSelectedSeason] = useState<number>(() => {
     const seasonParam = searchParams.get('season');
     return seasonParam ? parseInt(seasonParam, 10) : 0;
   });
+  const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null);
 
   // Update URL when selectedSeason changes
   useEffect(() => {
@@ -38,6 +40,15 @@ export default function DaysListPage() {
       setSearchParams(searchParams, { replace: true });
     }
   }, [selectedSeason, searchParams, setSearchParams]);
+
+  // Capture day id from hash (#day_123) to highlight and scroll into view
+  useEffect(() => {
+    if (!location.hash) return;
+    const decodedHash = decodeURIComponent(location.hash.replace('#', ''));
+    if (decodedHash) {
+      setHighlightedDayId(decodedHash);
+    }
+  }, [location.hash]);
 
   const { data: days, isLoading, error } = useQuery({
     queryKey: ['days', selectedSeason],
@@ -70,9 +81,43 @@ export default function DaysListPage() {
     setSelectedSeason(seasonNumber);
   };
 
+  // When days are loaded, scroll to the highlighted day then clear highlight after a delay
+  useEffect(() => {
+    if (!highlightedDayId || !days || !Array.isArray(days)) return;
+    if (!days.some(day => day.id === highlightedDayId)) return;
+    if (typeof window === 'undefined') return;
+
+    const scrollToHighlightedDay = () => {
+      const element = document.getElementById(highlightedDayId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    const rafId = window.requestAnimationFrame(scrollToHighlightedDay);
+
+    // Remove the hash from the URL so future visits don't repeat the highlight
+    if (window.history?.replaceState) {
+      window.history.replaceState(null, '', `${location.pathname}${location.search}`);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedDayId(null);
+    }, 6000);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [highlightedDayId, days, location.pathname, location.search]);
+
+  const newDayTarget = selectedSeason !== undefined
+    ? `/new?season=${selectedSeason}`
+    : '/new';
+
   const newDayButton = (
     <Button
-      onClick={() => navigate("/new")}
+      onClick={() => navigate(newDayTarget)}
       size="sm"
       className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
     >
@@ -125,7 +170,13 @@ export default function DaysListPage() {
           <div className="bg-white rounded-lg overflow-hidden">
             {days.map((day, index) => (
               <React.Fragment key={day.id}>
-                <SkiDayItem day={day} onDelete={handleDeleteDay} />
+                <SkiDayItem
+                  day={day}
+                  onDelete={handleDeleteDay}
+                  isHighlighted={highlightedDayId === day.id}
+                  anchorId={day.id}
+                  selectedSeason={selectedSeason}
+                />
                 {index < days.length - 1 && <Separator className="bg-slate-100" />}
               </React.Fragment>
             ))}

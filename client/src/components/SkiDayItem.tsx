@@ -14,13 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface SkiDayItemProps {
   day: SkiDayEntry;
   onDelete: (dayId: string) => void;
+  isHighlighted?: boolean;
+  anchorId?: string;
+  selectedSeason?: number;
 }
 
-export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
+export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, selectedSeason }: SkiDayItemProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailedDayData, setDetailedDayData] = useState<SkiDayDetailType | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -72,7 +76,10 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening detail modal
-    navigate(`/days/${day.id}/edit`);
+    const seasonQuery = typeof selectedSeason === 'number'
+      ? `?season=${selectedSeason}`
+      : '';
+    navigate(`/days/${day.id}/edit${seasonQuery}`);
   };
 
   const currentYear = getYear(new Date());
@@ -84,8 +91,15 @@ export function SkiDayItem({ day, onDelete }: SkiDayItemProps) {
   return (
     <>
       <div
-        className="flex items-start gap-3 pb-3 pt-3 cursor-pointer hover:bg-slate-50 transition-colors"
+        id={anchorId ?? day.id}
+        className={cn(
+          "flex items-start gap-3 pb-3 pt-3 cursor-pointer transition-colors border-l-4 border-transparent rounded-md px-2",
+          isHighlighted
+            ? "bg-blue-50 border-blue-500 shadow-[0_8px_24px_rgba(37,99,235,0.15)]"
+            : "hover:bg-slate-50"
+        )}
         data-testid={`ski-day-item-${day.id}`}
+        data-highlighted={isHighlighted ? "true" : undefined}
         onClick={handleItemClick}
       >
         <div className="relative h-24 w-24 flex-shrink-0">

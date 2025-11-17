@@ -18,7 +18,7 @@ export class ValidationError extends Error {
   }
 }
 
-import { API_BASE_URL } from './config';
+import { API_BASE_URL } from '@/lib/config';
 import type { QueryParams, RequestBody } from '@/types/api';
 
 // Default options for fetch requests
