@@ -1,5 +1,5 @@
 // @jest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import DaysListPage from '../DaysListPage';
@@ -130,5 +130,65 @@ describe('DaysListPage', () => {
 
     const nonHighlightedRow = screen.getByTestId('ski-day-item-day_whistler');
     expect(nonHighlightedRow).not.toHaveAttribute('data-highlighted');
+  });
+
+  it('groups ski days into relative date sections', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-11-20T12:00:00Z'));
+
+    mockGetDays.mockResolvedValue([
+      {
+        id: 'day_this_week',
+        resort_name: 'This Week Resort',
+        date: '2025-11-19',
+        day_number: 20,
+        photos: [],
+        ski_names: [],
+        tag_names: [],
+      },
+      {
+        id: 'day_this_month',
+        resort_name: 'This Month Resort',
+        date: '2025-11-05',
+        day_number: 19,
+        photos: [],
+        ski_names: [],
+        tag_names: [],
+      },
+      {
+        id: 'day_last_month',
+        resort_name: 'Last Month Resort',
+        date: '2025-10-10',
+        day_number: 18,
+        photos: [],
+        ski_names: [],
+        tag_names: [],
+      },
+      {
+        id: 'day_september',
+        resort_name: 'September Resort',
+        date: '2025-09-01',
+        day_number: 17,
+        photos: [],
+        ski_names: [],
+        tag_names: [],
+      },
+    ]);
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText('This week')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('This month')).toBeInTheDocument();
+    expect(screen.getByText('Last month')).toBeInTheDocument();
+    expect(screen.getByText('September 2025')).toBeInTheDocument();
+
+    const thisWeekSection = screen.getByText('This week').nextElementSibling;
+    expect(thisWeekSection).not.toBeNull();
+    expect(within(thisWeekSection as HTMLElement).getByText('This Week Resort')).toBeInTheDocument();
+
+    jest.useRealTimers();
   });
 });

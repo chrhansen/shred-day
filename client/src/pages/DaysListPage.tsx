@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { skiService } from '@/services/skiService';
 import { SkiDayItem } from '@/components/SkiDayItem';
@@ -11,6 +11,84 @@ import Navbar from '@/components/Navbar';
 import SeasonDropdown from '@/components/SeasonDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSeasonDisplayName, getFormattedSeasonDateRange } from '@/utils/seasonFormatters';
+import { addDays, addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import type { SkiDayEntry } from '@/types/ski';
+
+type Section = {
+  title: string;
+  days: SkiDayEntry[];
+};
+
+const groupDaysByRelativeSections = (days: SkiDayEntry[]): Section[] => {
+  const now = new Date();
+  const startOfCurrentWeek = startOfWeek(now, { weekStartsOn: 1 });
+  const startOfNextWeek = addDays(startOfCurrentWeek, 7);
+  const startOfCurrentMonth = startOfMonth(now);
+  const startOfNextMonth = startOfMonth(addMonths(now, 1));
+  const startOfLastMonth = startOfMonth(subMonths(now, 1));
+
+  const sections: { thisWeek: SkiDayEntry[]; thisMonth: SkiDayEntry[]; lastMonth: SkiDayEntry[] } = {
+    thisWeek: [],
+    thisMonth: [],
+    lastMonth: [],
+  };
+
+  const olderBuckets = new Map<string, { title: string; monthStart: Date; days: SkiDayEntry[] }>();
+
+  days.forEach((day) => {
+    const dayDate = parseISO(day.date);
+    if (Number.isNaN(dayDate.getTime())) {
+      return;
+    }
+
+    if (dayDate >= startOfCurrentWeek && dayDate < startOfNextWeek) {
+      sections.thisWeek.push(day);
+      return;
+    }
+
+    if (dayDate >= startOfCurrentMonth && dayDate < startOfNextMonth) {
+      sections.thisMonth.push(day);
+      return;
+    }
+
+    if (dayDate >= startOfLastMonth && dayDate < startOfCurrentMonth) {
+      sections.lastMonth.push(day);
+      return;
+    }
+
+    const monthKey = format(dayDate, 'yyyy-MM');
+    if (!olderBuckets.has(monthKey)) {
+      olderBuckets.set(monthKey, {
+        title: format(dayDate, 'MMMM yyyy'),
+        monthStart: startOfMonth(dayDate),
+        days: [],
+      });
+    }
+
+    olderBuckets.get(monthKey)!.days.push(day);
+  });
+
+  const orderedSections: Section[] = [];
+
+  if (sections.thisWeek.length > 0) {
+    orderedSections.push({ title: 'This week', days: sections.thisWeek });
+  }
+
+  if (sections.thisMonth.length > 0) {
+    orderedSections.push({ title: 'This month', days: sections.thisMonth });
+  }
+
+  if (sections.lastMonth.length > 0) {
+    orderedSections.push({ title: 'Last month', days: sections.lastMonth });
+  }
+
+  const olderSections = Array.from(olderBuckets.values())
+    .sort((a, b) => b.monthStart.getTime() - a.monthStart.getTime())
+    .map(({ title, days }) => ({ title, days }));
+
+  orderedSections.push(...olderSections);
+  return orderedSections;
+};
 
 export default function DaysListPage() {
   const navigate = useNavigate();
@@ -54,6 +132,13 @@ export default function DaysListPage() {
     queryKey: ['days', selectedSeason],
     queryFn: () => skiService.getDays(selectedSeason === 0 ? undefined : { season: selectedSeason }),
   });
+
+  const groupedSections = useMemo(() => {
+    if (!days || !Array.isArray(days) || days.length === 0) {
+      return [];
+    }
+    return groupDaysByRelativeSections(days);
+  }, [days]);
 
   // Get available seasons and season_start_day from user account details
   const availableSeasonOffsets = user?.available_seasons || [0];
@@ -166,24 +251,31 @@ export default function DaysListPage() {
           </div>
         )}
 
-        {!isLoading && !error && days && Array.isArray(days) && days.length > 0 && (
-          <div className="bg-white rounded-lg overflow-hidden">
-            {days.map((day, index) => (
-              <React.Fragment key={day.id}>
-                <SkiDayItem
-                  day={day}
-                  onDelete={handleDeleteDay}
-                  isHighlighted={highlightedDayId === day.id}
-                  anchorId={day.id}
-                  selectedSeason={selectedSeason}
-                />
-                {index < days.length - 1 && <Separator className="bg-slate-100" />}
-              </React.Fragment>
+        {!isLoading && !error && groupedSections.length > 0 && (
+          <div className="space-y-10">
+            {groupedSections.map((section) => (
+              <div key={section.title}>
+                <h2 className="text-lg font-semibold text-slate-700 mb-3">{section.title}</h2>
+                <div className="bg-white rounded-lg overflow-hidden">
+                  {section.days.map((day, index) => (
+                    <React.Fragment key={day.id}>
+                      <SkiDayItem
+                        day={day}
+                        onDelete={handleDeleteDay}
+                        isHighlighted={highlightedDayId === day.id}
+                        anchorId={day.id}
+                        selectedSeason={selectedSeason}
+                      />
+                      {index < section.days.length - 1 && <Separator className="bg-slate-100" />}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {!isLoading && !error && (!days || !Array.isArray(days) || days.length === 0) && (
+        {!isLoading && !error && groupedSections.length === 0 && (
           <div className="text-center py-10 text-slate-500">
             <p>No ski days logged yet.</p>
             <Button
