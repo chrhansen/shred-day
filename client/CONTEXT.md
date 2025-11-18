@@ -1,155 +1,57 @@
-# Shred Day Client - Context & Progress
+# Shred Day Client – Context
 
-## Recent Work (2025-06-17)
+Use this file to keep timeless knowledge about the client-side codebase. Capture information that is still useful months from now (architecture decisions, recurring patterns, testing tricks), not a log of recent work.
 
-### Service Layer Refactoring - COMPLETED ✅
+## Overview
+- React + TypeScript SPA built with Vite, Tailwind, shadcn/ui, and TanStack Query.
+- Talks to the Rails API at `/api/v1/*` using cookie-based session auth.
+- Key experiences: logging ski days, browsing calendars/maps/lists, handling bulk imports.
 
-**What was done:**
-1. Created centralized API client (`src/lib/apiClient.ts`) to eliminate code duplication
-2. Refactored all 7 service files to use the new API client
-3. Added comprehensive test coverage (31 tests)
-4. Fixed Cypress test failures and successfully deployed to production
+## Architecture & Patterns
+- `src/lib/apiClient.ts` centralizes HTTP configuration (base URL, headers, 204 handling). Service modules should call this client instead of `fetch`.
+- Shared API and UI types live under `src/types/` to avoid circular imports and `any` usage.
+- Business logic that spans components belongs in hooks (e.g., `useLogDay`, `useTextImport`) so pages stay thin.
+- Component folders (`src/components`) hold reusable building blocks; organize by feature when possible to keep imports manageable.
+- Prefer React Query for server state; reach for context only when data truly needs global sync.
 
-**Key Files Created/Modified:**
-- `src/lib/apiClient.ts` - Centralized API client with error handling
-- `src/lib/config.ts` - Environment configuration
-- `src/lib/__mocks__/config.ts` - Mock for testing
-- `src/services/*.ts` - All refactored to use API client
-- `src/services/__tests__/*.test.ts` - New test files
-
-**Results:**
-- ~70% code reduction in service files (~500 lines removed)
-- Consistent error handling across all API calls
-- Better TypeScript type safety
-- All tests passing (Jest + Cypress)
-
-### TypeScript Type Safety - COMPLETED ✅
-
-**What was done:**
-1. Created centralized API types (`src/types/api.ts`)
-2. Removed all uses of `any` types from production code (10 instances)
-3. Fixed circular dependency by moving shared types to central location
-4. Added proper type constraints to generic functions
-
-**Key Files Created/Modified:**
-- `src/types/api.ts` - New file with centralized API types
-- `src/lib/apiClient.ts` - Removed `any` types, added proper generics
-- `src/services/*.ts` - Updated imports to use centralized types
-- `src/pages/LogDay.tsx` - Removed unnecessary type annotation
-
-**Results:**
-- Zero `any` types in production code
-- Better IntelliSense and type checking
-- Cleaner import structure
-- PR #11 merged and deployed
-
-### Component Decomposition - COMPLETED ✅
-
-**What was done:**
-1. Analyzed and decomposed LogDay.tsx (603 → 245 lines)
-2. Analyzed and decomposed TextImportPage.tsx (457 → 200 lines)
-3. Extracted business logic into custom hooks
-4. Created focused, reusable components
-
-**Key Files Created:**
-- `src/hooks/useLogDay.ts` - Business logic for LogDay page
-- `src/hooks/useTextImport.ts` - Business logic for TextImport page
-- `src/components/ResortSelection.tsx` - Resort selection UI
-- `src/components/SkiSelection.tsx` - Ski selection UI
-- `src/components/ActivitySelection.tsx` - Activity selection UI
-- `src/components/TextInputSection.tsx` - Text input for imports
-- `src/components/FileUploadSection.tsx` - File upload for imports
-- `src/components/ImportConfirmationDialogs.tsx` - Import dialogs
-
-**Results:**
-- ~58% reduction in LogDay.tsx size
-- ~56% reduction in TextImportPage.tsx size
-- Better separation of concerns
-- More testable components
-
-### Key Learnings
-
-1. **Cypress Test Fixes:**
-   - Toast messages appear in `[data-sonner-toast]` elements
-   - API intercepts must be set up BEFORE triggering the action
-   - Use wildcard patterns for more flexible intercepts
-
-2. **Jest Configuration:**
-   - Mock `import.meta.env` in tests using module mocks
-   - Use `jest.config.cjs` with proper module name mapping
-
-3. **API Client Patterns:**
-   - Handle 204 No Content responses explicitly
-   - FormData requires removing Content-Type header
-   - Re-export utilities for backward compatibility
-
-## Next Steps for Cleanup (Prioritized)
-
-### 1. State Management Patterns (HIGH PRIORITY)
-- Standardize React Query usage
-- Remove manual state synchronization
-- Implement optimistic updates
-
-### 2. Error Handling & User Feedback (MEDIUM PRIORITY)
-- Add error boundaries
-- Consistent toast messages
-- Better loading states
-
-### 3. Code Organization (LOW-MEDIUM PRIORITY)
-- Organize components by feature/domain
-- Create barrel exports
-- Standardize import paths
+## Testing & Tooling Notes
+- Jest/Vitest unit tests: mock `import.meta.env` via module mocks (see `jest.config.cjs` mappings) and use the mocks in `src/lib/__mocks__/`.
+- Cypress: set up `cy.intercept` **before** triggering actions, use `[data-sonner-toast]` for toast assertions, and lean on wildcard routes for flexible matching.
+- FormData requests must omit `Content-Type` so the browser sets boundaries automatically.
+- 204 responses require explicit `.text()`/`.json()` guards—`apiClient` already handles this; reuse it.
 
 ## Project Structure
 
 ```
 client/
 ├── src/
+│   ├── components/            # Shared UI pieces
+│   ├── contexts/              # Auth context and similar global state
+│   ├── hooks/                 # Feature/business logic hooks
 │   ├── lib/
-│   │   ├── apiClient.ts       # Centralized API client
-│   │   └── config.ts          # Environment config
-│   ├── services/              # API service layer (all refactored)
-│   ├── components/            # React components (needs organization)
-│   ├── pages/                 # Route components (some need decomposition)
-│   ├── contexts/              # Global state (AuthContext)
-│   └── types/                 # TypeScript types
-├── cypress/                   # E2E tests
-└── jest.config.cjs           # Test configuration
+│   │   ├── apiClient.ts       # Shared HTTP client
+│   │   └── config.ts          # Environment helpers
+│   ├── pages/                 # Route-level components
+│   ├── services/              # API wrappers built on apiClient
+│   └── types/                 # Centralized TypeScript types
+├── cypress/                   # End-to-end tests
+└── jest.config.cjs            # Unit-test configuration
 ```
 
-## Important Notes
-
-- Authentication: Session-based with cookies
-- API Base: `/api/v1/*`
-- State Management: React Query + Context API
-- UI Components: shadcn/ui with Tailwind CSS
-- Testing: Jest for unit tests, Cypress for E2E
-
-## Common Commands
+## Useful Commands
 
 ```bash
-# Development
-npm run dev              # Start dev server (port 8080)
-npm test                 # Run Jest tests
-npm run build           # Build for production
-
-# Testing
-npm test src/services   # Test specific directory
-npx cypress open        # Run Cypress interactively
-npx cypress run         # Run Cypress headless
-
-# Git workflow
-gh pr create            # Create PR
-gh pr checks <number>   # Check PR status
-gh pr merge <number>    # Merge PR
+npm run dev          # Start Vite dev server (port 8080)
+npm test             # Run unit tests
+npm run build        # Production build
+npx cypress open     # Cypress UI runner
+npx cypress run      # Cypress headless run
+gh pr create         # Open a pull request
+gh pr checks <id>    # View PR checks
+gh pr merge <id>     # Merge once checks are green
 ```
 
 ## CI/CD Notes
-
-- Tests run automatically on PR
-- Deployment happens automatically after merge to main
-- Cypress tests can be flaky - check toast selectors and API intercepts
-
----
-Last updated: 2025-06-17
-Context preserved for future sessions
+- GitHub Actions run unit tests and Cypress on every PR.
+- Merges to `main` trigger deployment via Kamal; no manual steps required.
+- When Cypress flakes, re-check toast selectors and intercept ordering first—they are the usual culprits.

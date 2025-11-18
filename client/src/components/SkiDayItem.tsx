@@ -1,4 +1,4 @@
-import { format, getYear } from "date-fns";
+import { format, getYear, differenceInCalendarDays } from "date-fns";
 // Use SkiDayEntry for the list item, and SkiDayDetailType for the detailed view
 import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types/ski";
 import { SkiDayDetail } from "@/components/SkiDayDetail";
@@ -15,6 +15,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+
+const RELATIVE_WINDOW_DAYS = 14;
+
+const formatDisplayDate = (dayDate: Date, now: Date) => {
+  const difference = differenceInCalendarDays(now, dayDate);
+  const isWithinRelativeWindow = Math.abs(difference) <= RELATIVE_WINDOW_DAYS;
+
+  if (isWithinRelativeWindow) {
+    if (difference === 0) return "Today";
+    if (difference === 1) return "Yesterday";
+    if (difference > 1) return `${difference} days ago`;
+    if (difference === -1) return "Tomorrow";
+    return `In ${Math.abs(difference)} days`;
+  }
+
+  const currentYear = getYear(now);
+  return getYear(dayDate) === currentYear
+    ? format(dayDate, "MMM d")
+    : format(dayDate, "MMM d, yyyy");
+};
 
 interface SkiDayItemProps {
   day: SkiDayEntry;
@@ -82,11 +102,9 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
     navigate(`/days/${day.id}/edit${seasonQuery}`);
   };
 
-  const currentYear = getYear(new Date());
+  const now = new Date();
   const dayDate = new Date(day.date.replace(/-/g, '/'));
-  const displayDate = getYear(dayDate) === currentYear
-    ? format(dayDate, 'MMM d')
-    : format(dayDate, 'MMM d, yyyy');
+  const displayDate = formatDisplayDate(dayDate, now);
 
   return (
     <>

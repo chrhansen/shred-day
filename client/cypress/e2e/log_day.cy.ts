@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
 /// <reference types="cypress-file-upload" />
 
+import { differenceInCalendarDays, format, getYear } from 'date-fns';
+
 describe('Create and Edit a Ski Day', () => {
   const PASSWORD = 'password123';
   const LOG_DAY_URL = '/new';
@@ -11,6 +13,21 @@ describe('Create and Edit a Ski Day', () => {
   const SKI_B_NAME = "Test Ski Bravo";
   const TAG_WITH_FRIENDS = "With Friends";
   const TAG_WITH_FRIENDS_TEST_ID = `tag-${TAG_WITH_FRIENDS.toLowerCase().replace(/\s+/g, '-')}`;
+
+  const formatExpectedDisplayDate = (dayDate: Date) => {
+    const now = new Date();
+    const difference = differenceInCalendarDays(now, dayDate);
+    if (Math.abs(difference) <= 14) {
+      if (difference === 0) return "Today";
+      if (difference === 1) return "Yesterday";
+      if (difference > 1) return `${difference} days ago`;
+      if (difference === -1) return "Tomorrow";
+      return `In ${Math.abs(difference)} days`;
+    }
+    const currentYear = getYear(now);
+    const formatString = getYear(dayDate) === currentYear ? 'MMM d' : 'MMM d, yyyy';
+    return format(dayDate, formatString);
+  };
 
   const selectWithFriendsTag = () => {
     cy.get(`[data-testid="${TAG_WITH_FRIENDS_TEST_ID}"]`)
@@ -128,12 +145,11 @@ describe('Create and Edit a Ski Day', () => {
     // Wait for the list to potentially refresh
     cy.wait('@getDaysList');
 
-    // Get the selected date (15th of current month) and format it
+    // Get the selected date (15th of current month) and format it similar to UI logic
     const selectedDate = new Date();
     selectedDate.setDate(15);
     selectedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
-    // Updated formatting: For current year, only month and day
-    const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const expectedDisplayDate = formatExpectedDisplayDate(selectedDate);
 
     // Check that the specific item with the new ID contains the correct resort
     // Use cy.then to ensure newDayId is available after the wait
@@ -142,14 +158,7 @@ describe('Create and Edit a Ski Day', () => {
           .should('contain.text', RESORT_A_NAME)
           .and(($el) => {
             const text = $el.text();
-
-            // Build a month-agnostic regex that tolerates a one-day timezone shift
-            const monthShort = selectedDate.toLocaleDateString('en-US', { month: 'short' });
-            const day = selectedDate.getDate();
-            const dayVariants = [day - 1, day];
-            const dateRegex = new RegExp(`${monthShort} (${dayVariants[0]}|${dayVariants[1]})`);
-
-            expect(text).to.match(dateRegex);
+            expect(text).to.include(expectedDisplayDate);
           });
     })
   });
