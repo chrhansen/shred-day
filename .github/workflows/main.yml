@@ -30,7 +30,27 @@ jobs:
           --health-retries 5
 
     steps:
-    - name: Checkout code
+    - name: Checkout code (attempt 1)
+      id: checkout_attempt_1
+      uses: actions/checkout@v4
+      continue-on-error: true
+
+    - name: Wait before retrying checkout
+      if: steps.checkout_attempt_1.outcome == 'failure'
+      run: sleep 20
+
+    - name: Checkout code (attempt 2)
+      if: steps.checkout_attempt_1.outcome == 'failure'
+      id: checkout_attempt_2
+      uses: actions/checkout@v4
+      continue-on-error: true
+
+    - name: Wait before final checkout attempt
+      if: steps.checkout_attempt_2.outcome == 'failure'
+      run: sleep 45
+
+    - name: Checkout code (attempt 3)
+      if: steps.checkout_attempt_2.outcome == 'failure'
       uses: actions/checkout@v4
 
     - name: Set up Ruby
@@ -132,7 +152,12 @@ jobs:
 
     - name: Display Rails Test Server Logs on Failure
       if: failure()
-      run: cat rails_test_server.log
+      run: |
+        if [ -f rails_test_server.log ]; then
+          cat rails_test_server.log
+        else
+          echo "rails_test_server.log not found; nothing to show."
+        fi
 
   deploy:
     name: Deploy
