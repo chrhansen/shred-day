@@ -111,9 +111,9 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
       <div
         id={anchorId ?? day.id}
         className={cn(
-          "flex items-start gap-3 pb-3 pt-3 cursor-pointer transition-colors border-l-4 border-transparent rounded-md px-2",
+          "flex items-start gap-3 py-3 cursor-pointer transition-colors rounded-md pr-2 pl-0",
           isHighlighted
-            ? "bg-blue-50 border-blue-500 shadow-[0_8px_24px_rgba(37,99,235,0.15)]"
+            ? "bg-blue-50 shadow-[0_8px_24px_rgba(37,99,235,0.15)]"
             : "hover:bg-slate-50"
         )}
         data-testid={`ski-day-item-${day.id}`}
