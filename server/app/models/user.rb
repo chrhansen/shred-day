@@ -12,6 +12,7 @@ class User < ApplicationRecord
   has_many :draft_days, through: :photo_imports
   has_many :draft_days, through: :text_imports
   has_many :tags, dependent: :destroy
+  has_one :google_sheet_integration, dependent: :destroy
 
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")

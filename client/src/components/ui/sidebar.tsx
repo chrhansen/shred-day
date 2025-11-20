@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { PanelLeft, Plug } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -23,6 +23,19 @@ const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+
+export const sidebarNavigation = [
+  {
+    label: "Integrations",
+    items: [
+      {
+        title: "Google Sheets",
+        url: "/integrations",
+        icon: Plug,
+      },
+    ],
+  },
+]
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -758,4 +771,5 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  sidebarNavigation,
 }
