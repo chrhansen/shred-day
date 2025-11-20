@@ -78,14 +78,7 @@ export default function IntegrationsPage() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar centerContent="Integrations" />
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900">Integrations</h1>
-          <p className="text-sm text-muted-foreground">
-            Connect Shred Day with the tools you already use. Start with Google Sheets to mirror your ski days.
-          </p>
-        </div>
-
+      <div className="max-w-3xl mx-auto px-4 py-6">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center gap-4">
             <div className="p-2 rounded-lg bg-green-100">

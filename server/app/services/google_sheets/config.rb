@@ -1,7 +1,6 @@
 module GoogleSheets
   SCOPES = [
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/spreadsheets"
+    "https://www.googleapis.com/auth/drive.file"
   ].freeze
 
   module Config
