@@ -23,6 +23,7 @@ gem "solid_cable"
 # For sign in with Google
 gem 'oauth2'
 gem 'googleauth'
+gem 'google-apis-sheets_v4'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, Menu as MenuIcon, X as XIcon, Home as HomeIcon, BarChart2, UploadCloud, CloudDownload, Loader2, User, SwatchBook, Images, Sheet, FileText } from 'lucide-react';
+import { Settings, Menu as MenuIcon, X as XIcon, Home as HomeIcon, BarChart2, UploadCloud, CloudDownload, Loader2, User, SwatchBook, Images, Sheet, FileText, Plug } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { photoImportService } from '@/services/photoImportService';
 import { toast } from 'sonner';
@@ -135,6 +135,19 @@ export default function Navbar({ rightContent, centerContent }: NavbarProps) {
             </div>
           </li>
           {/* Indented Settings Items */}
+          <li className="mb-2 ml-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
+              onClick={() => {
+                navigate('/integrations');
+                toggleDrawer();
+              }}
+            >
+              <Plug className="mr-2 h-5 w-5" />
+              Integrations
+            </Button>
+          </li>
           <li className="mb-2 ml-4">
             <Button
               variant="ghost"
