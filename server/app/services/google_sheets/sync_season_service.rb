@@ -2,7 +2,7 @@ require "google/apis/sheets_v4"
 
 module GoogleSheets
   class SyncSeasonService
-    HEADERS = ["Date", "Resort", "Day #", "Skis", "Tags", "Notes", "Photos", "Created At", "Updated At"].freeze
+    HEADERS = ["Date", "Resort", "Day #", "Skis", "Tags", "Notes", "Photos"].freeze
 
     def initialize(integration)
       @integration = integration
@@ -37,19 +37,17 @@ module GoogleSheets
 
     def data_rows_for_offset(season_offset)
       start_date, end_date = @converter.date_range(season_offset)
-      days = @user.days.includes(:resort, :skis, :tags, :photos).where(date: start_date..end_date).order(date: :asc)
+      days = @user.days.includes(:resort, :skis, :tags, :photos).where(date: start_date..end_date).order(date: :desc)
 
       days.map do |day|
         [
-          day.date&.iso8601,
+          day.date&.strftime("%Y %b %-d"),
           day.resort&.name,
           day.day_number,
           day.skis.map(&:name).join(", "),
           day.tags.map(&:name).join(", "),
           day.notes.to_s,
-          day.photos.size,
-          day.created_at&.iso8601,
-          day.updated_at&.iso8601
+          day.photos.size
         ]
       end
     end
