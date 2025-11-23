@@ -1,13 +1,9 @@
 class GoogleSheetIntegration < ApplicationRecord
   belongs_to :user
 
-  enum :status, { connected: 0, errored: 1, disconnected: 2 }
+  enum :status, { connected: 0, errored: 1, disconnected: 2 }, prefix: true
 
   validates :user_id, presence: true, uniqueness: true
-
-  def connected?
-    status == "connected"
-  end
 
   def mark_error!(message)
     update(status: :errored, last_error: message)

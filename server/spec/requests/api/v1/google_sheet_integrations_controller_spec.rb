@@ -82,7 +82,7 @@ RSpec.describe "Api::V1::GoogleSheetIntegrationsController", type: :request do
       delete "/api/v1/google_sheet_integration"
 
       expect(response).to have_http_status(:no_content)
-      expect(integration.reload).to be_disconnected
+      expect(integration.reload).to be_status_disconnected
       expect(integration.access_token).to be_nil
       expect(integration.spreadsheet_id).to be_nil
     end
