@@ -3,7 +3,7 @@ class GoogleSheetsSyncJob < ApplicationJob
 
   def perform(integration_id, season_offsets)
     integration = GoogleSheetIntegration.find_by(id: integration_id)
-    return unless integration&.connected?
+    return unless integration&.status_connected?
 
     offsets = Array(season_offsets).map(&:to_i).uniq
     sync_service = GoogleSheets::SyncSeasonService.new(integration)

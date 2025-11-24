@@ -6,7 +6,7 @@ module Api
         return render json: { connected: false } unless integration
 
         render json: {
-          connected: integration.connected?,
+          connected: integration.status_connected?,
           status: integration.status,
           sheet_url: integration.spreadsheet_url,
           last_error: integration.last_error,

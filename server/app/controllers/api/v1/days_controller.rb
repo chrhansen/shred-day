@@ -95,7 +95,7 @@ class Api::V1::DaysController < ApplicationController
 
   def enqueue_google_sheets_sync(dates)
     integration = current_user.google_sheet_integration
-    return unless integration&.connected?
+    return unless integration&.status_connected?
 
     converter = OffsetDateRangeConverterService.new(current_user.season_start_day)
     offsets = dates.compact.map { |date| converter.season_offset(date) }.uniq
