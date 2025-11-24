@@ -7,7 +7,6 @@ module GoogleSheets
     def initialize(integration)
       @integration = integration
       @user = integration.user
-      @label_service = GoogleSheets::SeasonLabelService.new(@user.season_start_day)
       @converter = OffsetDateRangeConverterService.new(@user.season_start_day)
     end
 
@@ -53,7 +52,8 @@ module GoogleSheets
     end
 
     def sheet_title(season_offset)
-      @label_service.label_for_offset(season_offset)
+      start_date, end_date = @converter.date_range(season_offset)
+      "#{start_date.year}-#{end_date.year} Season"
     end
 
     def sheets_service
