@@ -12,7 +12,6 @@ This is a monorepo containing both the frontend (React client in /client) and th
 
 *   `/client`: Contains the frontend application built with Vite, React, TypeScript, and Tailwind CSS (using shadcn/ui).
 *   `/server`: Contains the backend API built with Ruby on Rails (API-only mode) using a PostgreSQL database.
-*   `/memory-bank`: Project documentation and context for AI assistance.
 *   `/`: Root directory containing configuration files for Docker (`.dockerignore`), Git (`.gitignore`), Kamal (`.kamal/`), and this README.
 
 ## ✨ Key Features

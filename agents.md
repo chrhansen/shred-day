@@ -11,7 +11,6 @@ Use this document as the single source of truth for onboarded coding agents. It 
 ## Repository Map
 - `/client` – Vite React SPA with routing, Auth context, service layer, and shadcn/ui components.
 - `/server` – Rails API-only app with namespaced `/api/v1` routes, serializers, service objects, and RSpec suite.
-- `/memory-bank` – Long-form project documentation (keep updated if requirements shift).
 - Root configs – Kamal deploy config, Docker/Kamal helpers, README, etc.
 
 ## Local Development
@@ -51,11 +50,10 @@ Use this document as the single source of truth for onboarded coding agents. It 
     - hooks for shared logic
     - TanStack Query for server state
     - protected routes in `App.tsx`.
-- Document meaningful project knowledge in `memory-bank/` when user requests or when major behavior changes.
 - Use GitHub CLI for PR interactions if needed (`gh pr create/view/merge`); never force-push.
 
 ## Assistant Workflow
-1. Read this file plus the current `memory-bank` docs at the start of every task.
+1. Read this file
 2. Confirm current feature focus with open issues/brief before implementing.
 3. Run targeted tests for the area you touch; call out anything you couldn’t run.
 4. Communicate clearly in summaries: describe the change, mention affected files, note test status, and suggest next actions when relevant.

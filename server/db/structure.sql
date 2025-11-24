@@ -296,6 +296,26 @@ CREATE TABLE public.draft_days (
 
 
 --
+-- Name: google_sheet_integrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.google_sheet_integrations (
+    id character varying DEFAULT public.gen_id('gsi'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    spreadsheet_id character varying,
+    spreadsheet_url character varying,
+    access_token text,
+    refresh_token text,
+    access_token_expires_at timestamp(6) without time zone,
+    status integer DEFAULT 0 NOT NULL,
+    last_synced_at timestamp(6) without time zone,
+    last_error text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: photo_imports; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -492,6 +512,14 @@ ALTER TABLE ONLY public.draft_days
 
 
 --
+-- Name: google_sheet_integrations google_sheet_integrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.google_sheet_integrations
+    ADD CONSTRAINT google_sheet_integrations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: photo_imports photo_imports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -648,6 +676,13 @@ CREATE INDEX index_draft_days_on_text_import_id ON public.draft_days USING btree
 
 
 --
+-- Name: index_google_sheet_integrations_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_google_sheet_integrations_on_user_id ON public.google_sheet_integrations USING btree (user_id);
+
+
+--
 -- Name: index_photo_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -774,6 +809,14 @@ ALTER TABLE ONLY public.days
 
 ALTER TABLE ONLY public.photos
     ADD CONSTRAINT fk_rails_1ac803375b FOREIGN KEY (day_id) REFERENCES public.days(id);
+
+
+--
+-- Name: google_sheet_integrations fk_rails_1cfd6a333e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.google_sheet_integrations
+    ADD CONSTRAINT fk_rails_1cfd6a333e FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -911,6 +954,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251120124144'),
 ('20251115205425'),
 ('20250612090000'),
 ('20250604122754'),

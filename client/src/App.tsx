@@ -13,6 +13,8 @@ import CallbackPage from "./pages/CallbackPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
 import TextImportPage from "@/pages/TextImportPage";
 import CsvExportPage from "@/pages/CsvExportPage";
+import IntegrationsPage from "@/pages/IntegrationsPage";
+import GoogleSheetsCallbackPage from "@/pages/GoogleSheetsCallbackPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -60,6 +62,8 @@ const AppRoutes = () => {
           <Route path="/text-imports/new" element={<ProtectedRoute><TextImportPage /></ProtectedRoute>} />
           <Route path="/text-imports/:importId" element={<ProtectedRoute><TextImportPage /></ProtectedRoute>} />
           <Route path="/csv-export" element={<ProtectedRoute><CsvExportPage /></ProtectedRoute>} />
+          <Route path="/integrations" element={<ProtectedRoute><IntegrationsPage /></ProtectedRoute>} />
+          <Route path="/integrations/google/callback" element={<ProtectedRoute><GoogleSheetsCallbackPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       ) : (
