@@ -1,3 +1,4 @@
+### Builds the Google OAuth URL for Sheets/Drive access using minimal scope (drive.file).
 module GoogleSheets
   class AuthUrlService
     def initialize(session:)

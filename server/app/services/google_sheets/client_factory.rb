@@ -1,3 +1,4 @@
+### Provides an authorized Sheets client, refreshing tokens and persisting refreshed creds.
 module GoogleSheets
   class ClientFactory
     def initialize(integration)

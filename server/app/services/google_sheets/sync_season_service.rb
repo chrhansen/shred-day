@@ -1,5 +1,6 @@
 require "google/apis/sheets_v4"
 
+### Writes season data into a sheet tab (ensures tab exists, clears, then rewrites rows).
 module GoogleSheets
   class SyncSeasonService
     HEADERS = ["Date", "Resort", "Day #", "Skis", "Tags", "Notes", "Photos"].freeze

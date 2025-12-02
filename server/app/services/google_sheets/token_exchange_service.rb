@@ -1,3 +1,4 @@
+### Exchanges an OAuth code for tokens and validates state; returns access/refresh tokens.
 module GoogleSheets
   class TokenExchangeService
     def initialize(session:, code:, state:)

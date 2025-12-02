@@ -1,5 +1,6 @@
 require "google/apis/sheets_v4"
 
+### Creates the Google Sheet (one tab per season), stores ids/URLs, and marks status.
 module GoogleSheets
   class SetupSpreadsheetService
     def initialize(integration)

@@ -1,3 +1,4 @@
+### Background job: given an integration and season offsets, writes data into the sheet.
 class GoogleSheetsSyncJob < ApplicationJob
   queue_as :default
 

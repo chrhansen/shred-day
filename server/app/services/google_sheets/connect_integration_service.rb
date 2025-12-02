@@ -1,3 +1,4 @@
+### Persists tokens for a user, creates the Sheet, and returns the integration record.
 module GoogleSheets
   class ConnectIntegrationService
     def initialize(user:, session:, code:, state:)

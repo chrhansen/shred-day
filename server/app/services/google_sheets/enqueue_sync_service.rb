@@ -1,3 +1,4 @@
+### Converts dates to season offsets and enqueues sync jobs when an integration is active.
 module GoogleSheets
   class EnqueueSyncService
     def initialize(user)
