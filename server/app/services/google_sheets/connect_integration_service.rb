@@ -28,11 +28,8 @@ module GoogleSheets
       )
       integration.save!
 
-      creation_result = GoogleSheets::SetupSpreadsheetService.new(integration).create_spreadsheet
-      unless creation_result.created?
-        integration.mark_error!(creation_result.error)
-        return Result.new(error: creation_result.error)
-      end
+      creation_error = create_spreadsheet(integration)
+      return Result.new(error: creation_error) if creation_error.present?
 
       Result.new(integration: integration)
     rescue StandardError => e
@@ -50,6 +47,51 @@ module GoogleSheets
       def connected?
         integration.present? && error.nil?
       end
+    end
+
+    private
+
+    def sheets_service(integration)
+      GoogleSheets::ClientFactory.new(integration).sheets_service
+    end
+
+    def create_spreadsheet(integration)
+      season_offsets = AvailableSeasonsService.new(@user).fetch_available_seasons
+      season_offsets = [0] if season_offsets.empty?
+
+      converter = OffsetDateRangeConverterService.new(@user.season_start_day)
+      sheets = season_offsets.map do |offset|
+        Google::Apis::SheetsV4::Sheet.new(
+          properties: Google::Apis::SheetsV4::SheetProperties.new(
+            title: season_label(converter, offset),
+            grid_properties: Google::Apis::SheetsV4::GridProperties.new(frozen_row_count: 1)
+          )
+        )
+      end
+
+      spreadsheet = sheets_service(integration).create_spreadsheet(
+        Google::Apis::SheetsV4::Spreadsheet.new(
+          properties: Google::Apis::SheetsV4::SpreadsheetProperties.new(title: "Shred Day Ski Log"),
+          sheets: sheets
+        )
+      )
+
+      integration.update!(
+        spreadsheet_id: spreadsheet.spreadsheet_id,
+        spreadsheet_url: spreadsheet.spreadsheet_url,
+        status: :connected,
+        last_error: nil
+      )
+
+      nil
+    rescue StandardError => e
+      integration.mark_error!(e.message)
+      e.message
+    end
+
+    def season_label(converter, offset)
+      start_date, end_date = converter.date_range(offset)
+      "#{start_date.year}-#{end_date.year} Season"
     end
   end
 end
