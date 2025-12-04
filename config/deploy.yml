@@ -73,6 +73,7 @@ builder:
 # Use a different ssh user than root
 ssh:
   user: root
+  proxy_command: "ssh -W %h:%p root@91.99.62.190"
 
 # Use accessory services (secrets come from .kamal/secrets).
 accessories:
