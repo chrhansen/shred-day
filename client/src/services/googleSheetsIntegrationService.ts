@@ -10,15 +10,18 @@ export type GoogleSheetIntegrationStatus = {
 
 export const googleSheetsIntegrationService = {
   async getStatus(): Promise<GoogleSheetIntegrationStatus> {
-    return apiClient.get<GoogleSheetIntegrationStatus>("/api/v1/google_sheet_integration");
+    const response = await apiClient.get<{ integration?: GoogleSheetIntegrationStatus; connected?: boolean }>("/api/v1/google_sheet_integration");
+    if (response.integration) return response.integration;
+    return { connected: response.connected ?? false };
   },
 
   async startConnect(): Promise<{ url: string }> {
     return apiClient.post<{ url: string }>("/api/v1/google_sheet_integration");
   },
 
-  async completeConnect(code: string, state: string): Promise<{ connected: boolean; sheet_url?: string }> {
-    return apiClient.patch("/api/v1/google_sheet_integration", { code, state });
+  async completeConnect(code: string, state: string): Promise<GoogleSheetIntegrationStatus> {
+    const response = await apiClient.patch<{ integration: GoogleSheetIntegrationStatus }>("/api/v1/google_sheet_integration", { code, state });
+    return response.integration;
   },
 
   async disconnect(): Promise<void> {

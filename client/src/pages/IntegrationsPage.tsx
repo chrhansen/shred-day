@@ -57,11 +57,12 @@ export default function IntegrationsPage() {
   const isConnected = status?.connected;
   const linkTarget = status?.sheet_url;
   const hasError = status?.last_error;
+  const statusText = status?.status;
   const statusLabel = useMemo(() => {
-    if (hasError) return "Needs attention";
+    if (hasError || statusText === "errored") return "Needs attention";
     if (isConnected) return "Connected";
     return "Not connected";
-  }, [hasError, isConnected]);
+  }, [hasError, isConnected, statusText]);
 
   const handleLaunchAuth = () => {
     connectMutation.mutate(undefined, {
