@@ -24,13 +24,14 @@ class GoogleSheetIntegration < ApplicationRecord
     defaults = {
       except: [
         :access_token,
-        :refresh_token,
-        :access_token_expires_at,
-        :user_id,
-        :created_at,
-        :updated_at,
-        :spreadsheet_id
-      ]
+      :refresh_token,
+      :access_token_expires_at,
+      :user_id,
+      :created_at,
+      :updated_at,
+      :spreadsheet_id,
+      :spreadsheet_url
+    ]
     }
 
     super(defaults.deep_merge(options || {})).merge(
