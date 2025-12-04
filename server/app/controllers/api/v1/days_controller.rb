@@ -26,6 +26,7 @@ class Api::V1::DaysController < ApplicationController
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.skis << @skis
       result.day.reload(include: [:skis, :resort, :photos, :tags])
+      enqueue_sheets_sync([result.day.date])
       render json: result.day, status: :created
     else
       render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
@@ -34,6 +35,7 @@ class Api::V1::DaysController < ApplicationController
 
   # PATCH /api/v1/days/:id
   def update
+    previous_date = @day.date
     result = Days::UpdateDayService.new(
       @day,
       day_params.except(:photo_ids, :tag_ids),
@@ -43,6 +45,7 @@ class Api::V1::DaysController < ApplicationController
     if result.updated?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
       result.day.reload(include: [:skis, :resort, :photos, :tags])
+      enqueue_sheets_sync([previous_date, result.day.date])
       render json: result.day, status: :ok
     else
       render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
@@ -54,6 +57,7 @@ class Api::V1::DaysController < ApplicationController
     date = @day.date
     if @day.destroy
       DayNumberUpdaterService.new(user:current_user, affected_dates: [date]).update!
+      enqueue_sheets_sync([date])
 
       head :no_content # Return 204 No Content on success
     else
@@ -87,5 +91,12 @@ class Api::V1::DaysController < ApplicationController
     params.require(:day).permit(
       :date, :resort_id, :notes, photo_ids: [], ski_ids: [], tag_ids: []
     )
+  end
+
+  def enqueue_sheets_sync(dates)
+    integration = current_user.google_sheet_integration
+    return unless integration&.status_connected?
+
+    GoogleSheetsSyncJob.perform_later(integration.id, dates)
   end
 end

@@ -1,0 +1,45 @@
+module Api
+  module V1
+    class GoogleSheetIntegrationsController < ApplicationController
+      def show
+        integration = current_user.google_sheet_integration
+        return render json: { connected: false } unless integration
+
+        render json: { integration: integration }
+      end
+
+      def create
+        result = GoogleSheets::AuthUrlService.new(session: session).auth_url
+
+        if result.generated?
+          render json: { url: result.auth_url }
+        else
+          render json: { error: result.error || "Unable to start Google Sheets connection" }, status: :unprocessable_entity
+        end
+      end
+
+      def update
+        service_result = GoogleSheets::ConnectIntegrationService.new(
+          user: current_user,
+          session: session,
+          code: params[:code],
+          state: params[:state]
+        ).connect
+
+        if service_result.connected?
+          GoogleSheetsSyncJob.perform_later(service_result.integration.id)
+          render json: { integration: service_result.integration }, status: :ok
+        else
+          render json: { error: service_result.error || "Unable to connect Google Sheets" }, status: :unprocessable_entity
+        end
+      end
+
+      def destroy
+        integration = current_user.google_sheet_integration
+        integration&.disconnect!
+
+        head :no_content
+      end
+    end
+  end
+end

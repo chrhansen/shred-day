@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       resources :recent_resorts, only: [:index] # GET /api/v1/recent_resorts
 
       resource :csv_export, only: [:show, :create], controller: :csv_export
+      resource :google_sheet_integration, only: [:show, :create, :update, :destroy], controller: :google_sheet_integrations
     end
   end
 
