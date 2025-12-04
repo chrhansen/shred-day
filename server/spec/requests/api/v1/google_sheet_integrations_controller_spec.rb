@@ -59,7 +59,7 @@ RSpec.describe "Api::V1::GoogleSheetIntegrationsController", type: :request do
       expect(response).to have_http_status(:ok)
       expect(body["connected"]).to eq(true)
       expect(body["sheet_url"]).to eq(integration.spreadsheet_url)
-      expect(GoogleSheetsSyncJob).to have_received(:perform_later).with(integration.id, [0])
+      expect(GoogleSheetsSyncJob).to have_received(:perform_later).with(integration.id)
     end
 
     it "returns error when connect fails" do

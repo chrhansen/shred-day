@@ -1,10 +1,9 @@
-### Orchestrates syncing an integration across season offsets using the season sync service.
 module GoogleSheets
   class SyncIntegrationService
-    def sync(integration:, season_offsets:)
+    def sync(integration:, dates: nil)
       return unless integration.status_connected?
 
-      offsets = Array(season_offsets).map(&:to_i).uniq
+      offsets = season_offsets(integration, dates)
       return if offsets.empty?
 
       sync_service = GoogleSheets::SyncSeasonService.new(integration)
@@ -14,6 +13,18 @@ module GoogleSheets
     rescue StandardError => e
       integration.mark_error!(e.message)
       Rails.logger.error("[GoogleSheets::SyncIntegrationService] #{e.class}: #{e.message}")
+    end
+
+    private
+
+    def season_offsets(integration, dates)
+      if dates.present?
+        converter = OffsetDateRangeConverterService.new(integration.user.season_start_day)
+        return dates.compact.map { |date| converter.season_offset(date) }.uniq
+      end
+
+      offsets = AvailableSeasonsService.new(integration.user).fetch_available_seasons
+      offsets.empty? ? [0] : offsets
     end
   end
 end

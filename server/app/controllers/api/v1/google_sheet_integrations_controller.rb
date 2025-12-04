@@ -33,7 +33,7 @@ module Api
         ).connect
 
         if service_result.connected?
-          enqueue_sync_jobs(service_result.integration)
+          GoogleSheetsSyncJob.perform_later(service_result.integration.id)
           render json: {
             connected: true,
             sheet_url: service_result.integration.spreadsheet_url
@@ -48,14 +48,6 @@ module Api
         integration&.disconnect!
 
         head :no_content
-      end
-
-      private
-
-      def enqueue_sync_jobs(integration)
-        offsets = AvailableSeasonsService.new(current_user).fetch_available_seasons
-        offsets = [0] if offsets.empty?
-        GoogleSheetsSyncJob.perform_later(integration.id, offsets)
       end
     end
   end
