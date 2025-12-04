@@ -19,4 +19,23 @@ class GoogleSheetIntegration < ApplicationRecord
       spreadsheet_url: nil
     )
   end
+
+  def as_json(options = {})
+    defaults = {
+      except: [
+        :access_token,
+        :refresh_token,
+        :access_token_expires_at,
+        :user_id,
+        :created_at,
+        :updated_at,
+        :spreadsheet_id
+      ]
+    }
+
+    super(defaults.deep_merge(options || {})).merge(
+      "connected" => status_connected?,
+      "sheet_url" => spreadsheet_url
+    )
+  end
 end

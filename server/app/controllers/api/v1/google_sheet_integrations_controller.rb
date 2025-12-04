@@ -5,13 +5,7 @@ module Api
         integration = current_user.google_sheet_integration
         return render json: { connected: false } unless integration
 
-        render json: {
-          connected: integration.status_connected?,
-          status: integration.status,
-          sheet_url: integration.spreadsheet_url,
-          last_error: integration.last_error,
-          last_synced_at: integration.last_synced_at
-        }
+        render json: { integration: integration }
       end
 
       def create
@@ -34,10 +28,7 @@ module Api
 
         if service_result.connected?
           GoogleSheetsSyncJob.perform_later(service_result.integration.id)
-          render json: {
-            connected: true,
-            sheet_url: service_result.integration.spreadsheet_url
-          }, status: :ok
+          render json: { integration: service_result.integration }, status: :ok
         else
           render json: { error: service_result.error || "Unable to connect Google Sheets" }, status: :unprocessable_entity
         end

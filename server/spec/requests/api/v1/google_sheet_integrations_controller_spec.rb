@@ -22,9 +22,9 @@ RSpec.describe "Api::V1::GoogleSheetIntegrationsController", type: :request do
       get "/api/v1/google_sheet_integration"
 
       body = JSON.parse(response.body)
-      expect(body["connected"]).to eq(true)
-      expect(body["sheet_url"]).to eq("http://sheet.url")
-      expect(body["status"]).to eq(integration.status)
+      expect(body.dig("integration", "connected")).to eq(true)
+      expect(body.dig("integration", "sheet_url")).to eq("http://sheet.url")
+      expect(body.dig("integration", "status")).to eq(integration.status)
     end
   end
 
@@ -57,8 +57,8 @@ RSpec.describe "Api::V1::GoogleSheetIntegrationsController", type: :request do
 
       body = JSON.parse(response.body)
       expect(response).to have_http_status(:ok)
-      expect(body["connected"]).to eq(true)
-      expect(body["sheet_url"]).to eq(integration.spreadsheet_url)
+      expect(body.dig("integration", "connected")).to eq(true)
+      expect(body.dig("integration", "sheet_url")).to eq(integration.spreadsheet_url)
       expect(GoogleSheetsSyncJob).to have_received(:perform_later).with(integration.id)
     end
 
