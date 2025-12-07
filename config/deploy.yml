@@ -8,7 +8,7 @@ image: ghcr.io/chrhansen/shred-day
 servers:
   web:
     hosts:
-      - 91.99.62.190
+      - 116.203.51.34
   # job:
   #   hosts:
   #     - 188.245.110.141
@@ -83,7 +83,7 @@ accessories:
   db:
     image: postgres:17
     service: server-db
-    host: 91.99.62.190
+    host: 116.203.51.34
     port: "127.0.0.1:5432:5432"
     env:
       clear:
@@ -92,4 +92,4 @@ accessories:
       secret:
         - POSTGRES_PASSWORD
     volumes:
-      - "postgres_data:/var/lib/postgresql/data"
+      - "/mnt/postgres_data:/var/lib/postgresql/data"
