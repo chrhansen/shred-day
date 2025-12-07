@@ -45,6 +45,7 @@ RUN bundle install && \
 
 COPY server/ .
 RUN bundle exec bootsnap precompile app/ lib/
+RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 
 # ──────────────── Node build stage ──────────────────────────────
 FROM node:${NODE_VERSION}-slim AS build-node
