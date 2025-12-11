@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import { X, Loader2 } from "lucide-react";
 import { type SkiDayDetail as SkiDayDetailType } from "@/types/ski";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,14 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
 
   const now = new Date();
   const dayDate = day ? new Date(day.date.replace(/-/g, '/')) : null;
-  const formattedFullDate = dayDate ? format(dayDate, "EEEE, MMMM d, yyyy") : "";
-  const displayDate = dayDate ? formatSkiDayDisplayDate(dayDate, now) : "";
+  const daysAgo = dayDate ? differenceInCalendarDays(now, dayDate) : null;
+  const isRecent = typeof daysAgo === "number" && daysAgo >= 0 && daysAgo <= 6;
+  const relativeLabel = dayDate
+    ? isRecent
+      ? formatSkiDayDisplayDate(dayDate, now)
+      : format(dayDate, "EEEE")
+    : "";
+  const formattedFullDate = dayDate ? format(dayDate, "MMM. d, yyyy") : "";
 
   const getAccessibilityText = () => {
     if (isLoading) {
@@ -137,7 +143,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
             <div>
               <h2 className="text-xl font-semibold text-slate-800">{day.resort.name}</h2>
               <p className="text-slate-500">
-                {displayDate}
+                {relativeLabel}
                 {formattedFullDate ? ` \u2022 ${formattedFullDate}` : ""}
               </p>
             </div>
