@@ -17,12 +17,10 @@ describe('Create and Edit a Ski Day', () => {
   const formatExpectedDisplayDate = (dayDate: Date) => {
     const now = new Date();
     const difference = differenceInCalendarDays(now, dayDate);
-    if (Math.abs(difference) <= 14) {
-      if (difference === 0) return "Today";
-      if (difference === 1) return "Yesterday";
-      if (difference > 1) return `${difference} days ago`;
-      if (difference === -1) return "Tomorrow";
-      return `In ${Math.abs(difference)} days`;
+    if (difference === 0) return "Today";
+    if (difference === 1) return "Yesterday";
+    if (difference > 1 && difference <= 6) {
+      return format(dayDate, 'EEEE');
     }
     const currentYear = getYear(now);
     const formatString = getYear(dayDate) === currentYear ? 'MMM d' : 'MMM d, yyyy';
