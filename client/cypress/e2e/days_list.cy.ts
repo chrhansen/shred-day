@@ -15,6 +15,23 @@ describe('Ski Days List Page', () => {
   const SKI_B_NAME = "Test Ski B";
   const DAY1_TAG = 'With Friends';
   const DAY2_TAG = 'Training';
+  const formatDetailHeaderDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayDate = new Date(date);
+    dayDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((today.getTime() - dayDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weekday = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const relative = diffDays === 0
+      ? 'Today'
+      : diffDays === 1
+        ? 'Yesterday'
+        : weekday;
+    const formattedDate = dayDate
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      .replace(/^([A-Za-z]{3})/, '$1.');
+    return `${relative} • ${formattedDate}`;
+  };
 
   // Calculate dates dynamically to always fall in current season (after Sept 1)
   const now = new Date();
@@ -219,7 +236,7 @@ describe('Ski Days List Page', () => {
 
     // Optional: Check for some content within the modal to be more specific
     const day1TestDate = new Date(DAY1_DATE.replace(/-/g, '/'));
-    const expectedModalDate = day1TestDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const expectedModalDate = formatDetailHeaderDate(day1TestDate);
     cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', expectedModalDate);
     cy.get('@resortName').then(resortName => {
       cy.get('[data-testid="ski-day-detail-modal"]').should('contain.text', resortName);
