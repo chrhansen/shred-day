@@ -26,6 +26,24 @@ describe('Ski Day Detail Popover', () => {
     notes: 'Had a great time taking photos.',
   };
 
+  const formatDetailHeaderDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayDate = new Date(date);
+    dayDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((today.getTime() - dayDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weekday = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const relative = diffDays === 0
+      ? 'Today'
+      : diffDays === 1
+        ? 'Yesterday'
+        : weekday;
+    const formattedDate = dayDate
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      .replace(/^([A-Za-z]{3})/, '$1.');
+    return `${relative} • ${formattedDate}`;
+  };
+
   beforeEach(function() {
     userEmail = `test-skidetail-${Date.now()}@example.com`;
     cy.createUser(userEmail, PASSWORD);
@@ -117,7 +135,7 @@ describe('Ski Day Detail Popover', () => {
   it('should display correct ski day details', function() {
     // Calculate expected date string for Nov 20 in current season
     const testDate = new Date(currentSeasonYear, 10, 20); // month is 0-indexed
-    const expectedDateString = testDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const expectedDateString = formatDetailHeaderDate(testDate);
 
     cy.get('[data-testid="ski-day-detail-modal"]').within(() => {
       cy.contains('h2', resortName).should('be.visible');
