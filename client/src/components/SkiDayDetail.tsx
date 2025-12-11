@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
+import { formatSkiDayDisplayDate } from "@/utils/dateDisplay";
 
 interface SkiDayDetailProps {
   day: SkiDayDetailType | null;
@@ -25,6 +26,11 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
   if (!isOpen) {
     return null;
   }
+
+  const now = new Date();
+  const dayDate = day ? new Date(day.date.replace(/-/g, '/')) : null;
+  const formattedFullDate = dayDate ? format(dayDate, "EEEE, MMMM d, yyyy") : "";
+  const displayDate = dayDate ? formatSkiDayDisplayDate(dayDate, now) : "";
 
   const getAccessibilityText = () => {
     if (isLoading) {
@@ -48,7 +54,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
     const skiNames = day.skis && day.skis.length > 0 ? day.skis.map(s => s.name).join(", ") : "N/A";
     return {
       title: `${day.resort.name} - Ski Day Details`,
-      description: `Details for ski day at ${day.resort.name} on ${format(new Date(day.date.replace(/-/g, '/')), "EEEE, MMMM d, yyyy")}. Skis used: ${skiNames}. ${day.notes ? `Notes: ${day.notes}` : "No additional notes."}`
+      description: `Details for ski day at ${day.resort.name} on ${formattedFullDate}. Skis used: ${skiNames}. ${day.notes ? `Notes: ${day.notes}` : "No additional notes."}`
     };
   };
 
@@ -130,7 +136,10 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
           <div className="flex items-center gap-4">
             <div>
               <h2 className="text-xl font-semibold text-slate-800">{day.resort.name}</h2>
-              <p className="text-slate-500">{format(new Date(day.date.replace(/-/g, '/')), "EEEE, MMMM d, yyyy")}</p>
+              <p className="text-slate-500">
+                {displayDate}
+                {formattedFullDate ? ` \u2022 ${formattedFullDate}` : ""}
+              </p>
             </div>
           </div>
           <Separator />
