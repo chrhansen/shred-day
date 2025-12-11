@@ -4,6 +4,7 @@ describe('Authentication Flows', () => {
   // Define base URL in cypress.config.ts or use full URLs here
   const AUTH_URL = '/auth';
   const PASSWORD = 'password123'; // Keep password consistent
+  const FAKE_GOOGLE_URL = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=dummy-client-id&scope=openid%20email%20profile&state=test-state';
 
   // --- Login Tests --- //
   describe('Login', () => {
@@ -72,13 +73,14 @@ describe('Authentication Flows', () => {
   describe('Google Sign-In', () => {
     beforeEach(() => {
       cy.clearCookies();
+      cy.intercept('POST', '/api/v1/google_sign_in_flow', {
+        statusCode: 200,
+        body: { url: FAKE_GOOGLE_URL },
+      }).as('googleSignInRequest');
       cy.visit(AUTH_URL);
     });
 
     it('should call backend API when Google Sign-In button is clicked', () => {
-      // Intercept the API call to verify it happens (but don't mock the response)
-      cy.intercept('POST', '/api/v1/google_sign_in_flow').as('googleSignInRequest');
-
       // Click the Google Sign-In button
       cy.contains('button', /Continue with Google/i).click();
 
@@ -125,15 +127,16 @@ describe('Authentication Flows', () => {
   describe('Google Sign-Up', () => {
     beforeEach(() => {
       cy.clearCookies();
+      cy.intercept('POST', '/api/v1/google_sign_in_flow', {
+        statusCode: 200,
+        body: { url: FAKE_GOOGLE_URL },
+      }).as('googleSignUpRequest');
       cy.visit(AUTH_URL);
       // Switch to Sign Up tab
       cy.contains('button', /sign up/i).click();
     });
 
     it('should call backend API when Google Sign-Up button is clicked from Sign Up tab', () => {
-      // Intercept the API call to verify it happens (but don't mock the response)
-      cy.intercept('POST', '/api/v1/google_sign_in_flow').as('googleSignUpRequest');
-
       // Click the Google Sign-Up button on the Sign Up tab
       cy.contains('button', /Continue with Google/i).click();
 

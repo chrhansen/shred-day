@@ -37,6 +37,8 @@ Rails.application.routes.draw do
     end
   end
 
+  mount MissionControl::Jobs::Engine, at: "/admin/jobs"
+
   # Serve frontend routes - must be last
   # This ensures that any GET request not matched by the API or other routes
   # above will be served the index.html file, allowing React Router to handle it.

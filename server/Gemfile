@@ -64,3 +64,7 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "shoulda-matchers"
 end
+
+# Gems for Mission Control Jobs dashboard
+gem "mission_control-jobs", "~> 1.1"
+gem "propshaft", "~> 1.3"
