@@ -28,9 +28,6 @@ ENV RAILS_ENV=production \
 FROM base AS build
 WORKDIR /rails/server
 
-ARG RAILS_MASTER_KEY
-ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
-
 RUN set -eux; \
     apt-get update -qq; \
     apt-get install --no-install-recommends -y \
