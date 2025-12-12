@@ -73,8 +73,6 @@ builder:
   arch: amd64
   context: .
   dockerfile: server/Dockerfile
-  args:
-    RAILS_MASTER_KEY: <%= ENV["RAILS_MASTER_KEY"] %>
 
 # Use a different ssh user than root
 ssh:
