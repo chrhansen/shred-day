@@ -3,9 +3,8 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  # Ensures that a master key has been made available in either ENV["RAILS_MASTER_KEY"]
-  # or in config/master.key. This key is used to decrypt credentials (and other encrypted files).
-  config.require_master_key = true
+  # Enforce master key in runtime, but allow asset builds to proceed when SECRET_KEY_BASE_DUMMY is set.
+  config.require_master_key = ENV["SECRET_KEY_BASE_DUMMY"].blank?
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
