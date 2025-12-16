@@ -15,6 +15,7 @@ import TextImportPage from "@/pages/TextImportPage";
 import CsvExportPage from "@/pages/CsvExportPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
 import GoogleSheetsCallbackPage from "@/pages/GoogleSheetsCallbackPage";
+import LandingPage from "@/pages/LandingPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -68,9 +69,10 @@ const AppRoutes = () => {
         </>
       ) : (
         <>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/callback" element={<CallbackPage />} />
-          <Route path="*" element={<Navigate to="/auth" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </>
       )}
     </Routes>

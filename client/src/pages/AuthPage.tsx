@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/assets/icons/google-g-logo";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { skiService } from "@/services/skiService";
 import { accountService } from "@/services/accountService";
 import { toast } from "sonner";
@@ -16,7 +16,28 @@ export default function AuthPage() {
   const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
   const [signupPasswordVisible, setSignupPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const [activeTab, setActiveTab] = useState<"login" | "signup">(() => {
+    const modeParam = new URLSearchParams(location.search).get("mode");
+    return modeParam === "signup" ? "signup" : "login";
+  });
+
+  const updateModeParam = (mode: "login" | "signup") => {
+    const params = new URLSearchParams(location.search);
+    if (mode === "signup") {
+      params.set("mode", "signup");
+    } else {
+      params.delete("mode");
+    }
+    navigate({ pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" }, { replace: true });
+  };
+
+  useEffect(() => {
+    const modeParam = new URLSearchParams(location.search).get("mode");
+    const mode = modeParam === "signup" ? "signup" : "login";
+    setActiveTab(mode);
+  }, [location.search]);
 
   // --- Sign Up State ---
   const [signupEmail, setSignupEmail] = useState("");
@@ -100,7 +121,11 @@ export default function AuthPage() {
           <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
             Welcome to Shred Day
           </h1>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => {
+            const mode = value === "signup" ? "signup" : "login";
+            setActiveTab(mode);
+            updateModeParam(mode);
+          }} className="w-full">
             <TabsList className="flex w-full bg-slate-100 rounded-lg mb-8 p-0">
               <TabsTrigger
                 value="login"
