@@ -91,11 +91,11 @@ export default function LandingPage() {
                   The simplest way to track your snow season. Log days, see stats, and never forget another epic run.
                 </p>
 
-                <div className="flex flex-row flex-wrap gap-4 pt-2">
+                <div className="flex flex-row flex-nowrap gap-3 pt-2">
                   <Button
                     onClick={() => goToAuth("signup")}
                     size="lg"
-                    className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                    className="h-12 px-6 text-base sm:h-14 sm:px-8 sm:text-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 shrink-0 whitespace-nowrap"
                   >
                     Start Tracking Free
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -104,7 +104,7 @@ export default function LandingPage() {
                     variant="outline"
                     onClick={() => goToAuth("login")}
                     size="lg"
-                    className="h-14 px-8 text-lg border-2"
+                    className="h-12 px-6 text-base sm:h-14 sm:px-8 sm:text-lg border-2 shrink-0 whitespace-nowrap"
                   >
                     I have an account
                   </Button>
