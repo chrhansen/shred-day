@@ -79,10 +79,6 @@ export default function LandingPage() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
               {/* Left Content */}
               <div className="space-y-8 text-left flex-1">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium w-fit">
-                  <Sparkles className="h-4 w-4" />
-                  Free to use forever
-                </div>
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
                   <span className="text-foreground">Remember</span>
                   <br />
@@ -92,10 +88,10 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-xl md:text-2xl text-muted-foreground max-w-xl leading-relaxed">
-                  The simplest way to track your ski season. Log days, see stats, and never forget another epic run.
+                  The simplest way to track your snow season. Log days, see stats, and never forget another epic run.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <div className="flex flex-row flex-wrap gap-4 pt-2">
                   <Button
                     onClick={() => goToAuth("signup")}
                     size="lg"
@@ -169,7 +165,7 @@ export default function LandingPage() {
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">One app. Your whole season.</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Built for skiers who want to remember every day on the mountain.
+                Built for skiers and snowboarders who want to remember every day on the mountain.
               </p>
             </div>
 
