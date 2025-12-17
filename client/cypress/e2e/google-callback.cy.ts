@@ -108,8 +108,8 @@ describe('Google OAuth Callback', () => {
       // Click "Go to Homepage" button
       cy.contains('button', 'Go to Homepage').click();
 
-      // Should redirect to home page (which will redirect to auth if not logged in)
-      cy.location('pathname').should('eq', '/auth');
+      // Should redirect to home page (landing when not logged in)
+      cy.location('pathname').should('eq', '/');
     });
   });
 
