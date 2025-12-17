@@ -7,9 +7,11 @@ type LogoProps = {
 export const Logo = ({ className }: LogoProps) => {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow-md shadow-indigo-200">
-        <span className="text-lg">A</span>
-      </div>
+      <img
+        src="/shread-day-logo_192x192.png"
+        alt="Shred Day logo"
+        className="h-10 w-10 rounded-lg shadow-sm"
+      />
       <span className="text-lg md:text-xl font-semibold text-slate-900">Shred.day</span>
     </div>
   );
