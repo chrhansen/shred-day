@@ -102,7 +102,7 @@ export default function CallbackPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/', { replace: true })}
+                  onClick={() => navigate('/auth', { replace: true })}
                   className="w-full"
                 >
                   Go to Homepage
