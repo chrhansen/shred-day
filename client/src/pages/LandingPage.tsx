@@ -83,12 +83,12 @@ export default function LandingPage() {
                   <span className="text-foreground">Remember</span>
                   <br />
                   <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                    every powder day
+                    every shred.day
                   </span>
                 </h1>
 
                 <p className="text-xl md:text-2xl text-muted-foreground max-w-xl leading-relaxed">
-                  The simplest way to track your snow season. Log days, see stats, and never forget another epic run.
+                  The simplest way to track your ski or snowboard season. Log days, see stats, and never forget another epic run.
                 </p>
 
                 <div className="flex flex-row flex-nowrap gap-3 pt-2">
