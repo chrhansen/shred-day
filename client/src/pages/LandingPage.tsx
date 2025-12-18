@@ -163,7 +163,7 @@ export default function LandingPage() {
         <section className="py-20 px-6">
           <div className="container mx-auto max-w-5xl">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">One app. Your whole season.</h2>
+              <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">One app. Several seasons. All your days.</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Built for skiers and snowboarders who want to remember every day on the mountain.
               </p>
