@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/assets/icons/google-g-logo";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { skiService } from "@/services/skiService";
 import { accountService } from "@/services/accountService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Logo } from "@/components/Logo";
 
 export default function AuthPage() {
   const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
@@ -116,7 +117,13 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 border-0">
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <Link to="/" aria-label="Shred Day home">
+            <Logo />
+          </Link>
+        </div>
+      <Card className="rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 border-0">
         <CardContent className="py-10 px-8">
           <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
             Welcome to Shred Day
@@ -299,6 +306,7 @@ export default function AuthPage() {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
