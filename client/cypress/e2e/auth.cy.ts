@@ -64,7 +64,7 @@ describe('Authentication Flows', () => {
       cy.location('pathname').should('eq', '/auth');
 
       // Assert visiting a protected route redirects back to auth
-      cy.visit('/');
+      cy.visit('/stats');
       cy.location('pathname').should('eq', '/auth');
     });
   });
