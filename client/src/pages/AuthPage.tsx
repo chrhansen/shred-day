@@ -116,13 +116,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4 relative">
+      <div className="absolute left-6 top-6">
+        <Link to="/" aria-label="Shred Day home">
+          <Logo />
+        </Link>
+      </div>
       <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <Link to="/" aria-label="Shred Day home">
-            <Logo />
-          </Link>
-        </div>
       <Card className="rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 border-0">
         <CardContent className="py-10 px-8">
           <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
