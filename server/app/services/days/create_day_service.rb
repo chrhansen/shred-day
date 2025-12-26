@@ -24,6 +24,8 @@ class Days::CreateDayService
       created = true
     end
 
+    UserMailer.day_created_notification(day).deliver_later if created
+
     Result.new(day, created, created ? nil : day.errors)
   end
 
