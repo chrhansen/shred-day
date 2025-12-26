@@ -76,7 +76,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="pt-20 pb-16 px-6 lg:pt-28">
           <div className="container mx-auto max-w-6xl">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:gap-16">
               {/* Left Content */}
               <div className="space-y-8 text-left flex-1">
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
@@ -112,15 +112,15 @@ export default function LandingPage() {
               </div>
 
               {/* Right - Phone Mockup */}
-              <div className="relative flex justify-center items-center mt-12 lg:mt-0 flex-shrink-0">
-                <div className="relative z-10 w-48 md:w-56 rotate-[15deg]">
+              <div className="relative flex justify-center items-center mt-12 lg:mt-0 flex-shrink-0 md:-translate-x-12 lg:-translate-x-16">
+                <div className="relative z-10 w-56 md:w-64 rotate-[10deg]">
                   <div className="bg-card rounded-[2rem] border-4 border-foreground/10 shadow-2xl shadow-primary/20 overflow-hidden">
                     <div className="bg-foreground/10 h-5 flex items-center justify-center">
                       <div className="w-16 h-3 bg-foreground/20 rounded-full" />
                     </div>
                     <img
                       src="/landing/app-screenshot.png"
-                      alt="Shred.day app showing ski day logs"
+                      alt="Shred.day web-app showing ski day activities"
                       className="w-full h-full object-cover object-top"
                       loading="lazy"
                     />
