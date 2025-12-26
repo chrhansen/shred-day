@@ -1,6 +1,6 @@
 class ApplicationMailer < ActionMailer::Base
-  DEFAULT_FROM_EMAIL = "Shred Day <hello@shred.day>"
-  DEFAULT_NOTIFICATION_EMAIL = "ops@shred.day"
+  DEFAULT_FROM_EMAIL = Rails.application.credentials.dig(:mailer, :from_email) || "Shred Day <hello@shred.day>"
+  DEFAULT_NOTIFICATION_EMAIL = Rails.application.credentials.dig(:mailer, :notification_email) || "ops@shred.day"
 
   default from: DEFAULT_FROM_EMAIL
   layout "mailer"
