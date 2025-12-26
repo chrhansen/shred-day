@@ -9,7 +9,7 @@ RSpec.describe UserMailer, type: :mailer do
 
       expect(mail.subject).to eq("New user signup - Shred Day")
       expect(mail.to).to eq([ApplicationMailer::DEFAULT_NOTIFICATION_EMAIL])
-      expect(mail.from).to eq([ApplicationMailer::DEFAULT_FROM_EMAIL])
+      expect(mail[:from].value).to eq(ApplicationMailer::DEFAULT_FROM_EMAIL)
       expect(mail.body.encoded).to include("newuser@example.com")
     end
   end
@@ -22,7 +22,7 @@ RSpec.describe UserMailer, type: :mailer do
 
       expect(mail.subject).to eq("New day logged - Shred Day")
       expect(mail.to).to eq([ApplicationMailer::DEFAULT_NOTIFICATION_EMAIL])
-      expect(mail.from).to eq([ApplicationMailer::DEFAULT_FROM_EMAIL])
+      expect(mail[:from].value).to eq(ApplicationMailer::DEFAULT_FROM_EMAIL)
       expect(mail.body.encoded).to include(day.user.email)
     end
   end
