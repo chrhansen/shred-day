@@ -75,6 +75,7 @@ bin/rails server
 - PostgreSQL (Database)
 - Puma (Web Server)
 - bcrypt (Password Hashing)
+- Resend (Transactional email notifications)
 
 ### Deployment (`/` and `/server`)
 - Docker (Containerization)
@@ -132,3 +133,13 @@ npx cypress open
 # Run tests headlessly in the terminal (e.g., for CI)
 # npx cypress run
 ```
+
+## 📧 Email (Resend)
+
+Shred Day uses Resend for transactional notification emails.
+
+Set these environment variables for the Rails API:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `RESEND_NOTIFICATION_EMAIL`

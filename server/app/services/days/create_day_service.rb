@@ -24,10 +24,19 @@ class Days::CreateDayService
       created = true
     end
 
+    notify_day_created(day) if created
+
     Result.new(day, created, created ? nil : day.errors)
   end
 
   private
+
+  def notify_day_created(day)
+    result = Notifications::DayCreatedEmailService.new(day).send_notification
+    return if result.sent?
+
+    Rails.logger.warn("Day created email not sent for day #{day.id}: #{result.error}")
+  end
 
   class Result
     attr_reader :day, :errors

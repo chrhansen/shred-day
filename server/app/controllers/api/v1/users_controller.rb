@@ -4,16 +4,15 @@ class Api::V1::UsersController < ApplicationController
 
   # POST /api/v1/users
   def create
-    user = User.new(email: user_params[:email].strip.downcase, password: user_params[:password])
+    result = Users::CreateUserService.new(user_params).create_user
 
-    if user.save
-      EnsureDefaultTagsService.new(user).create_default_tags
+    if result.created?
       # Establish session immediately after sign up
-      session[:user_id] = user.id
+      session[:user_id] = result.user.id
       # Exclude password_digest from the response for security
-      render json: user.as_json(except: :password_digest), status: :created
+      render json: result.user.as_json(except: :password_digest), status: :created
     else
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: result.errors }, status: :unprocessable_entity
     end
   end
 
