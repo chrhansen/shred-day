@@ -138,8 +138,8 @@ npx cypress open
 
 Shred Day uses Resend for transactional notification emails.
 
-Set these environment variables for the Rails API:
+Set the Resend API key in Rails credentials:
 
-- `RESEND_API_KEY`
-- `RESEND_FROM_EMAIL`
-- `RESEND_NOTIFICATION_EMAIL`
+- `resend.api_key`
+
+From and notification email defaults live in `server/app/mailers/user_mailer.rb`.
