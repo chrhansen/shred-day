@@ -1,13 +1,8 @@
 class UserMailer < ApplicationMailer
-  DEFAULT_FROM_EMAIL = "Shred Day <hello@shred.day>"
-  NOTIFICATION_EMAIL = "ops@shred.day"
-
-  default from: DEFAULT_FROM_EMAIL
-
   def signup_notification(user)
     @user = user
 
-    mail(to: NOTIFICATION_EMAIL, subject: "New user signup - Shred Day") do |format|
+    mail(to: notification_email, subject: "New user signup - Shred Day") do |format|
       format.html { render html: signup_html.html_safe }
     end
   end
@@ -15,7 +10,7 @@ class UserMailer < ApplicationMailer
   def day_created_notification(day)
     @day = day
 
-    mail(to: NOTIFICATION_EMAIL, subject: "New day logged - Shred Day") do |format|
+    mail(to: notification_email, subject: "New day logged - Shred Day") do |format|
       format.html { render html: day_html.html_safe }
     end
   end
