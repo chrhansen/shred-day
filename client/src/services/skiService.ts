@@ -1,4 +1,4 @@
-import { SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry, SkiDayDetail } from '@/types/ski';
+import { SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry, SkiDayDetail, SharedDayDetail } from '@/types/ski';
 import { apiClient, AuthenticationError, API_BASE_URL, defaultFetchOptions, handleApiError } from '@/lib/apiClient';
 
 // Re-export for backward compatibility
@@ -59,12 +59,20 @@ export const skiService = {
     return apiClient.get<SkiDayDetail>(`/api/v1/days/${dayId}`);
   },
 
+  async getSharedDay(dayId: string): Promise<SharedDayDetail> {
+    return apiClient.get<SharedDayDetail>(`/api/v1/shared_days/${dayId}`);
+  },
+
   async updateDay(
     dayId: string,
     dayData: Partial<Omit<SkiDayDetail, 'id' | 'resort' | 'photos' | 'skis'>> &
              { resort_id?: string; ski_ids?: string[]; tag_ids?: string[]; photo_ids?: string[] }
   ): Promise<SkiDayDetail> {
     return apiClient.patch<SkiDayDetail>(`/api/v1/days/${dayId}`, { day: dayData });
+  },
+
+  async updateDaySharing(dayId: string, shared: boolean): Promise<SkiDayDetail> {
+    return apiClient.patch<SkiDayDetail>(`/api/v1/days/${dayId}/share`, { day: { shared } });
   },
 
   async deleteDay(dayId: string): Promise<void> {

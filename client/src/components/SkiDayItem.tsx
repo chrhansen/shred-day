@@ -4,7 +4,7 @@ import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types
 import { SkiDayDetail } from "@/components/SkiDayDetail";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, Camera } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, Camera, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { skiService } from "@/services/skiService";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatSkiDayDisplayDate } from "@/utils/dateDisplay";
+import { ShareDayDialog } from "@/components/ShareDayDialog";
 
 interface SkiDayItemProps {
   day: SkiDayEntry;
@@ -27,6 +28,7 @@ interface SkiDayItemProps {
 
 export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, selectedSeason }: SkiDayItemProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [detailedDayData, setDetailedDayData] = useState<SkiDayDetailType | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [errorLoadingDetail, setErrorLoadingDetail] = useState<string | null>(null);
@@ -139,6 +141,18 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
         </div>
         {/* Vertically stacked and right-aligned for actions menu */}
         <div className="ml-auto flex self-stretch items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-8 w-8 flex-shrink-0 self-center mr-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsShareOpen(true);
+            }}
+            aria-label="Share day"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -177,6 +191,11 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
           error={errorLoadingDetail}
         />
       )}
+      <ShareDayDialog
+        dayId={day.id}
+        open={isShareOpen}
+        onOpenChange={setIsShareOpen}
+      />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { format, isValid, getYear, subYears, subDays, setMonth, setDate, getDays
 import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast as sonnerToast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -11,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { accountService } from "@/services/accountService";
 import { AccountDetails } from "@/types/ski";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i, label: format(new Date(2000, i, 1), 'MMMM') }));
 
@@ -22,6 +24,10 @@ export default function AccountPage() {
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
   const [selectedDay, setSelectedDay] = useState<number | undefined>(undefined);
   const [availableDays, setAvailableDays] = useState<{value: number, label: string}[]>([]);
+  const [username, setUsername] = useState<string>('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
 
   const [derivedSeasonStartDate, setDerivedSeasonStartDate] = useState<Date | undefined>(undefined);
 
@@ -30,7 +36,7 @@ export default function AccountPage() {
     queryFn: accountService.getAccountDetails,
   });
 
-  const { mutate: updateAccount, isPending: isSaving } = useMutation<AccountDetails, Error, { season_start_day: string }>({
+  const { mutate: updateAccount, isPending: isSaving } = useMutation<AccountDetails, Error, { season_start_day?: string; username?: string; avatar?: File | null }>({
     mutationFn: accountService.updateAccountDetails,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['accountDetails'] });
@@ -41,7 +47,18 @@ export default function AccountPage() {
         setSelectedMonth(month);
         setSelectedDay(day);
       }
-      sonnerToast.success("Season start date saved");
+      if (typeof data.username === 'string') {
+        setUsername(data.username);
+      }
+      if (data.avatar_url) {
+        setAvatarPreviewUrl(data.avatar_url);
+      }
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+      }
+      setAvatarFile(null);
+      setAvatarObjectUrl(null);
+      sonnerToast.success("Account updated");
     },
     onError: (error) => {
       sonnerToast.error("Error saving changes", {
@@ -62,6 +79,23 @@ export default function AccountPage() {
       }
     }
   }, [accountDetails]);
+
+  useEffect(() => {
+    if (accountDetails?.username !== undefined && accountDetails?.username !== null) {
+      setUsername(accountDetails.username);
+    }
+    if (accountDetails?.avatar_url) {
+      setAvatarPreviewUrl(accountDetails.avatar_url);
+    }
+  }, [accountDetails]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+      }
+    };
+  }, [avatarObjectUrl]);
 
   useEffect(() => {
     if (selectedMonth !== undefined && selectedDay !== undefined) {
@@ -127,7 +161,27 @@ export default function AccountPage() {
     }
     const formattedMonth = (selectedMonth + 1).toString().padStart(2, '0');
     const formattedDay = selectedDay.toString().padStart(2, '0');
-    updateAccount({ season_start_day: `${formattedMonth}-${formattedDay}` });
+    const trimmedUsername = username.trim();
+    updateAccount({
+      season_start_day: `${formattedMonth}-${formattedDay}`,
+      username: trimmedUsername.length > 0 ? trimmedUsername : undefined,
+      avatar: avatarFile,
+    });
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setAvatarFile(file);
+    if (file) {
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+      }
+      const nextUrl = URL.createObjectURL(file);
+      setAvatarObjectUrl(nextUrl);
+      setAvatarPreviewUrl(nextUrl);
+    } else if (accountDetails?.avatar_url) {
+      setAvatarPreviewUrl(accountDetails.avatar_url);
+    }
   };
 
   const logOutButton = (
@@ -188,6 +242,39 @@ export default function AccountPage() {
             <div className="p-2 bg-gray-50 rounded-md border">
             {format(new Date(accountDetails.created_at), "MMMM d, yyyy")}
             </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={avatarPreviewUrl || undefined} alt={username || "User avatar"} />
+              <AvatarFallback className="bg-slate-100 text-slate-500">
+                {(username || accountDetails.email).slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="space-y-2 flex-1">
+              <Label htmlFor="avatarUpload">Profile Photo</Label>
+              <Input
+                id="avatarUpload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="powderhound"
+              maxLength={20}
+            />
+            <p className="text-sm text-muted-foreground">
+              Usernames are public on shared days. Use 3-20 letters, numbers, or underscores.
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">

@@ -687,6 +687,42 @@ RSpec.describe "Api::V1::Days", type: :request do
     end
   end
 
+  describe "PATCH /api/v1/days/:id/share" do
+    context "when authenticated" do
+      before do
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "sets shared_at when sharing is enabled" do
+        patch share_api_v1_day_path(day), params: { day: { shared: true } }
+        expect(response).to have_http_status(:ok)
+        day.reload
+        expect(day.shared_at).to be_present
+      end
+
+      it "clears shared_at when sharing is disabled" do
+        day.update!(shared_at: Time.current)
+        patch share_api_v1_day_path(day), params: { day: { shared: false } }
+        expect(response).to have_http_status(:ok)
+        day.reload
+        expect(day.shared_at).to be_nil
+      end
+
+      it "returns 422 when shared param is missing" do
+        patch share_api_v1_day_path(day), params: { day: {} }
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "when not authenticated" do
+      it "returns unauthorized status" do
+        patch share_api_v1_day_path(day), params: { day: { shared: true } }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe "DELETE /api/v1/days/:id" do
     context "when authenticated" do
       before do
