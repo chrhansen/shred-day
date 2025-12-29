@@ -113,7 +113,7 @@ export default function SharedDayPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center">
       <div
-        className="relative w-full max-w-2xl aspect-[4/5] sm:aspect-[16/10] bg-muted"
+        className="relative w-full max-w-2xl aspect-[4/5] sm:aspect-[16/10] bg-muted max-h-[72vh] sm:max-h-[64vh] lg:max-h-[78vh]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
