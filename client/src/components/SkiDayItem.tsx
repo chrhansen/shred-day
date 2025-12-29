@@ -141,18 +141,6 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
         </div>
         {/* Vertically stacked and right-aligned for actions menu */}
         <div className="ml-auto flex self-stretch items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-8 w-8 flex-shrink-0 self-center mr-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsShareOpen(true);
-            }}
-            aria-label="Share day"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -167,6 +155,15 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsShareOpen(true);
+                }}
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                <span>Share</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleEditClick}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>Edit</span>
