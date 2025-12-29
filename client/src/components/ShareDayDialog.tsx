@@ -28,10 +28,11 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
 
   const shareUrl = useMemo(() => {
     const shortId = stripDayPrefix(dayId);
-    return `shred.day/d/${shortId}`;
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}/d/${shortId}`;
+    }
+    return `/d/${shortId}`;
   }, [dayId]);
-
-  const fullShareUrl = useMemo(() => `https://${shareUrl}`, [shareUrl]);
 
   const { mutate: updateSharing } = useMutation({
     mutationFn: (shared: boolean) => skiService.updateDaySharing(dayId, shared),
@@ -46,7 +47,7 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(fullShareUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       toast.success('Link copied', { description: 'Share link copied to clipboard' });
       setTimeout(() => setCopied(false), 2000);
