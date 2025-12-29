@@ -51,7 +51,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/d/:id" element={<SharedDayPage />} />
+      <Route path="/d/:dayId" element={<SharedDayPage />} />
       {isAuthenticated ? (
         <>
           <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />

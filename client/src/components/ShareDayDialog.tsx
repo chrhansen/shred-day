@@ -1,13 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Copy, Link } from "lucide-react";
+import { Check, Copy, Link, Link2Off } from "lucide-react";
 import { skiService } from "@/services/skiService";
 
 interface ShareDayDialogProps {
@@ -16,29 +14,30 @@ interface ShareDayDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const stripDayPrefix = (id: string) => id.startsWith('day_') ? id.slice(4) : id;
+const stripDayPrefix = (id: string) => (id.startsWith('day_') ? id.slice(4) : id);
 
 export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProps) {
   const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
 
-  const { data: day, isLoading } = useQuery({
+  const { data: day } = useQuery({
     queryKey: ['day', dayId],
     queryFn: () => skiService.getDay(dayId),
     enabled: open,
   });
 
   const shareUrl = useMemo(() => {
-    if (typeof window === 'undefined') return '';
     const shortId = stripDayPrefix(dayId);
-    return `${window.location.origin}/d/${shortId}`;
+    return `shred.day/d/${shortId}`;
   }, [dayId]);
 
-  const { mutate: updateSharing, isPending: isUpdating } = useMutation({
+  const fullShareUrl = useMemo(() => `https://${shareUrl}`, [shareUrl]);
+
+  const { mutate: updateSharing } = useMutation({
     mutationFn: (shared: boolean) => skiService.updateDaySharing(dayId, shared),
     onSuccess: (updatedDay) => {
       queryClient.setQueryData(['day', dayId], updatedDay);
       queryClient.invalidateQueries({ queryKey: ['days'] });
-      toast.success(updatedDay.shared_at ? 'Sharing enabled' : 'Sharing disabled');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Unable to update sharing');
@@ -47,10 +46,21 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Share link copied');
-    } catch (error) {
-      toast.error('Unable to copy link');
+      await navigator.clipboard.writeText(fullShareUrl);
+      setCopied(true);
+      toast.success('Link copied', { description: 'Share link copied to clipboard' });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error('Failed to copy', { description: 'Please copy the link manually' });
+    }
+  };
+
+  const handleToggleShare = (enabled: boolean) => {
+    updateSharing(enabled);
+    if (enabled) {
+      toast.success('Sharing enabled', { description: 'Anyone with the link can now view this day' });
+    } else {
+      toast.success('Sharing disabled', { description: 'This day is now private' });
     }
   };
 
@@ -60,36 +70,82 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share this day</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Link className="h-5 w-5" />
+            Share Day
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="share-link">Share link</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Link className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input id="share-link" readOnly value={shareUrl} className="pl-9" />
-              </div>
-              <Button type="button" variant="outline" onClick={handleCopy} disabled={!shareUrl}>
-                <Copy className="mr-2 h-4 w-4" />
-                Copy
-              </Button>
-            </div>
-          </div>
-          <Separator />
+
+        <div className="space-y-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label>Public sharing</Label>
+            <div className="space-y-0.5">
+              <Label htmlFor="share-toggle" className="text-base font-medium">
+                Public link
+              </Label>
               <p className="text-sm text-muted-foreground">
-                {isShared ? 'Anyone with the link can view this day.' : 'Turn on to create a public link.'}
+                {isShared
+                  ? "Anyone with the link can view this day"
+                  : "Enable to create a shareable link"}
               </p>
             </div>
             <Switch
+              id="share-toggle"
               checked={isShared}
-              onCheckedChange={(checked) => updateSharing(checked)}
-              disabled={isLoading || isUpdating}
+              onCheckedChange={handleToggleShare}
             />
           </div>
+
+          {isShared && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
+                  <Link className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm truncate font-mono">{shareUrl}</span>
+                </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="shrink-0"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              <Button
+                onClick={handleCopy}
+                className="w-full"
+                variant="default"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {!isShared && (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                <Link2Off className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Turn on the toggle above to create a shareable link
+              </p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

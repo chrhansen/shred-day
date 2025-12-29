@@ -1,188 +1,217 @@
-import { useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, Mountain, Snowflake } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { differenceInCalendarDays, format } from "date-fns";
-import { Loader2, Snowflake } from "lucide-react";
-import { skiService } from "@/services/skiService";
-import { SharedDayDetail } from "@/types/ski";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/Logo";
-import { formatSkiDayDisplayDate } from "@/utils/dateDisplay";
-
-const getRelativeDateLabel = (dateString: string) => {
-  const dayDate = new Date(dateString.replace(/-/g, '/'));
-  const now = new Date();
-  const daysAgo = differenceInCalendarDays(now, dayDate);
-  if (daysAgo >= 0 && daysAgo <= 6) {
-    return formatSkiDayDisplayDate(dayDate, now);
-  }
-  return format(dayDate, "EEEE");
-};
-
-const NotFoundSharedDay = () => (
-  <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white">
-    <div className="mx-auto max-w-xl px-6 py-16 text-center space-y-8">
-      <div className="mx-auto h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center">
-        <Snowflake className="h-9 w-9 text-slate-400" />
-      </div>
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">This day has melted away</h1>
-        <p className="text-slate-500">
-          The ski day you're looking for doesn't exist or is no longer shared.
-        </p>
-      </div>
-      <div className="space-y-4">
-        <div className="flex items-center justify-center gap-3 text-slate-600">
-          <Logo />
-        </div>
-        <p className="text-sm text-slate-500">Track your own ski days and share your adventures.</p>
-        <Button asChild className="bg-slate-900 hover:bg-slate-800">
-          <Link to="/auth">Start Logging Your Days</Link>
-        </Button>
-      </div>
-    </div>
-  </div>
-);
+import { skiService } from "@/services/skiService";
+import type { SharedDayDetail } from "@/types/ski";
 
 export default function SharedDayPage() {
-  const { id } = useParams();
+  const { dayId } = useParams();
+  const navigate = useNavigate();
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   const { data: day, isLoading, isError } = useQuery<SharedDayDetail, Error>({
-    queryKey: ['sharedDay', id],
-    queryFn: () => skiService.getSharedDay(id || ''),
-    enabled: !!id,
+    queryKey: ['sharedDay', dayId],
+    queryFn: () => skiService.getSharedDay(dayId || ''),
+    enabled: !!dayId,
   });
 
-  const displayDate = useMemo(() => {
-    if (!day) return '';
-    return format(new Date(day.date.replace(/-/g, '/')), 'MMM d, yyyy');
-  }, [day]);
+  const photoUrls = day?.photos?.map((photo) => photo.full_url) || [];
+  const hasPhotos = photoUrls.length > 0;
+
+  const nextPhoto = () => {
+    if (hasPhotos) {
+      setCurrentPhotoIndex((prev) => (prev === photoUrls.length - 1 ? 0 : prev + 1));
+    }
+  };
+
+  const prevPhoto = () => {
+    if (hasPhotos) {
+      setCurrentPhotoIndex((prev) => (prev === 0 ? photoUrls.length - 1 : prev - 1));
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextPhoto();
+      else prevPhoto();
+    }
+    setTouchStart(null);
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (isError || !day) {
-    return <NotFoundSharedDay />;
-  }
-
-  const userDisplayName = day.user?.username || 'Shred Day skier';
-  const avatarFallback = userDisplayName.slice(0, 2).toUpperCase();
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <header className="px-6 pt-6 pb-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <img
-            src="/shread-day-logo_192x192.png"
-            alt="Shred Day logo"
-            className="h-10 w-10 rounded-lg shadow-sm"
-          />
-          <span className="text-lg font-semibold text-white">Shred.day</span>
-        </Link>
-        <Button asChild variant="ghost" className="text-white/80 hover:text-white">
-          <Link to="/auth">Start Logging</Link>
-        </Button>
-      </header>
-
-      <main className="px-6 pb-16 space-y-8">
-        <section className="space-y-4">
-          <div className="text-sm uppercase tracking-[0.25em] text-white/60">Shared day</div>
-          <h1 className="text-3xl font-semibold">{day.resort.name}</h1>
-          <p className="text-white/70">
-            {getRelativeDateLabel(day.date)} \u2022 {displayDate}
-          </p>
-        </section>
-
-        <section className="space-y-4">
-          <Carousel className="w-full" data-testid="shared-day-carousel">
-            <CarouselContent>
-              {day.photos && day.photos.length > 0 ? (
-                day.photos.map((photo, index) => (
-                  <CarouselItem key={photo.id || index}>
-                    <div className="aspect-square rounded-2xl overflow-hidden bg-black/40">
-                      <img
-                        src={photo.full_url}
-                        alt={`Shared ski day ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  </CarouselItem>
-                ))
-              ) : (
-                <CarouselItem>
-                  <div className="aspect-square rounded-2xl bg-white/5 flex items-center justify-center text-white/60">
-                    No photos available
-                  </div>
-                </CarouselItem>
-              )}
-            </CarouselContent>
-            <CarouselPrevious className="left-2 bg-white/10 text-white border-white/20" />
-            <CarouselNext className="right-2 bg-white/10 text-white border-white/20" />
-          </Carousel>
-        </section>
-
-        <section className="space-y-4 rounded-2xl bg-white/5 p-6">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={day.user?.avatar_url || undefined} alt={userDisplayName} />
-              <AvatarFallback className="bg-white/10 text-white">{avatarFallback}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-lg font-semibold">{userDisplayName}</p>
-              <p className="text-sm text-white/70">Shared from Shred Day</p>
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+        <div className="text-center space-y-6 max-w-md mx-auto">
+          <div className="relative h-32 w-32 mx-auto">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Mountain className="h-20 w-20 text-muted-foreground/20" />
             </div>
+            <Snowflake
+              className="absolute top-0 left-4 h-6 w-6 text-primary/40 animate-pulse"
+              style={{ animationDelay: "0s" }}
+            />
+            <Snowflake
+              className="absolute top-8 right-2 h-4 w-4 text-primary/30 animate-pulse"
+              style={{ animationDelay: "0.5s" }}
+            />
+            <Snowflake
+              className="absolute bottom-4 left-0 h-5 w-5 text-primary/35 animate-pulse"
+              style={{ animationDelay: "1s" }}
+            />
+            <Snowflake
+              className="absolute bottom-0 right-6 h-3 w-3 text-primary/25 animate-pulse"
+              style={{ animationDelay: "1.5s" }}
+            />
           </div>
 
-          <Separator className="bg-white/10" />
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="text-sm uppercase tracking-wider text-white/60">Skis used</h3>
-              {day.skis && day.skis.length > 0 ? (
-                <ul className="mt-2 space-y-1">
-                  {day.skis.map((ski) => (
-                    <li key={ski.id} className="text-white/90">{ski.name}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-white/60">No skis recorded.</p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-sm uppercase tracking-wider text-white/60">Tags</h3>
-              {day.tags && day.tags.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {day.tags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wide"
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-2 text-white/60">No tags added.</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-white/60">Notes</h3>
-            <p className="mt-2 text-white/80">
-              {day.notes ? day.notes : 'No notes available.'}
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">This day has melted away</h1>
+            <p className="text-muted-foreground">
+              The ski day you're looking for doesn't exist or is no longer shared.
             </p>
           </div>
-        </section>
-      </main>
+
+          <div className="pt-4 space-y-4">
+            <div className="flex justify-center">
+              <Logo />
+            </div>
+            <p className="text-sm text-muted-foreground">Track your own ski days and share your adventures</p>
+            <Button onClick={() => navigate("/")} variant="default" className="w-full sm:w-auto">
+              Start Logging Your Days
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const username = day.user?.username || "shred_day";
+  const resortName = day.resort?.name || "Ski day";
+  const skiNames = day.skis?.map((ski) => ski.name).filter(Boolean).join(" / ") || "";
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center">
+      <div
+        className="relative w-full max-w-2xl aspect-[4/5] sm:aspect-[16/10] bg-muted"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {hasPhotos ? (
+          <>
+            <img
+              src={photoUrls[currentPhotoIndex]}
+              alt={`${resortName} - Photo ${currentPhotoIndex + 1}`}
+              className="w-full h-full object-contain"
+            />
+
+            {photoUrls.length > 1 && (
+              <>
+                <button
+                  onClick={prevPhoto}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={nextPhoto}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {photoUrls.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentPhotoIndex(index)}
+                      className={`h-2 w-2 rounded-full transition-all ${
+                        index === currentPhotoIndex ? "bg-white w-4" : "bg-white/50 hover:bg-white/70"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Mountain className="h-16 w-16 text-muted-foreground/30" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 px-4 py-6 sm:px-6 sm:py-8 max-w-2xl mx-auto w-full">
+        <div className="flex items-center gap-3 mb-6">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={day.user?.avatar_url || undefined} />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {username.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <p className="font-medium text-foreground">@{username}</p>
+        </div>
+
+        <div className="space-y-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{resortName}</h1>
+
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm">{format(new Date(day.date.replace(/-/g, '/')), "MMMM d, yyyy")}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {day.tags?.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+
+          {skiNames && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
+              <span className="text-sm font-medium">{skiNames}</span>
+            </div>
+          )}
+
+          {day.notes && <p className="text-foreground leading-relaxed pt-2">{day.notes}</p>}
+        </div>
+
+        <div className="mt-12 pt-6 border-t">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Logo />
+            </div>
+            <p className="text-sm text-muted-foreground">Track your ski days and share your adventures</p>
+            <Button onClick={() => navigate("/")} variant="default" className="w-full sm:w-auto">
+              Start Logging Your Days
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
