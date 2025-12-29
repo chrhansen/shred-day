@@ -59,6 +59,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
 4. Communicate clearly in summaries: describe the change, mention affected files, note test status, and suggest next actions when relevant.
 5. Use asdf Ruby (currently 3.3.0) when running Ruby commands.
 6. If you add migrations, run them and commit the updated `server/db/structure.sql`.
+7. Do not commit implementation plans; keep them local unless explicitly requested for inclusion.
 
 ## Git
 1. Use the Github CLI `gh` to interact with Github, the origin
