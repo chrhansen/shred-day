@@ -4,7 +4,7 @@ import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types
 import { SkiDayDetail } from "@/components/SkiDayDetail";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, Camera, Share2 } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, Camera, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { skiService } from "@/services/skiService";
@@ -161,7 +161,7 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
                   setIsShareOpen(true);
                 }}
               >
-                <Share2 className="mr-2 h-4 w-4" />
+                <Share className="mr-2 h-4 w-4" />
                 <span>Share</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleEditClick}>
