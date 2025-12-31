@@ -66,7 +66,6 @@ class Api::V1::DaysController < ApplicationController
     end
   end
 
-
   private
 
   def set_skis
