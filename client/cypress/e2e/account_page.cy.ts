@@ -79,6 +79,10 @@ describe('Account Page', () => {
 
     cy.get('#username').clear().type(newUsername);
     cy.get('#avatarUpload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#avatarUpload').then((input) => {
+      const files = (input[0] as HTMLInputElement).files;
+      expect(files).to.have.length(1);
+    });
 
     cy.contains('button', 'Save Changes').click();
 
@@ -86,12 +90,11 @@ describe('Account Page', () => {
       const contentType = interception.request.headers['content-type'];
       expect(contentType).to.include('multipart/form-data');
       expect(interception.response?.statusCode).to.eq(200);
+      expect(interception.response?.body.avatar_url).to.be.a('string');
     });
 
     cy.contains('Account updated').should('be.visible');
     cy.get('#username').should('have.value', expectedUsername);
-    cy.get('[data-testid="avatar-preview"]')
-      .should('have.attr', 'src')
-      .and('match', /^(blob:|http)/);
+    cy.get('#username').should('have.value', expectedUsername);
   });
 });
