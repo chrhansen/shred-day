@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isValid, getYear, subYears, subDays, setMonth, setDate, getDaysInMonth } from "date-fns";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function AccountPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const [derivedSeasonStartDate, setDerivedSeasonStartDate] = useState<Date | undefined>(undefined);
 
@@ -184,6 +185,10 @@ export default function AccountPage() {
     }
   };
 
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
   const logOutButton = (
     <>
       <Button
@@ -244,33 +249,63 @@ export default function AccountPage() {
             </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={avatarPreviewUrl || undefined} alt={username || "User avatar"} />
-              <AvatarFallback className="bg-slate-100 text-slate-500">
-                {(username || accountDetails.email).slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2 flex-1">
-              <Label htmlFor="avatarUpload">Profile Photo</Label>
-              <Input
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label>Profile Photo</Label>
+            <div className="flex items-center gap-4">
+              <div
+                className="relative cursor-pointer group"
+                onClick={handleAvatarClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleAvatarClick();
+                  }
+                }}
+              >
+                <Avatar className="h-20 w-20">
+                  <AvatarImage
+                    src={avatarPreviewUrl || undefined}
+                    alt={username || "User avatar"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-slate-100 text-slate-500 text-xl">
+                    {(username || accountDetails.email).slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <input
+                ref={avatarInputRef}
                 id="avatarUpload"
                 type="file"
                 accept="image/*"
                 onChange={handleAvatarChange}
+                className="hidden"
               />
+              <Button variant="outline" size="sm" onClick={handleAvatarClick}>
+                Upload Photo
+              </Button>
             </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="powderhound"
-              maxLength={20}
-            />
+            <div className="flex items-center">
+              <span className="text-muted-foreground mr-1">@</span>
+              <Input
+                id="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="your_username"
+                maxLength={20}
+                className="flex-1"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Usernames are public on shared days. Use 3-20 letters, numbers, or underscores.
             </p>
