@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Check, Copy, Link, Link2Off } from "lucide-react";
+import { format } from "date-fns";
 import { skiService } from "@/services/skiService";
 
 interface ShareDayDialogProps {
@@ -72,8 +73,10 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Link className="h-5 w-5" />
-            Share Day
+            <Link className="h-5 w-5 shrink-0" />
+            <span className="truncate">
+              Share {day?.resort?.name || "Ski day"}, {day?.date ? format(new Date(day.date.replace(/-/g, '/')), "MMM d, yyyy") : ""}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
@@ -98,23 +101,9 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
 
           {isShared && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
-                  <Link className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm truncate font-mono">{shareUrl}</span>
-                </div>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={handleCopy}
-                  className="shrink-0"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
+                <Link className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-sm truncate font-mono">{shareUrl}</span>
               </div>
 
               <Button
