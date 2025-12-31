@@ -36,7 +36,7 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
   }, [dayId]);
 
   const { mutate: updateSharing } = useMutation({
-    mutationFn: (shared: boolean) => skiService.updateDaySharing(dayId, shared),
+    mutationFn: (shared: boolean) => shared ? skiService.createDayShare(dayId) : skiService.deleteDayShare(dayId),
     onSuccess: (updatedDay) => {
       queryClient.setQueryData(['day', dayId], updatedDay);
       queryClient.invalidateQueries({ queryKey: ['days'] });

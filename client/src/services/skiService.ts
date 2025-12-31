@@ -71,8 +71,12 @@ export const skiService = {
     return apiClient.patch<SkiDayDetail>(`/api/v1/days/${dayId}`, { day: dayData });
   },
 
-  async updateDaySharing(dayId: string, shared: boolean): Promise<SkiDayDetail> {
-    return apiClient.patch<SkiDayDetail>(`/api/v1/days/${dayId}/share`, { day: { shared } });
+  async createDayShare(dayId: string): Promise<SkiDayDetail> {
+    return apiClient.post<SkiDayDetail>('/api/v1/shared_days', { shared_day: { day_id: dayId } });
+  },
+
+  async deleteDayShare(dayId: string): Promise<SkiDayDetail> {
+    return apiClient.delete<SkiDayDetail>(`/api/v1/shared_days/${dayId}`);
   },
 
   async deleteDay(dayId: string): Promise<void> {

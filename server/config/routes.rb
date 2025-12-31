@@ -18,10 +18,8 @@ Rails.application.routes.draw do
       resources :text_imports, only: [:create, :show, :update, :destroy]
       resources :draft_days, only: [:update]
 
-      resources :days, only: [:create, :index, :show, :update, :destroy] do
-        patch :share, on: :member
-      end
-      resources :shared_days, only: [:show]
+      resources :days, only: [:create, :index, :show, :update, :destroy]
+      resources :shared_days, only: [:show, :create, :destroy]
       resource :stats, only: [:show]
       resource :account, only: [:show, :update], controller: :account
 

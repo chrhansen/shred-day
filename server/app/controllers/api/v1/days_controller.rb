@@ -1,5 +1,5 @@
 class Api::V1::DaysController < ApplicationController
-  before_action :set_day, only: [:show, :update, :destroy, :share]
+  before_action :set_day, only: [:show, :update, :destroy]
   before_action :set_skis, only: [:create, :update]
 
   # GET /api/v1/days
@@ -66,24 +66,6 @@ class Api::V1::DaysController < ApplicationController
     end
   end
 
-  # PATCH /api/v1/days/:id/share
-  def share
-    shared_param = params.dig(:day, :shared)
-    if shared_param.nil?
-      render json: { errors: { shared: ['is required'] } }, status: :unprocessable_entity
-      return
-    end
-
-    shared = ActiveModel::Type::Boolean.new.cast(shared_param)
-    service = Days::ShareDayService.new(@day)
-    result = shared ? service.enable_sharing : service.disable_sharing
-
-    if result.updated?
-      render json: result.day, status: :ok
-    else
-      render json: { errors: result.errors }, status: :unprocessable_entity
-    end
-  end
 
   private
 

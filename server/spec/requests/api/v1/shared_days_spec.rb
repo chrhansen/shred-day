@@ -33,4 +33,48 @@ RSpec.describe "Api::V1::SharedDays", type: :request do
       expect(json_response['id']).to eq(day.id)
     end
   end
+
+  describe "POST /api/v1/shared_days" do
+    context "when authenticated" do
+      before do
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "sets shared_at for the day" do
+        post api_v1_shared_days_path, params: { shared_day: { day_id: unshared_day.id } }
+        expect(response).to have_http_status(:ok)
+        expect(unshared_day.reload.shared_at).to be_present
+      end
+    end
+
+    context "when not authenticated" do
+      it "returns unauthorized status" do
+        post api_v1_shared_days_path, params: { shared_day: { day_id: unshared_day.id } }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "DELETE /api/v1/shared_days/:id" do
+    context "when authenticated" do
+      before do
+        post api_v1_sessions_path, params: { email: user.email, password: user.password }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "clears shared_at for the day" do
+        delete api_v1_shared_day_path(day.id)
+        expect(response).to have_http_status(:ok)
+        expect(day.reload.shared_at).to be_nil
+      end
+    end
+
+    context "when not authenticated" do
+      it "returns unauthorized status" do
+        delete api_v1_shared_day_path(day.id)
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end
