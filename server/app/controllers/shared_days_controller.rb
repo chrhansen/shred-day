@@ -26,7 +26,7 @@ class SharedDaysController < ActionController::Base
     tags = []
     title = og_title
     description = og_description
-    image_url = og_image_url
+    image_urls = og_image_urls
     url = og_url
 
     tags << helpers.tag(:meta, name: 'description', content: description)
@@ -34,13 +34,19 @@ class SharedDaysController < ActionController::Base
     tags << helpers.tag(:meta, property: 'og:description', content: description)
     tags << helpers.tag(:meta, property: 'og:type', content: 'website')
     tags << helpers.tag(:meta, property: 'og:url', content: url)
+    tags << helpers.tag(:meta, property: 'og:site_name', content: 'Shred Day')
 
-    if image_url.present?
-      tags << helpers.tag(:meta, property: 'og:image', content: image_url)
+    if image_urls.any?
+      image_urls.each do |image_url|
+        tags << helpers.tag(:meta, property: 'og:image', content: image_url)
+      end
       tags << helpers.tag(:meta, name: 'twitter:card', content: 'summary_large_image')
+      tags << helpers.tag(:meta, name: 'twitter:image', content: image_urls.first)
     else
       tags << helpers.tag(:meta, name: 'twitter:card', content: 'summary')
     end
+    tags << helpers.tag(:meta, name: 'twitter:title', content: title)
+    tags << helpers.tag(:meta, name: 'twitter:description', content: description)
 
     tags.join("\n")
   end
@@ -54,7 +60,11 @@ class SharedDaysController < ActionController::Base
   def og_description
     return "The ski day you're looking for doesn't exist or is no longer shared." unless @day
 
-    base = "#{@day.user&.username || 'A Shred Day user'} shared a ski day at #{@day.resort&.name || 'a resort'}."
+    username = @day.user&.username || 'A Shred Day user'
+    resort_name = @day.resort&.name || 'a resort'
+    tags = @day.tags.map(&:name).join(', ')
+    base = "#{username} shared a ski day at #{resort_name}."
+    base = "#{base} Tags: #{tags}." if tags.present?
     notes = @day.notes.to_s.strip
     return base if notes.blank?
 
@@ -62,13 +72,13 @@ class SharedDaysController < ActionController::Base
     "#{base} #{truncated_notes}"
   end
 
-  def og_image_url
-    return default_image_url unless @day
+  def og_image_urls
+    return [default_image_url].compact unless @day
 
-    photo = @day.photos.first
-    return default_image_url unless photo&.image&.attached?
+    photos = @day.photos.select { |photo| photo.image.attached? }.first(4)
+    return [default_image_url].compact if photos.empty?
 
-    url_for(photo.image.variant(:full))
+    photos.map { |photo| url_for(photo.image.variant(:full)) }
   end
 
   def default_image_url
