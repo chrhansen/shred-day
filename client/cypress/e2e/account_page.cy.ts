@@ -64,10 +64,31 @@ describe('Account Page', () => {
       expect(interception.response?.statusCode).to.eq(200);
     });
 
-    cy.contains('Season start date saved').should('be.visible');
+    cy.contains('Account updated').should('be.visible');
 
     // After successful update, the dropdowns should reflect the new values
     cy.get('#seasonStartMonth').should('contain.text', targetMonth);
     cy.get('#seasonStartDay').should('contain.text', targetDay);
+  });
+
+  it('should allow updating username and avatar photo', () => {
+    const newUsername = `powder_hound_${Date.now()}`;
+
+    cy.intercept('PATCH', '/api/v1/account').as('updateAccountDetails');
+
+    cy.get('#username').clear().type(newUsername);
+    cy.get('#avatarUpload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+
+    cy.contains('button', 'Save Changes').click();
+
+    cy.wait('@updateAccountDetails').then((interception) => {
+      const contentType = interception.request.headers['content-type'];
+      expect(contentType).to.include('multipart/form-data');
+      expect(interception.response?.statusCode).to.eq(200);
+    });
+
+    cy.contains('Account updated').should('be.visible');
+    cy.get('#username').should('have.value', newUsername);
+    cy.get('img[alt]').should('have.attr', 'src').and('include', 'blob:');
   });
 });
