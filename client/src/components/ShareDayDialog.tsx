@@ -24,7 +24,8 @@ export function ShareDayDialog({ dayId, open, onOpenChange }: ShareDayDialogProp
   const { data: day } = useQuery({
     queryKey: ['day', dayId],
     queryFn: () => skiService.getDay(dayId),
-    enabled: open,
+    enabled: open && !!dayId,
+    refetchOnMount: 'always',
   });
 
   const shareUrl = useMemo(() => {
