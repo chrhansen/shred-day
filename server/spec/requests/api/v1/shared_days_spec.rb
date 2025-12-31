@@ -2,9 +2,11 @@ require 'rails_helper'
 
 RSpec.describe "Api::V1::SharedDays", type: :request do
   let!(:user) { create(:user) }
+  let!(:other_user) { create(:user) }
   let!(:resort) { create(:resort) }
   let!(:day) { create(:day, user: user, resort: resort, shared_at: Time.current) }
   let!(:unshared_day) { create(:day, user: user, resort: resort, shared_at: nil) }
+  let!(:other_user_day) { create(:day, user: other_user, resort: resort, shared_at: nil) }
 
   describe "GET /api/v1/shared_days/:id" do
     it "returns the shared day when shared_at is present" do
@@ -46,6 +48,11 @@ RSpec.describe "Api::V1::SharedDays", type: :request do
         expect(response).to have_http_status(:ok)
         expect(unshared_day.reload.shared_at).to be_present
       end
+
+      it "returns not found when day belongs to another user" do
+        post api_v1_shared_days_path, params: { shared_day: { day_id: other_user_day.id } }
+        expect(response).to have_http_status(:not_found)
+      end
     end
 
     context "when not authenticated" do
@@ -67,6 +74,11 @@ RSpec.describe "Api::V1::SharedDays", type: :request do
         delete api_v1_shared_day_path(day.id)
         expect(response).to have_http_status(:ok)
         expect(day.reload.shared_at).to be_nil
+      end
+
+      it "returns not found when day belongs to another user" do
+        delete api_v1_shared_day_path(other_user_day.id)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
