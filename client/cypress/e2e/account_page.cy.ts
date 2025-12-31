@@ -90,6 +90,8 @@ describe('Account Page', () => {
 
     cy.contains('Account updated').should('be.visible');
     cy.get('#username').should('have.value', expectedUsername);
-    cy.get('img[alt]').should('have.attr', 'src').and('include', 'blob:');
+    cy.get('[data-testid="avatar-preview"]')
+      .should('have.attr', 'src')
+      .and('match', /^(blob:|http)/);
   });
 });

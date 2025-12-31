@@ -270,6 +270,7 @@ export default function AccountPage() {
                     src={avatarPreviewUrl || undefined}
                     alt={username || "User avatar"}
                     className="object-cover"
+                    data-testid="avatar-preview"
                   />
                   <AvatarFallback className="bg-slate-100 text-slate-500 text-xl">
                     {(username || accountDetails.email).slice(0, 2).toUpperCase()}
