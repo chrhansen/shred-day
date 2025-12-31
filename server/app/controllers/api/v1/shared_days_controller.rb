@@ -13,23 +13,19 @@ class Api::V1::SharedDaysController < ApplicationController
 
   def create
     day = current_user.days.find(shared_day_params[:day_id])
-    result = Days::ShareDayService.new(day).enable_sharing
-
-    if result.updated?
-      render json: result.day, status: :ok
+    if day.update(shared_at: Time.current)
+      render json: day, status: :ok
     else
-      render json: { errors: result.errors }, status: :unprocessable_entity
+      render json: { errors: day.errors }, status: :unprocessable_entity
     end
   end
 
   def destroy
     day = current_user.days.find(params[:id])
-    result = Days::ShareDayService.new(day).disable_sharing
-
-    if result.updated?
-      render json: result.day, status: :ok
+    if day.update(shared_at: nil)
+      render json: day, status: :ok
     else
-      render json: { errors: result.errors }, status: :unprocessable_entity
+      render json: { errors: day.errors }, status: :unprocessable_entity
     end
   end
 
