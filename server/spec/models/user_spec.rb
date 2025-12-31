@@ -44,6 +44,31 @@ RSpec.describe User, type: :model do
     # Season Start Day validations
     it { should validate_presence_of(:season_start_day) }
 
+    # Username validations
+    it "is valid with a username that uses letters, numbers, and underscores" do
+      subject.username = "powder_hound_1"
+      expect(subject).to be_valid
+    end
+
+    it "is invalid with a username containing disallowed characters" do
+      subject.username = "powder-hound"
+      expect(subject).to_not be_valid
+      expect(subject.errors[:username]).to be_present
+    end
+
+    it "is invalid with a username longer than 20 characters" do
+      subject.username = "a" * 21
+      expect(subject).to_not be_valid
+      expect(subject.errors[:username]).to be_present
+    end
+
+    it "requires usernames to be unique (case-insensitive)" do
+      create(:user, username: "powder_hound")
+      subject.username = "Powder_Hound"
+      expect(subject).to_not be_valid
+      expect(subject.errors[:username]).to be_present
+    end
+
     it 'is valid with a valid season_start_day format (MM-DD)' do
       subject.season_start_day = "09-01"
       expect(subject).to be_valid

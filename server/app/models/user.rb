@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_many :draft_days, through: :text_imports
   has_many :tags, dependent: :destroy
   has_one :google_sheet_integration, dependent: :destroy
+  has_one_attached :avatar
 
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")
@@ -23,6 +24,11 @@ class User < ApplicationRecord
   # Validations
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
+  validates :username,
+            length: { in: 3..20 },
+            format: { with: /\A[a-zA-Z0-9_]+\z/ },
+            uniqueness: { case_sensitive: false },
+            allow_nil: true
   validates :season_start_day, presence: true
   validate :season_start_day_must_be_valid_date
 

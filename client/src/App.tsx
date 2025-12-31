@@ -16,6 +16,7 @@ import CsvExportPage from "@/pages/CsvExportPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
 import GoogleSheetsCallbackPage from "@/pages/GoogleSheetsCallbackPage";
 import LandingPage from "@/pages/LandingPage";
+import SharedDayPage from "@/pages/SharedDayPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -50,6 +51,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/d/:dayId" element={<SharedDayPage />} />
       {isAuthenticated ? (
         <>
           <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />

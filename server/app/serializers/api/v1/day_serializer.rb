@@ -4,7 +4,7 @@ module Api
       # Include url_helpers to generate attachment URLs
       include Rails.application.routes.url_helpers
 
-      attributes :id, :date, :user_id, :created_at, :updated_at, :notes, :day_number
+      attributes :id, :date, :user_id, :created_at, :updated_at, :notes, :day_number, :shared_at
 
       # Use belongs_to to embed the full associated objects
       belongs_to :resort

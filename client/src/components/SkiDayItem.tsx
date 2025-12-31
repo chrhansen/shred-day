@@ -4,7 +4,7 @@ import { type SkiDayEntry, type SkiDayDetail as SkiDayDetailType } from "@/types
 import { SkiDayDetail } from "@/components/SkiDayDetail";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, Camera } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, Camera, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { skiService } from "@/services/skiService";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatSkiDayDisplayDate } from "@/utils/dateDisplay";
+import { ShareDayDialog } from "@/components/ShareDayDialog";
 
 interface SkiDayItemProps {
   day: SkiDayEntry;
@@ -27,6 +28,7 @@ interface SkiDayItemProps {
 
 export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, selectedSeason }: SkiDayItemProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [detailedDayData, setDetailedDayData] = useState<SkiDayDetailType | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [errorLoadingDetail, setErrorLoadingDetail] = useState<string | null>(null);
@@ -153,6 +155,15 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsShareOpen(true);
+                }}
+              >
+                <Share className="mr-2 h-4 w-4" />
+                <span>Share</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleEditClick}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>Edit</span>
@@ -177,6 +188,11 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
           error={errorLoadingDetail}
         />
       )}
+      <ShareDayDialog
+        dayId={day.id}
+        open={isShareOpen}
+        onOpenChange={setIsShareOpen}
+      />
     </>
   );
 }

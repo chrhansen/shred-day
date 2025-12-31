@@ -11,6 +11,7 @@ export interface SkiDayDetail {
   date: string; // Keep as string for consistency with API response
   tags: Tag[];
   notes?: string | null;
+  shared_at?: string | null;
   // resort_id and ski_id are removed, access via nested objects
   user_id?: string;
   created_at?: string;
@@ -62,6 +63,18 @@ export interface AccountDetails {
   created_at: string; // ISO 8601 date string
   season_start_day: string; // Format "MM-DD"
   available_seasons: number[]; // Array of season offsets, e.g., [0, -1, -4]
+  username?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface SharedUser {
+  id: string;
+  username?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface SharedDayDetail extends SkiDayDetail {
+  user: SharedUser;
 }
 
 // New type for the GET /days endpoint response item

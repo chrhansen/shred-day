@@ -16,7 +16,7 @@ class Api::V1::AccountController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:email, :password, :season_start_day)
+    params.require(:user).permit(:email, :password, :season_start_day, :username, :avatar)
   end
 
   def calculate_available_seasons

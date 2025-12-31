@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       resources :draft_days, only: [:update]
 
       resources :days, only: [:create, :index, :show, :update, :destroy]
+      resources :shared_days, only: [:show, :create, :destroy]
       resource :stats, only: [:show]
       resource :account, only: [:show, :update], controller: :account
 
@@ -38,6 +39,9 @@ Rails.application.routes.draw do
   end
 
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
+
+  # Share page (must be above the catch-all)
+  get "/d/:id", to: "shared_days#show", as: :shared_day, constraints: ->(req) { req.format.html? }
 
   # Serve frontend routes - must be last
   # This ensures that any GET request not matched by the API or other routes

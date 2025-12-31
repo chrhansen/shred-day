@@ -262,7 +262,8 @@ CREATE TABLE public.days (
     user_id character varying NOT NULL,
     resort_id character varying NOT NULL,
     notes text,
-    day_number integer
+    day_number integer,
+    shared_at timestamp(6) without time zone
 );
 
 
@@ -438,7 +439,8 @@ CREATE TABLE public.users (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     season_start_day character varying DEFAULT '09-01'::character varying NOT NULL,
-    full_name character varying
+    full_name character varying,
+    username character varying
 );
 
 
@@ -788,6 +790,13 @@ CREATE INDEX index_users_on_email ON public.users USING btree (email);
 
 
 --
+-- Name: index_users_on_lower_username; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_lower_username ON public.users USING btree (lower((username)::text));
+
+
+--
 -- Name: skis fk_rails_0249827881; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -954,6 +963,8 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251207120500'),
+('20251207120000'),
 ('20251120124144'),
 ('20251115205425'),
 ('20250612090000'),

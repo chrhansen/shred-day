@@ -3,7 +3,7 @@ import {
   Mountain,
   Calendar,
   BarChart3,
-  Share2,
+  Share,
   Download,
   Sparkles,
   FileSpreadsheet,
@@ -33,7 +33,7 @@ const features = [
     description: "Total days, resorts visited, gear breakdown, and more.",
   },
   {
-    icon: Share2,
+    icon: Share,
     title: "Share Your Season",
     description: "Beautiful share links to show off your adventures.",
   },

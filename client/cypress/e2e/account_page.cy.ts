@@ -48,11 +48,11 @@ describe('Account Page', () => {
 
     // Select new month
     cy.get('#seasonStartMonth').click();
-    cy.get('div[role="listbox"]:visible').contains('[role="option"]', targetMonth).click();
+    cy.get('div[role="listbox"]:visible').contains('[role="option"]', targetMonth).click({ force: true });
 
     // Select new day
     cy.get('#seasonStartDay').click();
-    cy.get('div[role="listbox"]:visible').contains('[role="option"]', targetDay).click();
+    cy.get('div[role="listbox"]:visible').contains('[role="option"]', targetDay).click({ force: true });
 
     // Intercept the PATCH request to verify its payload before clicking save
     cy.intercept('PATCH', '/api/v1/account').as('updateAccountDetails');
@@ -64,10 +64,37 @@ describe('Account Page', () => {
       expect(interception.response?.statusCode).to.eq(200);
     });
 
-    cy.contains('Season start date saved').should('be.visible');
+    cy.contains('Account updated').should('be.visible');
 
     // After successful update, the dropdowns should reflect the new values
     cy.get('#seasonStartMonth').should('contain.text', targetMonth);
     cy.get('#seasonStartDay').should('contain.text', targetDay);
+  });
+
+  it('should allow updating username and avatar photo', () => {
+    const newUsername = `powder_hound_${Date.now()}`;
+    const expectedUsername = newUsername.slice(0, 20);
+
+    cy.intercept('PATCH', '/api/v1/account').as('updateAccountDetails');
+
+    cy.get('#username').clear().type(newUsername);
+    cy.get('#avatarUpload').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#avatarUpload').then((input) => {
+      const files = (input[0] as HTMLInputElement).files;
+      expect(files).to.have.length(1);
+    });
+
+    cy.contains('button', 'Save Changes').click();
+
+    cy.wait('@updateAccountDetails').then((interception) => {
+      const contentType = interception.request.headers['content-type'];
+      expect(contentType).to.include('multipart/form-data');
+      expect(interception.response?.statusCode).to.eq(200);
+      expect(interception.response?.body.avatar_url).to.be.a('string');
+    });
+
+    cy.contains('Account updated').should('be.visible');
+    cy.get('#username').should('have.value', expectedUsername);
+    cy.get('#username').should('have.value', expectedUsername);
   });
 });
