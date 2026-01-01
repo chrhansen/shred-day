@@ -64,14 +64,7 @@ class SharedDaysController < ActionController::Base
 
     username = @day.user&.username || 'A Shred Day user'
     resort_name = @day.resort&.name || 'a resort'
-    tags = @day.tags.map(&:name).join(', ')
-    base = "#{username} shared a ski day at #{resort_name}."
-    base = "#{base} Tags: #{tags}." if tags.present?
-    notes = @day.notes.to_s.strip
-    return base if notes.blank?
-
-    truncated_notes = notes.length > 140 ? "#{notes[0, 137]}..." : notes
-    "#{base} #{truncated_notes}"
+    "#{username} shared a ski day at #{resort_name} on #{formatted_date}."
   end
 
   def og_image_urls
@@ -91,6 +84,10 @@ class SharedDaysController < ActionController::Base
 
   def og_url
     "#{request.base_url}/d/#{short_day_id}"
+  end
+
+  def formatted_date
+    @day.date.strftime('%b %-d, %Y')
   end
 
   def short_day_id
