@@ -7,11 +7,9 @@ class SharedDaysController < ActionController::Base
     @day = result.day
 
     index_html_path = Rails.public_path.join('index.html')
-    html = if File.exist?(index_html_path)
-      inject_og_tags(File.read(index_html_path))
-    else
-      fallback_html
-    end
+    return head :not_found unless File.exist?(index_html_path)
+
+    html = inject_og_tags(File.read(index_html_path))
 
     render html: html.html_safe, layout: false
   end
@@ -19,16 +17,26 @@ class SharedDaysController < ActionController::Base
   private
 
   def inject_og_tags(html)
-    html.sub('</head>', "#{og_tags}\n</head>")
+    sanitized_html = remove_existing_share_tags(html)
+    sanitized_html.sub('</head>', "#{og_tags}\n</head>")
+  end
+
+  def remove_existing_share_tags(html)
+    html
+      .gsub(/<title>.*?<\/title>/mi, '')
+      .gsub(/<meta[^>]+name=["']description["'][^>]*>\s*/i, '')
+      .gsub(/<meta[^>]+property=["']og:[^"']+["'][^>]*>\s*/i, '')
+      .gsub(/<meta[^>]+name=["']twitter:[^"']+["'][^>]*>\s*/i, '')
   end
 
   def og_tags
     tags = []
-    title = og_title
+    title = og_description
     description = og_description
     image_urls = og_image_urls
     url = og_url
 
+    tags << helpers.content_tag(:title, title)
     tags << helpers.tag(:meta, name: 'description', content: description)
     tags << helpers.tag(:meta, property: 'og:title', content: title)
     tags << helpers.tag(:meta, property: 'og:description', content: description)
@@ -51,29 +59,15 @@ class SharedDaysController < ActionController::Base
     tags.join("\n")
   end
 
-  def og_title
-    return 'This day has melted away' unless @day
-
-    "#{@day.resort&.name || 'Ski day'} \u00b7 #{formatted_date}"
-  end
-
   def og_description
     return "The ski day you're looking for doesn't exist or is no longer shared." unless @day
 
     username = @day.user&.username || 'A Shred Day user'
-    resort_name = @day.resort&.name || 'a resort'
-    tags = @day.tags.map(&:name).join(', ')
-    base = "#{username} shared a ski day at #{resort_name}."
-    base = "#{base} Tags: #{tags}." if tags.present?
-    notes = @day.notes.to_s.strip
-    return base if notes.blank?
-
-    truncated_notes = notes.length > 140 ? "#{notes[0, 137]}..." : notes
-    "#{base} #{truncated_notes}"
+    "#{username} at #{@day.resort&.name} on #{formatted_date}."
   end
 
   def og_image_urls
-    return [default_image_url].compact unless @day
+    return [] unless @day
 
     photos = @day.photos.select { |photo| photo.image.attached? }.first(4)
     return [default_image_url].compact if photos.empty?
@@ -99,22 +93,5 @@ class SharedDaysController < ActionController::Base
     return '' unless params[:id]
 
     params[:id].to_s.delete_prefix('day_')
-  end
-
-  def fallback_html
-    <<~HTML
-      <!doctype html>
-      <html lang="en">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          #{og_tags}
-          <title>Shred Day</title>
-        </head>
-        <body>
-          <div id="root"></div>
-        </body>
-      </html>
-    HTML
   end
 end
