@@ -18,7 +18,7 @@ class SharedDaysController < ActionController::Base
 
   def inject_og_tags(html)
     sanitized_html = remove_existing_share_tags(html)
-    sanitized_html.sub('</head>', "#{og_tags}\n</head>")
+    sanitized_html.sub(/<head[^>]*>/i) { |match| "#{match}\n#{og_tags}\n" }
   end
 
   def remove_existing_share_tags(html)
@@ -63,7 +63,8 @@ class SharedDaysController < ActionController::Base
     return "The ski day you're looking for doesn't exist or is no longer shared." unless @day
 
     username = @day.user&.username || 'A Shred Day user'
-    "#{username} at #{@day.resort&.name} on #{formatted_date}."
+    resort_name = @day.resort&.name || 'a resort'
+    "#{username} shared a ski day at #{resort_name} on #{formatted_date}."
   end
 
   def og_image_urls
