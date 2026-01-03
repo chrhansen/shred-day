@@ -63,8 +63,7 @@ class SharedDaysController < ActionController::Base
     return "The ski day you're looking for doesn't exist or is no longer shared." unless @day
 
     username = @day.user&.username || 'A Shred Day user'
-    resort_name = @day.resort&.name || 'a resort'
-    "#{username} shared a ski day at #{resort_name} on #{formatted_date}."
+    "#{username} at #{@day.resort&.name} on #{formatted_date}."
   end
 
   def og_image_urls
