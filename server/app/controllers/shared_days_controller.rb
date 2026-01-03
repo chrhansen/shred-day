@@ -18,7 +18,7 @@ class SharedDaysController < ActionController::Base
 
   def inject_og_tags(html)
     sanitized_html = remove_existing_share_tags(html)
-    sanitized_html.sub('</head>', "#{og_tags}\n</head>")
+    sanitized_html.sub(/<head[^>]*>/i) { |match| "#{match}\n#{og_tags}\n" }
   end
 
   def remove_existing_share_tags(html)
