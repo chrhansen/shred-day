@@ -26,6 +26,8 @@ export default function SharedDayPage() {
   const hasPhotos = photoUrls.length > 0;
   const username = day?.user?.username || "A shred.day user";
   const resortName = day?.resort?.name || "Ski day";
+  const resortRegion = day?.resort?.region?.trim();
+  const resortDisplayName = resortRegion ? `${resortName}, ${resortRegion}` : resortName;
   const formattedDate = day
     ? format(new Date(day.date.replace(/-/g, "/")), "MMM d, yyyy")
     : "";
@@ -33,7 +35,7 @@ export default function SharedDayPage() {
   const defaultImage = baseUrl ? `${baseUrl}/shread-day-logo_192x192.png` : undefined;
   const metaTitle = day ? `${resortName} · ${formattedDate}` : "Shred Day";
   const metaDescription = day
-    ? `${username} at ${resortName} on ${formattedDate}.`
+    ? `${username} at ${resortName} on ${formattedDate}`
     : "View a shared ski day.";
   const metaImage = hasPhotos ? photoUrls[0] : defaultImage;
 
@@ -192,7 +194,7 @@ export default function SharedDayPage() {
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{resortName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{resortDisplayName}</h1>
 
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -219,7 +221,7 @@ export default function SharedDayPage() {
             {day.notes && <p className="text-foreground leading-relaxed pt-2">{day.notes}</p>}
           </div>
 
-          <div className="mt-12 pt-6 border-t">
+          <div className="mt-[150px] pt-6 border-t">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
                 <Logo />
