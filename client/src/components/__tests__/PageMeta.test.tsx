@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
 import PageMeta from "@/components/PageMeta";
 
@@ -16,7 +16,7 @@ describe("PageMeta", () => {
     document.title = "";
   });
 
-  it("sets title and meta tags using provided values", () => {
+  it("sets title and meta tags using provided values", async () => {
     renderWithHelmet(
       <PageMeta
         title="Page Title"
@@ -26,7 +26,9 @@ describe("PageMeta", () => {
       />
     );
 
-    expect(document.title).toBe("Page Title");
+    await waitFor(() => {
+      expect(document.title).toBe("Page Title");
+    });
     expect(getMeta('meta[name="description"]')?.content).toBe("Page description");
     expect(getMeta('meta[property="og:title"]')?.content).toBe("Page Title");
     expect(getMeta('meta[property="og:description"]')?.content).toBe("Page description");
@@ -40,7 +42,7 @@ describe("PageMeta", () => {
     expect(getMeta('meta[name="twitter:description"]')?.content).toBe("Page description");
   });
 
-  it("falls back to the default logo when no image is provided", () => {
+  it("falls back to the default logo when no image is provided", async () => {
     renderWithHelmet(
       <PageMeta
         title="Fallback Page"
@@ -49,7 +51,9 @@ describe("PageMeta", () => {
     );
 
     const expectedImage = `${window.location.origin}/shread-day-logo_192x192.png`;
-    expect(getMeta('meta[property="og:image"]')?.content).toBe(expectedImage);
+    await waitFor(() => {
+      expect(getMeta('meta[property="og:image"]')?.content).toBe(expectedImage);
+    });
     expect(getMeta('meta[name="twitter:image"]')?.content).toBe(expectedImage);
     expect(getMeta('meta[name="twitter:card"]')?.content).toBe("summary_large_image");
   });
