@@ -9,6 +9,7 @@ import { SkiSelection } from "@/components/SkiSelection";
 import { TagSelection } from "@/components/TagSelection";
 import { useLogDay } from "@/hooks/useLogDay";
 import type { PhotoPreview } from "@/types/ski";
+import PageMeta from "@/components/PageMeta";
 
 export default function LogDay() {
   const navigate = useNavigate();
@@ -125,68 +126,84 @@ export default function LogDay() {
   };
 
   const formIsValid = Boolean(selectedResort) && selectedSkis.length > 0;
+  const pageTitle = isEditMode ? "Edit Day · Shred Day" : "Log Day · Shred Day";
+  const pageDescription = isEditMode ? "Edit a logged ski day." : "Log a new ski day.";
 
   // Loading states
   if (isLoading && isEditMode) {
     return (
-      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="flex items-center text-slate-500">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading ski day...
+      <>
+        <PageMeta title={pageTitle} description={pageDescription} />
+        <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+          <div className="flex items-center text-slate-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading ski day...
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Error states
   if (skisError) {
     return (
-      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load skis data</p>
-          <Button onClick={() => navigate('/')}>Go Back</Button>
+      <>
+        <PageMeta title={pageTitle} description={pageDescription} />
+        <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Failed to load skis data</p>
+            <Button onClick={() => navigate('/')}>Go Back</Button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (tagsError) {
     return (
-      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load tags</p>
-          <Button onClick={() => navigate('/')}>Go Back</Button>
+      <>
+        <PageMeta title={pageTitle} description={pageDescription} />
+        <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Failed to load tags</p>
+            <Button onClick={() => navigate('/')}>Go Back</Button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (isEditMode && dayToEditError) {
     return (
-      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load ski day</p>
-          <Button onClick={() => navigate('/')}>Go Back</Button>
+      <>
+        <PageMeta title={pageTitle} description={pageDescription} />
+        <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Failed to load ski day</p>
+            <Button onClick={() => navigate('/')}>Go Back</Button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 flex justify-center">
-      <div className="w-full max-w-md mx-auto space-y-6">
-        {/* Header with Cancel Button */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={() => navigate(-1)}
-            disabled={isProcessing}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Cancel
-          </Button>
-        </div>
+    <>
+      <PageMeta title={pageTitle} description={pageDescription} />
+      <div className="min-h-screen bg-white p-4 flex justify-center">
+        <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Header with Cancel Button */}
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              className="text-slate-600 hover:text-slate-800"
+              onClick={() => navigate(-1)}
+              disabled={isProcessing}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Cancel
+            </Button>
+          </div>
 
         {/* Form Title */}
         <div>
@@ -298,6 +315,7 @@ export default function LogDay() {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

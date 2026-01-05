@@ -12,6 +12,7 @@ import { accountService } from "@/services/accountService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/Logo";
+import PageMeta from "@/components/PageMeta";
 
 export default function AuthPage() {
   const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
@@ -116,28 +117,33 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4 relative">
-      <div className="absolute left-6 top-6">
-        <Link to="/" aria-label="Shred Day home">
-          <Logo />
-        </Link>
-      </div>
-      <div className="w-full max-w-md">
-      <Card className="rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 border-0">
-        <CardContent className="py-10 px-8">
-          <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
-            Welcome to Shred Day
-          </h1>
-          <Tabs value={activeTab} onValueChange={(value) => {
-            const mode = value === "signup" ? "signup" : "login";
-            setActiveTab(mode);
-            updateModeParam(mode);
-          }} className="w-full">
-            <TabsList className="flex w-full bg-slate-100 rounded-lg mb-8 p-0">
-              <TabsTrigger
-                value="login"
-                className="flex-1 text-md py-2 rounded-l-lg rounded-r-none aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white data-[state=inactive]:hover:bg-slate-200 data-[state=inactive]:text-slate-600 transition-all duration-150"
-              >
+    <>
+      <PageMeta
+        title="Sign In · Shred Day"
+        description="Sign in to Shred Day."
+      />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4 relative">
+        <div className="absolute left-6 top-6">
+          <Link to="/" aria-label="Shred Day home">
+            <Logo />
+          </Link>
+        </div>
+        <div className="w-full max-w-md">
+        <Card className="rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 border-0">
+          <CardContent className="py-10 px-8">
+            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+              Welcome to Shred Day
+            </h1>
+            <Tabs value={activeTab} onValueChange={(value) => {
+              const mode = value === "signup" ? "signup" : "login";
+              setActiveTab(mode);
+              updateModeParam(mode);
+            }} className="w-full">
+              <TabsList className="flex w-full bg-slate-100 rounded-lg mb-8 p-0">
+                <TabsTrigger
+                  value="login"
+                  className="flex-1 text-md py-2 rounded-l-lg rounded-r-none aria-selected:bg-gradient-to-r aria-selected:from-blue-600 aria-selected:to-indigo-600 aria-selected:text-white data-[state=inactive]:hover:bg-slate-200 data-[state=inactive]:text-slate-600 transition-all duration-150"
+                >
                 <LogIn className="inline mr-1 w-4 h-4" /> Login
               </TabsTrigger>
               <TabsTrigger
@@ -307,6 +313,7 @@ export default function AuthPage() {
         </CardContent>
       </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

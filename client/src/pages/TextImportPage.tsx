@@ -8,6 +8,7 @@ import { TextInputSection } from "@/components/TextInputSection";
 import { FileUploadSection } from "@/components/FileUploadSection";
 import { ImportConfirmationDialogs } from "@/components/ImportConfirmationDialogs";
 import { useTextImport } from "@/hooks/useTextImport";
+import PageMeta from "@/components/PageMeta";
 
 export default function TextImportPage() {
   const { user } = useAuth();
@@ -56,28 +57,39 @@ export default function TextImportPage() {
   // Loading state
   if (isLoadingExisting) {
     return (
-      <div className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="flex items-center text-slate-500">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading text import...
+      <>
+        <PageMeta
+          title="Text Import · Shred Day"
+          description="Import ski days from text or CSV."
+        />
+        <div className="min-h-screen bg-white p-4 flex items-center justify-center">
+          <div className="flex items-center text-slate-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading text import...
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-slate-800"
-            onClick={handleCancel}
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-        </div>
+    <>
+      <PageMeta
+        title="Text Import · Shred Day"
+        description="Import ski days from text or CSV."
+      />
+      <div className="min-h-screen bg-white p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Button
+              variant="ghost"
+              className="text-slate-600 hover:text-slate-800"
+              onClick={handleCancel}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
 
         <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center" data-testid="text-import-title">
           Import Ski Days from Text/CSV
@@ -196,6 +208,7 @@ export default function TextImportPage() {
           onConfirmCancel={confirmAndCancelImport}
         />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

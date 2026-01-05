@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { googleSheetsIntegrationService } from "@/services/googleSheetsIntegrationService";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import PageMeta from "@/components/PageMeta";
 
 export default function GoogleSheetsCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -41,25 +42,37 @@ export default function GoogleSheetsCallbackPage() {
 
   if (!error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <p className="text-muted-foreground">Finishing Google connection…</p>
-      </div>
+      <>
+        <PageMeta
+          title="Connecting Google Sheets · Shred Day"
+          description="Completing Google Sheets sign-in."
+        />
+        <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-muted-foreground">Finishing Google connection…</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold text-red-600">Connection failed</h1>
-        <p className="text-muted-foreground max-w-md">{error}</p>
+    <>
+      <PageMeta
+        title="Connecting Google Sheets · Shred Day"
+        description="Completing Google Sheets sign-in."
+      />
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-semibold text-red-600">Connection failed</h1>
+          <p className="text-muted-foreground max-w-md">{error}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/integrations", { replace: true })}>Back to integrations</Button>
+          <Button variant="outline" onClick={() => navigate("/", { replace: true })}>
+            Home
+          </Button>
+        </div>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={() => navigate("/integrations", { replace: true })}>Back to integrations</Button>
-        <Button variant="outline" onClick={() => navigate("/", { replace: true })}>
-          Home
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }

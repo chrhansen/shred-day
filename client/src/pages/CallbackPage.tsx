@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { skiService } from "@/services/skiService";
 import { accountService } from "@/services/accountService";
 import { useAuth } from "@/contexts/AuthContext";
+import PageMeta from "@/components/PageMeta";
 
 export default function CallbackPage() {
   const [searchParams] = useSearchParams();
@@ -58,9 +59,14 @@ export default function CallbackPage() {
   }, [searchParams, navigate, login]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-6 text-center">
+    <>
+      <PageMeta
+        title="Signing In · Shred Day"
+        description="Completing sign-in."
+      />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="p-6 text-center">
 
           {isProcessing ? (
             <>
@@ -112,6 +118,7 @@ export default function CallbackPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

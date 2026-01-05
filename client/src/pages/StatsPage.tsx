@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
 import Navbar from "@/components/Navbar";
+import PageMeta from "@/components/PageMeta";
 
 export default function StatsPage() {
   const navigate = useNavigate();
@@ -26,10 +27,15 @@ export default function StatsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar title="Stats" rightContent={newDayButton} />
-      <div className="max-w-md mx-auto space-y-8 p-4">
-        <h1 className="text-2xl font-bold text-slate-800">Stats</h1>
+    <>
+      <PageMeta
+        title="Stats · Shred Day"
+        description="Review your ski stats and trends."
+      />
+      <div className="min-h-screen bg-white">
+        <Navbar title="Stats" rightContent={newDayButton} />
+        <div className="max-w-md mx-auto space-y-8 p-4">
+          <h1 className="text-2xl font-bold text-slate-800">Stats</h1>
 
         <div className="grid grid-cols-1 gap-6">
            <div
@@ -44,6 +50,7 @@ export default function StatsPage() {
         </div>
 
       </div>
-    </div>
+      </div>
+    </>
   );
 }

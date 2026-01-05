@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight, Loader2, Mountain, Snowflake } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/Logo";
 import { skiService } from "@/services/skiService";
 import type { SharedDayDetail } from "@/types/ski";
-import { Helmet } from "react-helmet-async";
+import PageMeta from "@/components/PageMeta";
 
 export default function SharedDayPage() {
   const { dayId } = useParams();
@@ -17,8 +17,8 @@ export default function SharedDayPage() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   const { data: day, isLoading, isError } = useQuery<SharedDayDetail, Error>({
-    queryKey: ['sharedDay', dayId],
-    queryFn: () => skiService.getSharedDay(dayId || ''),
+    queryKey: ["sharedDay", dayId],
+    queryFn: () => skiService.getSharedDay(dayId || ""),
     enabled: !!dayId,
   });
 
@@ -36,18 +36,6 @@ export default function SharedDayPage() {
     ? `${username} at ${resortName} on ${formattedDate}.`
     : "View a shared ski day.";
   const metaImage = hasPhotos ? photoUrls[0] : defaultImage;
-
-  const metaHelmet = (
-    <Helmet>
-      <title>{metaTitle}</title>
-      <meta name="description" content={metaDescription} />
-      <meta property="og:title" content={metaTitle} />
-      <meta property="og:description" content={metaDescription} />
-      <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Shred Day" />
-      {metaImage && <meta property="og:image" content={metaImage} />}
-    </Helmet>
-  );
 
   const nextPhoto = () => {
     if (hasPhotos) {
@@ -79,7 +67,7 @@ export default function SharedDayPage() {
   if (isLoading) {
     return (
       <>
-        {metaHelmet}
+        <PageMeta title={metaTitle} description={metaDescription} image={metaImage} />
         <div className="min-h-screen bg-background flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
@@ -90,7 +78,7 @@ export default function SharedDayPage() {
   if (isError || !day) {
     return (
       <>
-        {metaHelmet}
+        <PageMeta title={metaTitle} description={metaDescription} image={metaImage} />
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
           <div className="text-center space-y-6 max-w-md mx-auto">
             <div className="relative h-32 w-32 mx-auto">
@@ -141,7 +129,7 @@ export default function SharedDayPage() {
 
   return (
     <>
-      {metaHelmet}
+      <PageMeta title={metaTitle} description={metaDescription} image={metaImage} />
       <div className="min-h-screen bg-background flex flex-col items-center">
         <div
           className="relative w-full max-w-2xl aspect-[4/5] sm:aspect-[16/10] bg-muted max-h-[72vh] sm:max-h-[64vh] lg:max-h-[78vh]"
@@ -208,7 +196,7 @@ export default function SharedDayPage() {
 
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span className="text-sm">{format(new Date(day.date.replace(/-/g, '/')), "MMMM d, yyyy")}</span>
+              <span className="text-sm">{format(new Date(day.date.replace(/-/g, "/")), "MMMM d, yyyy")}</span>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -236,7 +224,7 @@ export default function SharedDayPage() {
               <div className="flex justify-center">
                 <Logo />
               </div>
-              <p className="text-sm text-muted-foreground">Track your ski days and share your adventures</p>
+              <p className="text-sm text-muted-foreground">Track your own ski days and share your adventures</p>
               <Button onClick={() => navigate("/")} variant="default" className="w-full sm:w-auto">
                 Start Logging Your Days
               </Button>
