@@ -2,4 +2,4 @@
 set -e
 
 echo "Running database migrations on the primary app host..."
-bin/kamal app exec --primary "bin/rails db:migrate"
+kamal app exec --primary "bin/rails db:migrate"
