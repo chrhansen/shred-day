@@ -24,16 +24,16 @@ export default function SharedDayPage() {
 
   const photoUrls = day?.photos?.map((photo) => photo.full_url) || [];
   const hasPhotos = photoUrls.length > 0;
-  const username = day?.user?.username || "shred_day";
+  const username = day?.user?.username || "A shred.day user";
   const resortName = day?.resort?.name || "Ski day";
   const formattedDate = day
     ? format(new Date(day.date.replace(/-/g, "/")), "MMM d, yyyy")
     : "";
   const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
   const defaultImage = baseUrl ? `${baseUrl}/shread-day-logo_192x192.png` : undefined;
-  const metaTitle = day ? `${resortName} · ${formattedDate}` : "Shared Day · Shred Day";
+  const metaTitle = day ? `${resortName} · ${formattedDate}` : "Shred Day";
   const metaDescription = day
-    ? `${username} shared a ski day at ${resortName} on ${formattedDate}.`
+    ? `${username} at ${resortName} on ${formattedDate}.`
     : "View a shared ski day.";
   const metaImage = hasPhotos ? photoUrls[0] : defaultImage;
 
