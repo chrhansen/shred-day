@@ -20,6 +20,7 @@ import SharedDayPage from "@/pages/SharedDayPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,73 @@ const App = () => (
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const pathname = location.pathname;
+
+  const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
+  const defaultImage = baseUrl ? `${baseUrl}/shread-day-logo_192x192.png` : undefined;
+
+  const routeMeta = (() => {
+    if (pathname.startsWith("/d/")) {
+      return {
+        title: "Shared Day · Shred Day",
+        description: "View a shared ski day.",
+      };
+    }
+
+    if (isAuthenticated) {
+      if (pathname === "/") {
+        return { title: "Your Days · Shred Day", description: "Review your logged ski days." };
+      }
+      if (pathname === "/stats") {
+        return { title: "Stats · Shred Day", description: "Review your ski stats and trends." };
+      }
+      if (pathname === "/new") {
+        return { title: "Log Day · Shred Day", description: "Log a new ski day." };
+      }
+      if (pathname.startsWith("/days/") && pathname.endsWith("/edit")) {
+        return { title: "Edit Day · Shred Day", description: "Edit a logged ski day." };
+      }
+      if (pathname === "/settings/account") {
+        return { title: "Account · Shred Day", description: "Manage your Shred Day account." };
+      }
+      if (pathname === "/settings/skis") {
+        return { title: "Skis · Shred Day", description: "Manage your ski list." };
+      }
+      if (pathname.startsWith("/photo-imports/")) {
+        return { title: "Photo Import · Shred Day", description: "Review imported ski photos." };
+      }
+      if (pathname.startsWith("/text-import")) {
+        return { title: "Text Import · Shred Day", description: "Import ski days from text or CSV." };
+      }
+      if (pathname === "/csv-export") {
+        return { title: "CSV Export · Shred Day", description: "Export your ski days to CSV." };
+      }
+      if (pathname.startsWith("/integrations")) {
+        return { title: "Integrations · Shred Day", description: "Connect Shred Day integrations." };
+      }
+    } else {
+      if (pathname === "/auth") {
+        return { title: "Sign In · Shred Day", description: "Sign in to Shred Day." };
+      }
+      if (pathname === "/auth/callback") {
+        return { title: "Signing In · Shred Day", description: "Completing sign-in." };
+      }
+      if (pathname === "/") {
+        return { title: "Shred Day", description: "Log your ski days and photos." };
+      }
+    }
+
+    return { title: "Shred Day", description: "Log your ski days and photos." };
+  })();
+
+  usePageMeta({
+    title: routeMeta.title,
+    description: routeMeta.description,
+    image: defaultImage,
+    url: typeof window === "undefined" ? undefined : window.location.href,
+    type: "website",
+    siteName: "Shred Day",
+  });
 
   if (isLoading) {
     return (

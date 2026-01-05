@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/Logo";
 import { skiService } from "@/services/skiService";
 import type { SharedDayDetail } from "@/types/ski";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function SharedDayPage() {
   const { dayId } = useParams();
@@ -23,6 +24,24 @@ export default function SharedDayPage() {
 
   const photoUrls = day?.photos?.map((photo) => photo.full_url) || [];
   const hasPhotos = photoUrls.length > 0;
+  const username = day?.user?.username || "shred_day";
+  const resortName = day?.resort?.name || "Ski day";
+  const formattedDate = day
+    ? format(new Date(day.date.replace(/-/g, "/")), "MMM d, yyyy")
+    : "";
+  const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
+  const defaultImage = baseUrl ? `${baseUrl}/shread-day-logo_192x192.png` : undefined;
+
+  usePageMeta({
+    title: day ? `${resortName} · ${formattedDate}` : "Shared Day · Shred Day",
+    description: day
+      ? `${username} shared a ski day at ${resortName} on ${formattedDate}.`
+      : "View a shared ski day.",
+    image: hasPhotos ? photoUrls[0] : defaultImage,
+    url: typeof window === "undefined" ? undefined : window.location.href,
+    type: "website",
+    siteName: "Shred Day",
+  });
 
   const nextPhoto = () => {
     if (hasPhotos) {
@@ -106,8 +125,6 @@ export default function SharedDayPage() {
     );
   }
 
-  const username = day.user?.username || "shred_day";
-  const resortName = day.resort?.name || "Ski day";
   const skiNames = day.skis?.map((ski) => ski.name).filter(Boolean).join(" / ") || "";
 
   return (

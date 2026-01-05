@@ -17,21 +17,22 @@ class SharedDaysController < ActionController::Base
   private
 
   def inject_og_tags(html)
-    sanitized_html = remove_existing_share_tags(html)
-    sanitized_html.sub(/<head[^>]*>/i) { |match| "#{match}\n#{og_tags}\n" }
-  end
+    document = Nokogiri::HTML.parse(html)
+    head = document.at('head')
+    return html unless head
 
-  def remove_existing_share_tags(html)
-    html
-      .gsub(/<title>.*?<\/title>/mi, '')
-      .gsub(/<meta[^>]+name=["']description["'][^>]*>\s*/i, '')
-      .gsub(/<meta[^>]+property=["']og:[^"']+["'][^>]*>\s*/i, '')
-      .gsub(/<meta[^>]+name=["']twitter:[^"']+["'][^>]*>\s*/i, '')
+    head.search('title').remove
+    head.search('meta[name="description"]').remove
+    head.search('meta[property^="og:"]').remove
+    head.search('meta[name^="twitter:"]').remove
+
+    head.prepend_child(Nokogiri::HTML::DocumentFragment.parse(og_tags))
+    document.to_html
   end
 
   def og_tags
     tags = []
-    title = og_description
+    title = og_title
     description = og_description
     image_urls = og_image_urls
     url = og_url
@@ -59,11 +60,19 @@ class SharedDaysController < ActionController::Base
     tags.join("\n")
   end
 
+  def og_title
+    return 'This day has melted away' unless @day
+
+    resort_name = @day.resort&.name || 'Ski day'
+    "#{resort_name} \u00b7 #{formatted_date}"
+  end
+
   def og_description
     return "The ski day you're looking for doesn't exist or is no longer shared." unless @day
 
     username = @day.user&.username || 'A Shred Day user'
-    "#{username} at #{@day.resort&.name} on #{formatted_date}."
+    resort_name = @day.resort&.name || 'a resort'
+    "#{username} shared a ski day at #{resort_name} on #{formatted_date}."
   end
 
   def og_image_urls
