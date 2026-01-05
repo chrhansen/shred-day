@@ -7,6 +7,7 @@ import { skiService } from "@/services/skiService";
 import { toast } from "sonner";
 import { Ski } from "@/types/ski";
 import Navbar from "@/components/Navbar";
+import PageMeta from "@/components/PageMeta";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -94,9 +95,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <Navbar centerContent="Manage Skis" />
-      <div className="max-w-2xl mx-auto space-y-8 p-4">
+    <>
+      <PageMeta
+        title="Skis · Shred Day"
+        description="Manage your ski list."
+      />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <Navbar centerContent="Manage Skis" />
+        <div className="max-w-2xl mx-auto space-y-8 p-4">
 
         <Card>
           <CardHeader>
@@ -210,6 +216,7 @@ export default function SettingsPage() {
         </Card>
         */}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

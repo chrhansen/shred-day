@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/Logo";
+import PageMeta from "@/components/PageMeta";
 
 const problemPoints = [
   "Forgetting which days you skied last season",
@@ -57,20 +58,25 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white text-slate-900">
-      <header className="sticky top-0 z-10 backdrop-blur-sm bg-white/80 border-b border-slate-200/70">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Logo className="text-xl" />
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => goToAuth("login")} className="text-muted-foreground hover:text-foreground">
-              Sign In
-            </Button>
-            <Button onClick={() => goToAuth("signup")} className="bg-primary hover:bg-primary/90">
-              Get Started
-            </Button>
+    <>
+      <PageMeta
+        title="Shred Day"
+        description="Log your ski days and photos."
+      />
+      <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white text-slate-900">
+        <header className="sticky top-0 z-10 backdrop-blur-sm bg-white/80 border-b border-slate-200/70">
+          <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+            <Logo className="text-xl" />
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => goToAuth("login")} className="text-muted-foreground hover:text-foreground">
+                Sign In
+              </Button>
+              <Button onClick={() => goToAuth("signup")} className="bg-primary hover:bg-primary/90">
+                Get Started
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       <main>
         {/* Hero Section */}
@@ -241,6 +247,7 @@ export default function LandingPage() {
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} shred.day — Track your season.</p>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

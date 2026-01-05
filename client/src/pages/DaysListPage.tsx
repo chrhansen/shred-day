@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSeasonDisplayName, getFormattedSeasonDateRange } from '@/utils/seasonFormatters';
 import { addDays, addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import type { SkiDayEntry } from '@/types/ski';
+import PageMeta from "@/components/PageMeta";
 
 type Section = {
   title: string;
@@ -221,21 +222,26 @@ export default function DaysListPage() {
   const selectedSeasonDisplayName = getSeasonDisplayName(selectedSeason);
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar
-        rightContent={newDayButton}
-        centerContent={
-          isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-slate-700" />
-          ) : (
-            <SeasonDropdown
-              selectedSeason={selectedSeasonDisplayName}
-              seasonsData={seasonsDataForDropdown}
-              onSeasonChange={handleSeasonChange}
-            />
-          )
-        }
+    <>
+      <PageMeta
+        title={`${selectedSeasonDisplayName} · Shred Day`}
+        description="Review your logged ski days."
       />
+      <div className="min-h-screen bg-white">
+        <Navbar
+          rightContent={newDayButton}
+          centerContent={
+            isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-slate-700" />
+            ) : (
+              <SeasonDropdown
+                selectedSeason={selectedSeasonDisplayName}
+                seasonsData={seasonsDataForDropdown}
+                onSeasonChange={handleSeasonChange}
+              />
+            )
+          }
+        />
 
       <div className="max-w-2xl mx-auto p-4">
         {isLoading && (
@@ -293,6 +299,7 @@ export default function DaysListPage() {
           <Loader2 className="h-8 w-8 text-white animate-spin" />
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

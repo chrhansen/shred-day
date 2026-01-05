@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { googleSheetsIntegrationService, GoogleSheetIntegrationStatus } from "@/services/googleSheetsIntegrationService";
 import { useToast } from "@/hooks/use-toast";
+import PageMeta from "@/components/PageMeta";
 
 export default function IntegrationsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,8 +78,13 @@ export default function IntegrationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar centerContent="Integrations" />
+    <>
+      <PageMeta
+        title="Integrations · Shred Day"
+        description="Connect Shred Day integrations."
+      />
+      <div className="min-h-screen bg-white">
+        <Navbar centerContent="Integrations" />
       <div className="max-w-3xl mx-auto px-4 py-6">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center gap-4">
@@ -182,6 +188,7 @@ export default function IntegrationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </>
   );
 }

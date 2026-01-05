@@ -13,6 +13,7 @@ import { accountService } from "@/services/accountService";
 import { AccountDetails } from "@/types/ski";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PageMeta from "@/components/PageMeta";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i, label: format(new Date(2000, i, 1), 'MMMM') }));
 
@@ -218,20 +219,31 @@ export default function AccountPage() {
 
   if (accountError || !accountDetails) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navbar centerContent="Account Settings" rightContent={logOutButton} />
-        <div className="max-w-md mx-auto space-y-8 pt-8 p-4 md:p-0 text-center">
-            <p className="text-red-600">
-              {accountError ? `Error loading account details: ${accountError.message}` : "Could not load account details."}
-            </p>
+      <>
+        <PageMeta
+          title="Account · Shred Day"
+          description="Manage your Shred Day account."
+        />
+        <div className="min-h-screen bg-white">
+          <Navbar centerContent="Account Settings" rightContent={logOutButton} />
+          <div className="max-w-md mx-auto space-y-8 pt-8 p-4 md:p-0 text-center">
+              <p className="text-red-600">
+                {accountError ? `Error loading account details: ${accountError.message}` : "Could not load account details."}
+              </p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-  <div className="min-h-screen bg-white">
-    <Navbar centerContent="Account Settings" rightContent={logOutButton} />
+  <>
+    <PageMeta
+      title="Account · Shred Day"
+      description="Manage your Shred Day account."
+    />
+    <div className="min-h-screen bg-white">
+      <Navbar centerContent="Account Settings" rightContent={logOutButton} />
 
       <div className="max-w-md mx-auto space-y-8 pt-8 p-2 md:p-0">
 
@@ -372,5 +384,6 @@ export default function AccountPage() {
 
       </div>
     </div>
+  </>
   );
 }

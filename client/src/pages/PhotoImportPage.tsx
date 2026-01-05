@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader";
 import { PhotoList } from "@/components/PhotoList";
 import { type DraftDay as UIDraftDay, type SkiPhoto, type PhotoImport, type PhotoPreview, type ServerPhoto } from "@/types/ski";
+import PageMeta from "@/components/PageMeta";
 import { photoImportService } from "@/services/photoImportService";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { format as formatDateStr } from 'date-fns';
@@ -297,37 +298,48 @@ export default function PhotoImportPage() {
 
   if (isLoadingImportDetails && !photoImportData) {
     return (
-      <div className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <p className="mt-2 text-slate-600">Loading import session...</p>
-      </div>
+      <>
+        <PageMeta
+          title="Photo Import · Shred Day"
+          description="Review imported ski photos."
+        />
+        <div className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="mt-2 text-slate-600">Loading import session...</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <Button variant="ghost" onClick={handleCancel} disabled={anyClientUploading || backendIsProcessing || isCancellingImport || isCommittingImport}>
-            Cancel
-          </Button>
-          <h1 className="text-2xl font-bold text-slate-800 text-center flex-1">
-            Import Photos
-          </h1>
-          <div className="w-auto min-w-[100px] text-right">
-            {displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip') && (
-                <Button
-                  onClick={handleSaveImport}
-                  disabled={anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport}
-                  size="sm"
-                  className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
-                >
-                    {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Save Import
-                </Button>
-            )}
-            {(anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport) &&
-             !(isCommittingImport && displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip')) &&
+    <>
+      <PageMeta
+        title="Photo Import · Shred Day"
+        description="Review imported ski photos."
+      />
+      <div className="min-h-screen bg-white p-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Button variant="ghost" onClick={handleCancel} disabled={anyClientUploading || backendIsProcessing || isCancellingImport || isCommittingImport}>
+              Cancel
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-800 text-center flex-1">
+              Import Photos
+            </h1>
+            <div className="w-auto min-w-[100px] text-right">
+              {displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip') && (
+                  <Button
+                    onClick={handleSaveImport}
+                    disabled={anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport}
+                    size="sm"
+                    className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+                  >
+                      {isCommittingImport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Save Import
+                  </Button>
+              )}
+              {(anyClientUploading || backendIsProcessing || isCommittingImport || isCancellingImport) &&
+               !(isCommittingImport && displayedDraftDays.length > 0 && displayedDraftDays.some(dd => dd.decision && dd.decision !== 'pending' && dd.decision !== 'skip')) &&
              <Loader2 className="h-5 w-5 animate-spin ml-2" />}
           </div>
         </div>
@@ -425,5 +437,6 @@ export default function PhotoImportPage() {
         </AlertDialog>
       </div>
     </div>
+    </>
   );
 }
