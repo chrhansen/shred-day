@@ -2,6 +2,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
+import { HelmetProvider } from "react-helmet-async";
 import DaysListPage from '../DaysListPage';
 import '@testing-library/jest-dom';
 
@@ -66,9 +67,11 @@ describe('DaysListPage', () => {
 
     return render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[initialEntry]}>
-          <DaysListPage />
-        </MemoryRouter>
+        <HelmetProvider>
+          <MemoryRouter initialEntries={[initialEntry]}>
+            <DaysListPage />
+          </MemoryRouter>
+        </HelmetProvider>
       </QueryClientProvider>
     );
   };
