@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight, Loader2, Mountain, Snowflake } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ export default function SharedDayPage() {
     ? format(new Date(day.date.replace(/-/g, "/")), "MMM d, yyyy")
     : "";
   const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
-  const defaultImage = baseUrl ? `${baseUrl}/shread-day-logo_192x192.png` : undefined;
+  const defaultImage = baseUrl ? `${baseUrl}/shred_day_logo.png` : undefined;
   const metaTitle = day ? `${resortName} · ${formattedDate}` : "Shred Day";
   const metaDescription = day
     ? `${username} at ${resortName} on ${formattedDate}`
@@ -114,7 +114,9 @@ export default function SharedDayPage() {
 
             <div className="pt-4 space-y-4">
               <div className="flex justify-center">
-                <Logo />
+                <Link to="/" className="transition-opacity hover:opacity-80">
+                  <Logo />
+                </Link>
               </div>
               <p className="text-sm text-muted-foreground">Track your own ski days and share your adventures</p>
               <Button onClick={() => navigate("/")} variant="default" className="w-full sm:w-auto">
@@ -133,6 +135,12 @@ export default function SharedDayPage() {
     <>
       <PageMeta title={metaTitle} description={metaDescription} image={metaImage} />
       <div className="min-h-screen bg-background flex flex-col items-center">
+        <header className="w-full max-w-2xl px-4 py-4 flex items-center justify-center">
+          <Link to="/" className="transition-opacity hover:opacity-80" aria-label="Go to Shred.Day home">
+            <Logo />
+          </Link>
+        </header>
+
         <div
           className="relative w-full max-w-2xl aspect-[4/5] sm:aspect-[16/10] bg-muted max-h-[72vh] sm:max-h-[64vh] lg:max-h-[78vh]"
           onTouchStart={handleTouchStart}
@@ -224,7 +232,9 @@ export default function SharedDayPage() {
           <div className="mt-[150px] pt-6 border-t">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                <Logo />
+                <Link to="/" className="transition-opacity hover:opacity-80">
+                  <Logo />
+                </Link>
               </div>
               <p className="text-sm text-muted-foreground">Track your own ski days and share your adventures</p>
               <Button onClick={() => navigate("/")} variant="default" className="w-full sm:w-auto">

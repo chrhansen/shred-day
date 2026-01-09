@@ -50,7 +50,7 @@ describe("PageMeta", () => {
       />
     );
 
-    const expectedImage = `${window.location.origin}/shread-day-logo_192x192.png`;
+    const expectedImage = `${window.location.origin}/shred_day_logo.png`;
     await waitFor(() => {
       expect(getMeta('meta[property="og:image"]')?.content).toBe(expectedImage);
     });
