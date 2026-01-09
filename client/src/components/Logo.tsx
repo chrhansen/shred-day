@@ -10,7 +10,7 @@ export const Logo = ({ className }: LogoProps) => {
       <img
         src="/shred_day_logo.png"
         alt="Shred Day logo"
-        className="h-10 w-10 rounded-lg shadow-sm"
+        className="h-10 w-10 rounded-lg"
       />
       <span className="text-lg md:text-xl font-semibold text-slate-900">Shred.Day</span>
     </div>
