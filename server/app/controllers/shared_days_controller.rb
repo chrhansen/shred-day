@@ -78,7 +78,7 @@ class SharedDaysController < ActionController::Base
   def default_image_url
     return nil unless request
 
-    "#{request.base_url}/new_shred_day_logo.png"
+    "#{request.base_url}/shred_day_logo.png"
   end
 
   def og_url

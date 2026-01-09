@@ -10,7 +10,7 @@ type PageMetaProps = {
 
 const PageMeta = ({ title, description, image, url, type = "website" }: PageMetaProps) => {
   const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
-  const fallbackImage = baseUrl ? `${baseUrl}/new_shred_day_logo.png` : undefined;
+  const fallbackImage = baseUrl ? `${baseUrl}/shred_day_logo.png` : undefined;
   const imageUrl = image || fallbackImage;
   const pageUrl = url || (typeof window === "undefined" ? undefined : window.location.href);
   const twitterCard = imageUrl ? "summary_large_image" : "summary";

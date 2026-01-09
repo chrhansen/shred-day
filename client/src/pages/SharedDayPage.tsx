@@ -32,7 +32,7 @@ export default function SharedDayPage() {
     ? format(new Date(day.date.replace(/-/g, "/")), "MMM d, yyyy")
     : "";
   const baseUrl = typeof window === "undefined" ? "" : window.location.origin;
-  const defaultImage = baseUrl ? `${baseUrl}/new_shred_day_logo.png` : undefined;
+  const defaultImage = baseUrl ? `${baseUrl}/shred_day_logo.png` : undefined;
   const metaTitle = day ? `${resortName} · ${formattedDate}` : "Shred Day";
   const metaDescription = day
     ? `${username} at ${resortName} on ${formattedDate}`

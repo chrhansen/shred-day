@@ -8,7 +8,7 @@ export const Logo = ({ className }: LogoProps) => {
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <img
-        src="/new_shred_day_logo.png"
+        src="/shred_day_logo.png"
         alt="Shred Day logo"
         className="h-10 w-10 rounded-lg shadow-sm"
       />
