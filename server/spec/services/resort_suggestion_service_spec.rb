@@ -1,10 +1,22 @@
 require 'rails_helper'
 
 RSpec.describe ResortSuggestionService do
+  include ActiveJob::TestHelper
+
   let(:user) { create(:user) }
 
+  before do
+    ActiveJob::Base.queue_adapter = :test
+  end
+
+  after do
+    clear_enqueued_jobs
+  end
+
   it 'creates an unverified resort suggestion for the user' do
-    result = described_class.new(user: user, name: 'Alpine Ridge', country: 'Austria').suggest_resort
+    result = nil
+    expect { result = described_class.new(user: user, name: 'Alpine Ridge', country: 'Austria').suggest_resort }
+      .to have_enqueued_mail(UserMailer, :resort_suggestion_notification)
 
     expect(result).to be_created
     expect(result.resort.name).to eq('Alpine Ridge')
@@ -21,14 +33,18 @@ RSpec.describe ResortSuggestionService do
   end
 
   it 'returns errors for invalid country' do
-    result = described_class.new(user: user, name: 'Alpine Ridge', country: 'Atlantis').suggest_resort
+    result = nil
+    expect { result = described_class.new(user: user, name: 'Alpine Ridge', country: 'Atlantis').suggest_resort }
+      .not_to have_enqueued_mail(UserMailer, :resort_suggestion_notification)
 
     expect(result).not_to be_created
     expect(result.errors[:country]).to be_present
   end
 
   it 'returns errors for invalid resort' do
-    result = described_class.new(user: user, name: '', country: 'France').suggest_resort
+    result = nil
+    expect { result = described_class.new(user: user, name: '', country: 'France').suggest_resort }
+      .not_to have_enqueued_mail(UserMailer, :resort_suggestion_notification)
 
     expect(result).not_to be_created
     expect(result.errors[:name]).to be_present

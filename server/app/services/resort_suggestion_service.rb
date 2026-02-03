@@ -47,6 +47,7 @@ class ResortSuggestionService
     end
 
     resort.save
+    UserMailer.resort_suggestion_notification(user, resort).deliver_later if resort.persisted?
 
     Result.new(resort: resort)
   end
