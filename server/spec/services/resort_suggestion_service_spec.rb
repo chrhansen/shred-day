@@ -20,6 +20,13 @@ RSpec.describe ResortSuggestionService do
     expect(result.resort.name).to eq('Alpine 2.0')
   end
 
+  it 'returns errors for invalid country' do
+    result = described_class.new(user: user, name: 'Alpine Ridge', country: 'Atlantis').suggest_resort
+
+    expect(result).not_to be_created
+    expect(result.errors[:country]).to be_present
+  end
+
   it 'returns errors for invalid resort' do
     result = described_class.new(user: user, name: '', country: 'France').suggest_resort
 

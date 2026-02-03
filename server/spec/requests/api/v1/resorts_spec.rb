@@ -120,6 +120,13 @@ RSpec.describe "Api::V1::Resorts", type: :request do
         post api_v1_resorts_path, params: { resort: { name: "" } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
+
+      it "returns validation errors for invalid country" do
+        post api_v1_resorts_path, params: { resort: { name: "New Resort", country: "Atlantis" } }
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['country']).to be_present
+      end
     end
 
     context "when not authenticated" do
