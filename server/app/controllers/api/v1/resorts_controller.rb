@@ -5,37 +5,21 @@ module Api
       # GET /api/v1/resorts
       # GET /api/v1/resorts?query=abc
       def index
-        if params[:query].present?
-          # Search for resorts where the name contains the query (case-insensitive)
-          # Limit results for performance and usability
-          query = "%#{params[:query].downcase}%"
-          base_scope = Resort.where("LOWER(name) LIKE ?", query)
-          visible_scope = base_scope.where(verified: true)
-            .or(base_scope.where(suggested_by: current_user.id))
-          @resorts = visible_scope.limit(20)
-        else
-          # Return empty array if no query is provided
-          @resorts = []
-        end
-
-        render json: @resorts
+        result = ResortSearchService.new(current_user: current_user).search_resorts(query: params[:query])
+        render json: result.resorts
       end
 
       # POST /api/v1/resorts
       def create
-        sanitized_params = resort_params
-        sanitized_params[:name] = sanitize_resort_name(sanitized_params[:name])
+        result = ResortSuggestionService.new(current_user: current_user).suggest_resort(
+          name: resort_params[:name],
+          country: resort_params[:country]
+        )
 
-        resort = Resort.new(sanitized_params.merge(
-          suggested_at: Time.current,
-          suggested_by: current_user.id,
-          verified: false
-        ))
-
-        if resort.save
-          render json: resort, status: :created
+        if result.created?
+          render json: result.resort, status: :created
         else
-          render json: resort.errors, status: :unprocessable_entity
+          render json: result.errors, status: :unprocessable_entity
         end
       end
 
@@ -43,13 +27,6 @@ module Api
 
       def resort_params
         params.require(:resort).permit(:name, :country)
-      end
-
-      def sanitize_resort_name(name)
-        name.to_s
-          .gsub(/[^A-Za-z0-9.\- ]+/, '')
-          .gsub(/\s+/, ' ')
-          .strip
       end
     end
   end
