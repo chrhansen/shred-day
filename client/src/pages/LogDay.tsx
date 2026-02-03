@@ -69,6 +69,8 @@ export default function LogDay() {
     removeTag,
     isAddingTag,
     isDeletingTag,
+    suggestResort,
+    isCreatingResort,
   } = useLogDay();
 
   // Event handlers
@@ -246,6 +248,8 @@ export default function LogDay() {
             onQueryChange={setResortQuery}
             onSelectFromSearch={handleSelectResortFromSearch}
             onSearchIndexChange={setActiveSearchIndex}
+            onCreateResort={suggestResort}
+            isCreatingResort={isCreatingResort}
           />
 
           {/* Ski Selection */}

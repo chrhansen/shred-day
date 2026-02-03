@@ -5,16 +5,29 @@ module Api
       # GET /api/v1/resorts
       # GET /api/v1/resorts?query=abc
       def index
-        if params[:query].present?
-          # Search for resorts where the name contains the query (case-insensitive)
-          # Limit results for performance and usability
-          @resorts = Resort.where("LOWER(name) LIKE ?", "%#{params[:query].downcase}%").limit(20)
-        else
-          # Return empty array if no query is provided
-          @resorts = []
-        end
+        result = ResortSearchService.new(user: current_user, query: params[:query]).search_resorts
+        render json: result.resorts
+      end
 
-        render json: @resorts
+      # POST /api/v1/resorts
+      def create
+        result = ResortSuggestionService.new(
+          user: current_user,
+          name: resort_params[:name],
+          country: resort_params[:country]
+        ).suggest_resort
+
+        if result.created?
+          render json: result.resort, status: :created
+        else
+          render json: result.errors, status: :unprocessable_entity
+        end
+      end
+
+      private
+
+      def resort_params
+        params.require(:resort).permit(:name, :country)
       end
     end
   end

@@ -30,7 +30,7 @@ Rails.application.routes.draw do
 
       resources :skis, only: [:index, :create, :update, :destroy]
       resources :tags, only: [:index, :create, :destroy]
-      resources :resorts, only: [:index] # GET /api/v1/resorts?query=... (Search Resorts)
+      resources :resorts, only: [:index, :create] # GET /api/v1/resorts?query=... (Search Resorts)
       resources :recent_resorts, only: [:index] # GET /api/v1/recent_resorts
 
       resource :csv_export, only: [:show, :create], controller: :csv_export

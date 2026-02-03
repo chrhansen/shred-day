@@ -157,6 +157,35 @@ export function useLogDay() {
     onSettled: () => setDeletingTagId(null),
   });
 
+  const { mutateAsync: createResort, isPending: isCreatingResort } = useMutation({
+    mutationFn: (data: { name: string; country: string }) => resortService.createResort(data),
+    onSuccess: (newResort) => {
+      toast.success(`Resort "${newResort.name}" suggested!`);
+    },
+    onError: (error) => {
+      console.error("Add Resort error:", error);
+      const message = error instanceof Error ? error.message : "Failed to add resort";
+      toast.error(message);
+    },
+  });
+
+  const suggestResort = useCallback(
+    async (data: { name: string; country: string }) => {
+      try {
+        const newResort = await createResort(data);
+        setSelectedResort(newResort);
+        setIsSearchingMode(false);
+        setResortQuery('');
+        setSearchResults([]);
+        setActiveSearchIndex(-1);
+        return newResort;
+      } catch {
+        return null;
+      }
+    },
+    [createResort, setSelectedResort, setIsSearchingMode, setResortQuery, setSearchResults, setActiveSearchIndex]
+  );
+
   // Resort search logic
   const fetchResorts = async (query: string) => {
     if (!query || query.trim().length < 2) {
@@ -284,7 +313,7 @@ export function useLogDay() {
     }
   };
 
-  const isProcessing = isSaving || isUpdating || isAddingSki || isAddingTag || isDeletingTag;
+  const isProcessing = isSaving || isUpdating || isAddingSki || isAddingTag || isDeletingTag || isCreatingResort;
   const isLoading = isLoadingSkis || isLoadingRecentResorts || isLoadingDayToEdit || isLoadingTags;
 
   return {
@@ -346,5 +375,7 @@ export function useLogDay() {
     removeTag,
     isAddingTag,
     isDeletingTag,
+    suggestResort,
+    isCreatingResort,
   };
 }
