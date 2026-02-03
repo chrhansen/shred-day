@@ -5,16 +5,17 @@ module Api
       # GET /api/v1/resorts
       # GET /api/v1/resorts?query=abc
       def index
-        result = ResortSearchService.new(current_user: current_user).search_resorts(query: params[:query])
+        result = ResortSearchService.new(user: current_user, query: params[:query]).search_resorts
         render json: result.resorts
       end
 
       # POST /api/v1/resorts
       def create
-        result = ResortSuggestionService.new(current_user: current_user).suggest_resort(
+        result = ResortSuggestionService.new(
+          user: current_user,
           name: resort_params[:name],
           country: resort_params[:country]
-        )
+        ).suggest_resort
 
         if result.created?
           render json: result.resort, status: :created

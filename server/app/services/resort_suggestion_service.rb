@@ -1,14 +1,16 @@
 class ResortSuggestionService
-  def initialize(current_user:)
-    @current_user = current_user
+  def initialize(user:, name:, country:)
+    @user = user
+    @name = name
+    @country = country
   end
 
-  def suggest_resort(name:, country:)
+  def suggest_resort
     resort = Resort.new(
       name: sanitize_resort_name(name),
       country: country,
       suggested_at: Time.current,
-      suggested_by: current_user.id,
+      suggested_by: user.id,
       verified: false
     )
 
@@ -19,7 +21,7 @@ class ResortSuggestionService
 
   private
 
-  attr_reader :current_user
+  attr_reader :user, :name, :country
 
   def sanitize_resort_name(name)
     name.to_s
