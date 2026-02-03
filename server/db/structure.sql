@@ -362,7 +362,10 @@ CREATE TABLE public.resorts (
     region character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    normalized_name text
+    normalized_name text,
+    suggested_at timestamp(6) without time zone,
+    suggested_by character varying,
+    verified boolean DEFAULT true NOT NULL
 );
 
 
@@ -734,6 +737,13 @@ CREATE INDEX index_resorts_on_normalized_name ON public.resorts USING gist (norm
 
 
 --
+-- Name: index_resorts_on_suggested_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_resorts_on_suggested_by ON public.resorts USING btree (suggested_by);
+
+
+--
 -- Name: index_skis_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -834,6 +844,14 @@ ALTER TABLE ONLY public.google_sheet_integrations
 
 ALTER TABLE ONLY public.photo_imports
     ADD CONSTRAINT fk_rails_439e345dbd FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: resorts fk_rails_59f141646a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resorts
+    ADD CONSTRAINT fk_rails_59f141646a FOREIGN KEY (suggested_by) REFERENCES public.users(id);
 
 
 --
@@ -963,6 +981,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260202220009'),
 ('20251207120500'),
 ('20251207120000'),
 ('20251120124144'),

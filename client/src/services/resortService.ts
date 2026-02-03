@@ -8,6 +8,11 @@ const searchResorts = async (query: string): Promise<Resort[]> => {
   return apiClient.get<Resort[]>('/api/v1/resorts', { query });
 };
 
+const createResort = async (resort: { name: string; country: string }): Promise<Resort> => {
+  return apiClient.post<Resort>('/api/v1/resorts', { resort });
+};
+
 export const resortService = {
   searchResorts,
+  createResort,
 };
