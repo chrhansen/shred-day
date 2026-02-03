@@ -206,8 +206,8 @@ export function ResortSelection({
                           autoFocus
                         />
                         <Select value={newResortCountry} onValueChange={setNewResortCountry} disabled={isDisabled}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Country" />
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Country" />
                           </SelectTrigger>
                           <SelectContent className="max-h-48">
                             {COUNTRIES.map((country) => (

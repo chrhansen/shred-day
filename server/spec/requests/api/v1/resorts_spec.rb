@@ -108,6 +108,14 @@ RSpec.describe "Api::V1::Resorts", type: :request do
         expect(resort.suggested_at).not_to be_nil
       end
 
+      it "sanitizes resort names to allowed characters" do
+        post api_v1_resorts_path, params: { resort: { name: "Alp$ine*** 2.0", country: "France" } }
+        expect(response).to have_http_status(:created)
+        json_response = JSON.parse(response.body)
+
+        expect(json_response['name']).to eq("Alpine 2.0")
+      end
+
       it "returns validation errors for invalid suggestions" do
         post api_v1_resorts_path, params: { resort: { name: "" } }
         expect(response).to have_http_status(:unprocessable_entity)

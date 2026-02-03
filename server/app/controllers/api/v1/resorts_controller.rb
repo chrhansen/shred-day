@@ -23,7 +23,10 @@ module Api
 
       # POST /api/v1/resorts
       def create
-        resort = Resort.new(resort_params.merge(
+        sanitized_params = resort_params
+        sanitized_params[:name] = sanitize_resort_name(sanitized_params[:name])
+
+        resort = Resort.new(sanitized_params.merge(
           suggested_at: Time.current,
           suggested_by: current_user.id,
           verified: false
@@ -40,6 +43,13 @@ module Api
 
       def resort_params
         params.require(:resort).permit(:name, :country)
+      end
+
+      def sanitize_resort_name(name)
+        name.to_s
+          .gsub(/[^A-Za-z0-9.\- ]+/, '')
+          .gsub(/\s+/, ' ')
+          .strip
       end
     end
   end
