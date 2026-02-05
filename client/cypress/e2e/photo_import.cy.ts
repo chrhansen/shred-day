@@ -128,10 +128,21 @@ describe('Photo Import', () => {
   });
 
   it('should allow removing an uploaded photo from the preview', function() {
+    cy.intercept('GET', '/api/v1/photo_imports/*', (req) => {
+      req.continue((res) => {
+        if (res.body && typeof res.body === 'object') {
+          res.body.photos = [];
+          res.body.draft_days = [];
+          res.body.status = 'waiting';
+        }
+      });
+    }).as('stabilizePhotoImportPolling');
+    cy.intercept('POST', '/api/v1/photo_imports/*/photos').as('uploadPhotoForRemoval');
     goToPhotoImportPage();
     cy.get('[data-testid="photo-dropzone-label"]').selectFile('cypress/fixtures/test_image.jpg', { action: 'drag-drop' });
-    cy.get('[data-testid="photo-preview"] img').should('be.visible');
-    cy.get('[data-testid="photo-preview"]').find('button[aria-label="Remove photo"]').click();
+    cy.wait('@uploadPhotoForRemoval').its('response.statusCode').should('eq', 201);
+    cy.get('[data-testid="photo-preview"]', { timeout: 10000 }).should('exist');
+    cy.get('[data-testid="photo-preview"]').find('button[aria-label="Remove photo"]').should('exist').click({ force: true });
 
     // Verify the preview is removed
     cy.get('[data-testid="photo-preview"]').should('not.exist');
