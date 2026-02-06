@@ -91,7 +91,7 @@ export function ResortSelection({
     }
   }, [isSearchingMode]);
 
-  const showNoResults = resortQuery.trim().length >= 2 && !isSearchingResorts && searchResults.length === 0;
+  const showSearchDropdown = resortQuery.trim().length >= 2 && !isSearchingResorts && !isAddingResort;
 
   const handleStartAddResort = () => {
     setNewResortName(resortQuery.trim());
@@ -159,88 +159,87 @@ export function ResortSelection({
             </div>
             
             <div className="relative">
-              {searchResults.length > 0 ? (
+              {showSearchDropdown ? (
                 <ResortSearchDropdown
                   results={searchResults}
                   isVisible={true}
                   onSelect={onSelectFromSearch}
                   activeIndex={activeSearchIndex}
                   onActiveIndexChange={onSearchIndexChange}
+                  emptyState={
+                    <p className="text-sm text-slate-500 text-center px-4 py-3">No resorts found</p>
+                  }
+                  footer={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={handleStartAddResort}
+                      disabled={isDisabled}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add "{resortQuery}" as new resort
+                    </Button>
+                  }
                 />
               ) : isSearchingResorts ? (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
                   <p className="text-sm text-slate-500 px-4 py-2">Searching...</p>
                 </div>
-              ) : showNoResults ? (
+              ) : isAddingResort ? (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
-                  {!isAddingResort ? (
-                    <div className="px-4 py-3">
-                      <p className="text-sm text-slate-500 text-center mb-3">No resorts found</p>
+                  <div className="p-3 space-y-3">
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={handleStartAddResort}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handleBackToSearch}
                         disabled={isDisabled}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add "{resortQuery}" as new resort
+                        <ChevronLeft className="h-4 w-4 text-slate-500" />
                       </Button>
+                      <span className="font-medium text-sm text-slate-700">Add new resort</span>
                     </div>
-                  ) : (
-                    <div className="p-3 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={handleBackToSearch}
-                          disabled={isDisabled}
-                        >
-                          <ChevronLeft className="h-4 w-4 text-slate-500" />
-                        </Button>
-                        <span className="font-medium text-sm text-slate-700">Add new resort</span>
-                      </div>
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="Resort name"
-                          value={newResortName}
-                          onChange={(e) => setNewResortName(e.target.value)}
-                          disabled={isDisabled}
-                          autoFocus
-                        />
-                        <Select value={newResortCountry} onValueChange={setNewResortCountry} disabled={isDisabled}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Country" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-48">
-                            {COUNTRIES.map((country) => (
-                              <SelectItem key={country} value={country}>
-                                {country}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        onClick={handleCreateResort}
-                        disabled={isDisabled || isCreatingResort || !newResortName.trim() || !newResortCountry}
-                        className="w-full"
-                      >
-                        {isCreatingResort ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Adding...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add resort
-                          </>
-                        )}
-                      </Button>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Resort name"
+                        value={newResortName}
+                        onChange={(e) => setNewResortName(e.target.value)}
+                        disabled={isDisabled}
+                        autoFocus
+                      />
+                      <Select value={newResortCountry} onValueChange={setNewResortCountry} disabled={isDisabled}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select Country" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-48">
+                          {COUNTRIES.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
+                    <Button
+                      onClick={handleCreateResort}
+                      disabled={isDisabled || isCreatingResort || !newResortName.trim() || !newResortCountry}
+                      className="w-full"
+                    >
+                      {isCreatingResort ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add resort
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ) : null}
             </div>
