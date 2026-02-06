@@ -282,7 +282,7 @@ export default function LogDay() {
 
           <div>
             <h2 className="text-lg font-medium text-slate-800 mb-4">
-              Comment <span className="text-sm font-normal text-slate-400">(optional)</span>
+              Notes <span className="text-sm font-normal text-slate-400">(optional)</span>
             </h2>
             <Textarea
               value={notes}
