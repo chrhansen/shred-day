@@ -14,6 +14,7 @@ import PageMeta from "@/components/PageMeta";
 
 export default function LogDay() {
   const navigate = useNavigate();
+  const NOTES_MAX_LENGTH = 500;
   const {
     // State
     date,
@@ -281,15 +282,20 @@ export default function LogDay() {
           />
 
           <div>
-            <h2 className="text-lg font-medium text-slate-800 mb-4">
-              Notes <span className="text-sm font-normal text-slate-400">(optional)</span>
-            </h2>
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-lg font-medium text-slate-800">
+                Notes <span className="text-sm font-normal text-slate-400">(optional)</span>
+              </h2>
+              <span className="text-sm text-slate-400" data-testid="day-notes-count">
+                {notes.length}/{NOTES_MAX_LENGTH}
+              </span>
+            </div>
             <Textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Add a note about this ski day (max. 500 characters)..."
               className="min-h-[120px] resize-none"
-              maxLength={500}
+              maxLength={NOTES_MAX_LENGTH}
               disabled={isProcessing || isLoading}
               data-testid="day-notes-input"
             />
