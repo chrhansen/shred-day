@@ -180,7 +180,7 @@ export function SkiDayDetail({ day, isOpen, onClose, isLoading, error }: SkiDayD
           </div>
           <div>
             <h3 className="text-sm font-medium text-slate-500 mb-1">Notes</h3>
-            <p className="text-slate-800">
+            <p className="text-slate-800 whitespace-pre-wrap break-words">
               {day.notes ? day.notes : <span className="text-slate-500 italic">No notes available</span>}
             </p>
           </div>

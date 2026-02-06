@@ -7,12 +7,14 @@ import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader"
 import { ResortSelection } from "@/components/ResortSelection";
 import { SkiSelection } from "@/components/SkiSelection";
 import { TagSelection } from "@/components/TagSelection";
+import { Textarea } from "@/components/ui/textarea";
 import { useLogDay } from "@/hooks/useLogDay";
 import type { PhotoPreview } from "@/types/ski";
 import PageMeta from "@/components/PageMeta";
 
 export default function LogDay() {
   const navigate = useNavigate();
+  const NOTES_MAX_LENGTH = 500;
   const {
     // State
     date,
@@ -32,6 +34,8 @@ export default function LogDay() {
     selectedSkis,
     setSelectedSkis,
     selectedTagIds,
+    notes,
+    setNotes,
     photos,
     setPhotos,
     isUploading,
@@ -276,6 +280,26 @@ export default function LogDay() {
             isAddingTag={isAddingTag}
             isDeletingTag={isDeletingTag}
           />
+
+          <div>
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-lg font-medium text-slate-800">
+                Notes <span className="text-sm font-normal text-slate-400">(optional)</span>
+              </h2>
+              <span className="text-sm text-slate-400" data-testid="day-notes-count">
+                {notes.length}/{NOTES_MAX_LENGTH}
+              </span>
+            </div>
+            <Textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Add a note about this ski day (max. 500 characters)..."
+              className="min-h-[120px] resize-none"
+              maxLength={NOTES_MAX_LENGTH}
+              disabled={isProcessing || isLoading}
+              data-testid="day-notes-input"
+            />
+          </div>
 
           {/* Photo Upload Section */}
           <div>

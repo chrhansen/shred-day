@@ -111,6 +111,25 @@ RSpec.describe "Api::V1::Days", type: :request do
           # Access errors correctly under the 'errors' key
           expect(json_response['errors']['date']).to include("can't be blank")
         end
+
+        it "returns unprocessable_entity when notes exceed 500 characters" do
+          params_with_long_notes = {
+            day: {
+              date: Date.today.to_s,
+              resort_id: resort.id,
+              ski_ids: [ski1.id],
+              notes: "a" * 501
+            }
+          }
+
+          expect {
+            post api_v1_days_path, params: params_with_long_notes
+          }.not_to change(Day, :count)
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          json_response = JSON.parse(response.body)
+          expect(json_response['errors']['notes']).to include("is too long (maximum is 500 characters)")
+        end
       end
 
       context "when the user already has 3 entries for that date" do
@@ -564,6 +583,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(day_entry).to have_key('updated_at')
         expect(day_entry).to have_key('day_number')
         expect(day_entry).to have_key('has_notes')
+        expect(day_entry).to have_key('notes')
 
         # Check for flattened names
         expect(day_entry).to have_key('resort_name')
@@ -571,6 +591,7 @@ RSpec.describe "Api::V1::Days", type: :request do
         expect(day_entry).to have_key('ski_names')
         expect(day_entry['ski_names']).to eq([ski1.name])
         expect(day_entry['has_notes']).to eq(true)
+        expect(day_entry['notes']).to eq(day.notes)
 
         # Check absence of nested objects
         expect(day_entry).not_to have_key('resort')

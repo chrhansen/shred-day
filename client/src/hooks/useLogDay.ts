@@ -29,6 +29,7 @@ export function useLogDay() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [selectedSkis, setSelectedSkis] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string>("");
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export function useLogDay() {
 
   // Mutations
   const { mutate: saveDay, isPending: isSaving } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[]; notes: string | null }) =>
       skiService.logDay(data),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -95,7 +96,7 @@ export function useLogDay() {
   });
 
   const { mutate: updateDay, isPending: isUpdating } = useMutation({
-    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[] }) =>
+    mutationFn: (data: { date: string; resort_id: string; ski_ids: string[]; tag_ids: string[]; photo_ids: string[]; notes: string | null }) =>
         skiService.updateDay(dayId!, data),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
@@ -224,6 +225,7 @@ export function useLogDay() {
       setSelectedSkis(dayToEdit.skis ? dayToEdit.skis.map(ski => ski.id) : []);
       setSelectedTagIds(dayToEdit.tags ? dayToEdit.tags.map(tag => tag.id) : []);
       setSelectedResort(dayToEdit.resort);
+      setNotes(dayToEdit.notes ?? "");
 
       // Map existing photo data from the fetched day
       const existingPhotos: PhotoPreview[] = dayToEdit.photos?.map((p) => ({
@@ -304,6 +306,7 @@ export function useLogDay() {
       ski_ids: selectedSkis,
       tag_ids: selectedTagIds,
       photo_ids: uploadedPhotoIds,
+      notes: notes.trim().length > 0 ? notes.trim() : null,
     };
 
     if (isEditMode) {
@@ -336,6 +339,8 @@ export function useLogDay() {
     setSelectedSkis,
     selectedTagIds,
     setSelectedTagIds,
+    notes,
+    setNotes,
     photos,
     setPhotos,
     isUploading,

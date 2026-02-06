@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatSkiDayDisplayDate } from "@/utils/dateDisplay";
 import { ShareDayDialog } from "@/components/ShareDayDialog";
@@ -24,6 +25,14 @@ interface SkiDayItemProps {
   isHighlighted?: boolean;
   anchorId?: string;
   selectedSeason?: number;
+}
+
+function truncateText(text: string, maxLength = 52): { truncated: string; isTruncated: boolean } {
+  if (text.length <= maxLength) {
+    return { truncated: text, isTruncated: false };
+  }
+
+  return { truncated: `${text.slice(0, maxLength).trim()}...`, isTruncated: true };
 }
 
 export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, selectedSeason }: SkiDayItemProps) {
@@ -88,6 +97,8 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
   const now = new Date();
   const dayDate = new Date(day.date.replace(/-/g, '/'));
   const displayDate = formatSkiDayDisplayDate(dayDate, now);
+  const noteText = day.notes?.trim() ?? "";
+  const truncatedNote = noteText ? truncateText(noteText) : null;
 
   return (
     <>
@@ -138,6 +149,27 @@ export function SkiDayItem({ day, onDelete, isHighlighted = false, anchorId, sel
               <span>{day.tag_names.join(', ')}</span>
             )}
           </div>
+          {truncatedNote && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p
+                  className="mt-1 text-base italic text-slate-500/90 truncate"
+                  data-testid={`day-notes-preview-${day.id}`}
+                  title={truncatedNote.isTruncated ? noteText : undefined}
+                >
+                  {truncatedNote.truncated}
+                </p>
+              </TooltipTrigger>
+              {truncatedNote.isTruncated && (
+                <TooltipContent
+                  className="max-w-sm whitespace-pre-wrap break-words"
+                  data-testid={`day-notes-tooltip-${day.id}`}
+                >
+                  {noteText}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          )}
         </div>
         {/* Vertically stacked and right-aligned for actions menu */}
         <div className="ml-auto flex self-stretch items-center">
