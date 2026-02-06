@@ -287,8 +287,9 @@ export default function LogDay() {
             <Textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              placeholder="Add a note about this ski day..."
+              placeholder="Add a note about this ski day (max. 500 characters)..."
               className="min-h-[120px] resize-none"
+              maxLength={500}
               disabled={isProcessing || isLoading}
               data-testid="day-notes-input"
             />

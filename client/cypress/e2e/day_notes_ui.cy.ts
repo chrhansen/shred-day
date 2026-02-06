@@ -47,7 +47,10 @@ describe('Day notes UI', () => {
     cy.wait('@getRecentResorts');
     cy.wait('@getTags');
 
-    cy.get('[data-testid="day-notes-input"]').should('be.visible').type(note);
+    cy.get('[data-testid="day-notes-input"]')
+      .should('be.visible')
+      .and('have.attr', 'placeholder', 'Add a note about this ski day (max. 500 characters)...')
+      .type(note);
     cy.contains('button[role="gridcell"]', /^15$/).click();
 
     cy.get('[data-testid="find-resort-button"]').click();

@@ -263,7 +263,8 @@ CREATE TABLE public.days (
     resort_id character varying NOT NULL,
     notes text,
     day_number integer,
-    shared_at timestamp(6) without time zone
+    shared_at timestamp(6) without time zone,
+    CONSTRAINT days_notes_max_500_chars CHECK (((notes IS NULL) OR (char_length(notes) <= 500)))
 );
 
 
@@ -981,6 +982,7 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260206133228'),
 ('20260202220009'),
 ('20251207120500'),
 ('20251207120000'),

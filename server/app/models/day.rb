@@ -9,6 +9,7 @@ class Day < ApplicationRecord
 
   # Validations
   validates :date, :resort, :user, presence: true
+  validates :notes, length: { maximum: 500 }, allow_nil: true
 
   # Custom validation for max 3 entries per user per date
   validate :maximum_3days_per_date, on: [:create, :update]

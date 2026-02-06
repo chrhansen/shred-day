@@ -39,6 +39,17 @@ RSpec.describe Day, type: :model do
       expect(day).not_to be_valid
       expect(day.errors[:date]).to include("can't be blank")
     end
+
+    it "is valid with notes up to 500 characters" do
+      day = build(:day, user: user, resort: resort, date: Date.today, notes: "a" * 500)
+      expect(day).to be_valid
+    end
+
+    it "is invalid with notes longer than 500 characters" do
+      day = build(:day, user: user, resort: resort, date: Date.today, notes: "a" * 501)
+      expect(day).not_to be_valid
+      expect(day.errors[:notes]).to include("is too long (maximum is 500 characters)")
+    end
   end
 
   describe "#maximum_3days_per_date validation" do
