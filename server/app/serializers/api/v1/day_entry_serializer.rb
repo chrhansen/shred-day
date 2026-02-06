@@ -2,7 +2,7 @@ module Api
   module V1
     # Serializer specifically for the /-index action (list view)
     class DayEntrySerializer < ActiveModel::Serializer
-      attributes :id, :date, :created_at, :updated_at, :day_number
+      attributes :id, :date, :created_at, :updated_at, :day_number, :notes
 
       # Include associated names directly as expected by SkiDayEntry type
 

@@ -7,6 +7,7 @@ import { InteractivePhotoUploader } from "@/components/InteractivePhotoUploader"
 import { ResortSelection } from "@/components/ResortSelection";
 import { SkiSelection } from "@/components/SkiSelection";
 import { TagSelection } from "@/components/TagSelection";
+import { Textarea } from "@/components/ui/textarea";
 import { useLogDay } from "@/hooks/useLogDay";
 import type { PhotoPreview } from "@/types/ski";
 import PageMeta from "@/components/PageMeta";
@@ -32,6 +33,8 @@ export default function LogDay() {
     selectedSkis,
     setSelectedSkis,
     selectedTagIds,
+    notes,
+    setNotes,
     photos,
     setPhotos,
     isUploading,
@@ -276,6 +279,20 @@ export default function LogDay() {
             isAddingTag={isAddingTag}
             isDeletingTag={isDeletingTag}
           />
+
+          <div>
+            <h2 className="text-lg font-medium text-slate-800 mb-4">
+              Comment <span className="text-sm font-normal text-slate-400">(optional)</span>
+            </h2>
+            <Textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Add a note about this ski day..."
+              className="min-h-[120px] resize-none"
+              disabled={isProcessing || isLoading}
+              data-testid="day-notes-input"
+            />
+          </div>
 
           {/* Photo Upload Section */}
           <div>

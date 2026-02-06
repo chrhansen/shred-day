@@ -226,7 +226,9 @@ export default function SharedDayPage() {
               </div>
             )}
 
-            {day.notes && <p className="text-foreground leading-relaxed pt-2">{day.notes}</p>}
+            {day.notes && (
+              <p className="text-foreground leading-relaxed pt-2 whitespace-pre-wrap break-words">{day.notes}</p>
+            )}
           </div>
 
           <div className="mt-[150px] pt-6 border-t">

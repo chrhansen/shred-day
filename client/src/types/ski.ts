@@ -81,6 +81,7 @@ export interface SharedDayDetail extends SkiDayDetail {
 export interface SkiDayEntry {
   id: string;
   date: string; // API returns string, we can parse it later
+  notes?: string | null;
   tag_names: string[];
   ski_names: string[];
   resort_name: string;
