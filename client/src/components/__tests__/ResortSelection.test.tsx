@@ -111,4 +111,51 @@ describe('ResortSelection', () => {
       });
     });
   });
+
+  it('shows add-resort action even when search results exist', async () => {
+    const user = userEvent.setup();
+    const resorts: Resort[] = [
+      {
+        id: 'res_2',
+        name: 'Stubai Glacier',
+        country: 'Austria',
+        region: 'Tyrol',
+        latitude: 47.0,
+        longitude: 11.1,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ];
+
+    render(
+      <ResortSelection
+        selectedResort={null}
+        recentResorts={[]}
+        isLoadingRecentResorts={false}
+        isSearchingMode={true}
+        resortQuery="st"
+        searchResults={resorts}
+        isSearchingResorts={false}
+        activeSearchIndex={-1}
+        isDisabled={false}
+        onToggleRecent={jest.fn()}
+        onSearchModeToggle={jest.fn()}
+        onQueryChange={jest.fn()}
+        onSelectFromSearch={jest.fn()}
+        onSearchIndexChange={jest.fn()}
+        onCreateResort={jest.fn().mockResolvedValue(null)}
+        isCreatingResort={false}
+      />
+    );
+
+    expect(screen.getByTestId('resort-search-results')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add "st" as new resort/i })).toBeInTheDocument();
+
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: /add "st" as new resort/i }));
+    });
+
+    expect(screen.getByText(/add new resort/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Resort name')).toHaveValue('st');
+  });
 });
