@@ -1,26 +1,22 @@
 class Api::V1::StatsController < ApplicationController
-
-  # GET /api/v1/stats
   def show
-    user_days = current_user.days
+    season_offset = params[:season]&.to_i || 0
+    result = Stats::FetchSeasonStatsService
+      .new(current_user, season_offset: season_offset)
+      .fetch_stats
 
-    total_days = user_days.count
-    unique_resorts = user_days.select(:resort_id).distinct.count
-
-    most_used_ski_name = "-"
-
-    ski_counts = current_user.days.joins(:skis).group('skis.id').count
-
-    if ski_counts.any?
-      most_used_ski_id = ski_counts.key(ski_counts.values.max)
-
-      most_used_ski_name = current_user.skis.find_by(id: most_used_ski_id).name
-    end
+    most_used_ski_name = result.skis.max_by { |row| row[:days].to_i }&.dig(:name) || "-"
 
     render json: {
-      totalDays: total_days,
-      uniqueResorts: unique_resorts,
-      mostUsedSki: most_used_ski_name
+      totalDays: result.summary[:totalDays],
+      uniqueResorts: result.summary[:uniqueResorts],
+      mostUsedSki: most_used_ski_name,
+      season: result.season,
+      summary: result.summary,
+      daysPerMonth: result.days_per_month,
+      resorts: result.resorts,
+      tags: result.tags,
+      skis: result.skis
     }
   end
 end

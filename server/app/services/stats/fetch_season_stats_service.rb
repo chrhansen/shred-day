@@ -1,11 +1,11 @@
-class Dashboard::FetchSeasonDashboardService
+class Stats::FetchSeasonStatsService
   def initialize(user, season_offset:)
     @user = user
     @season_offset = season_offset.to_i
     @converter = OffsetDateRangeConverterService.new(@user.season_start_day)
   end
 
-  def fetch_dashboard
+  def fetch_stats
     start_date, end_date = @converter.date_range(@season_offset)
     days = @user.days.where(date: start_date..end_date)
 
@@ -132,3 +132,4 @@ class Dashboard::FetchSeasonDashboardService
     end
   end
 end
+
