@@ -1,74 +1,77 @@
 import Navbar from "@/components/Navbar";
 import PageMeta from "@/components/PageMeta";
-import { Logo } from "@/components/Logo";
-import { SeasonSelector } from "@/components/dashboard/SeasonSelector";
 import { SeasonStatsCard } from "@/components/dashboard/SeasonStatsCard";
 import { DaysPerMonthChart } from "@/components/dashboard/DaysPerMonthChart";
 import { ResortMap } from "@/components/dashboard/ResortMap";
 import { TopResortsCard } from "@/components/dashboard/TopResortsCard";
 import { TagsBreakdownChart } from "@/components/dashboard/TagsBreakdownChart";
 import { SkisUsageCard } from "@/components/dashboard/SkisUsageCard";
+import SeasonDropdown from "@/components/SeasonDropdown";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardService } from "@/services/dashboardService";
-import { getSeasonDateObjects } from "@/utils/seasonFormatters";
+import {
+  getFormattedSeasonDateRange,
+  getSeasonDisplayName,
+} from "@/utils/seasonFormatters";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Loader2, Plus } from "lucide-react";
 
 export default function StatsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const seasonStartDay = user?.season_start_day || "09-01";
   const availableSeasonOffsets = user?.available_seasons || [0];
 
-  const [selectedSeason, setSelectedSeason] = useState<string>(() => {
+  const [selectedSeason, setSelectedSeason] = useState<number>(() => {
     const seasonParam = searchParams.get("season");
-    if (seasonParam === null) return "0";
-    const n = Number.parseInt(seasonParam, 10);
-    return Number.isNaN(n) ? "0" : n.toString();
+    return seasonParam ? Number.parseInt(seasonParam, 10) : 0;
   });
 
   useEffect(() => {
-    const seasonParam = searchParams.get("season");
-    const n = seasonParam === null ? 0 : Number.parseInt(seasonParam, 10);
-    const next = Number.isNaN(n) ? "0" : n.toString();
-    if (next !== selectedSeason) setSelectedSeason(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    const currentSeasonParam = searchParams.get("season");
+    const expectedParam = selectedSeason === 0 ? null : selectedSeason.toString();
 
-  const seasons = useMemo(() => {
+    if (currentSeasonParam !== expectedParam) {
+      if (expectedParam === null) {
+        searchParams.delete("season");
+      } else {
+        searchParams.set("season", expectedParam);
+      }
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [selectedSeason, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const seasonParam = searchParams.get("season");
+    const nextSeason = seasonParam ? Number.parseInt(seasonParam, 10) : 0;
+    const next = Number.isNaN(nextSeason) ? 0 : nextSeason;
+    if (next !== selectedSeason) setSelectedSeason(next);
+  }, [searchParams, selectedSeason]);
+
+  const selectedSeasonDisplayName = getSeasonDisplayName(selectedSeason);
+
+  const seasonsDataForDropdown = useMemo(() => {
     return availableSeasonOffsets.map((offset) => {
-      const { startDate, endDate } = getSeasonDateObjects(offset, seasonStartDay);
-      const startYear = startDate.getFullYear();
-      const endYear = endDate.getFullYear();
-      return {
-        value: offset.toString(),
-        label: `${startYear}/${String(endYear).slice(-2)} Season`,
-      };
+      const displayName = getSeasonDisplayName(offset);
+      const dateRange = getFormattedSeasonDateRange(offset, seasonStartDay);
+      return { displayName, dateRange, value: offset.toString() };
     });
   }, [availableSeasonOffsets, seasonStartDay]);
 
-  const selectedSeasonOffset = Number.parseInt(selectedSeason, 10) || 0;
-
   const { data: dashboard, isLoading } = useQuery({
-    queryKey: ["dashboard", selectedSeasonOffset],
-    queryFn: () => dashboardService.getSeasonDashboard(selectedSeasonOffset),
+    queryKey: ["dashboard", selectedSeason],
+    queryFn: () => dashboardService.getSeasonDashboard(selectedSeason),
     enabled: !!user,
   });
 
   const handleSeasonChange = (seasonValue: string) => {
-    setSelectedSeason(seasonValue);
-
-    const n = Number.parseInt(seasonValue, 10);
-    if (Number.isNaN(n) || n === 0) {
-      searchParams.delete("season");
-      setSearchParams(searchParams, { replace: true });
-      return;
-    }
-
-    searchParams.set("season", seasonValue);
-    setSearchParams(searchParams, { replace: true });
+    const seasonNumber = Number.parseInt(seasonValue, 10);
+    setSelectedSeason(Number.isNaN(seasonNumber) ? 0 : seasonNumber);
   };
 
   const seasonStartMonthIndex = (() => {
@@ -77,19 +80,36 @@ export default function StatsPage() {
     return Number.isNaN(m) ? 8 : Math.min(Math.max(m - 1, 0), 11);
   })();
 
+  const newDayTarget = selectedSeason !== undefined ? `/new?season=${selectedSeason}` : "/new";
+
+  const newDayButton = (
+    <Button
+      onClick={() => navigate(newDayTarget)}
+      size="sm"
+      className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md transition-all hover:shadow-lg"
+    >
+      <Plus className="mr-1.0 h-4 w-4" />
+      New Day
+    </Button>
+  );
+
   return (
     <>
       <PageMeta title="Stats · Shred Day" description="Review your ski stats and trends." />
 
       <div className="min-h-screen bg-slate-50 pb-8">
         <Navbar
-          centerContent={<Logo className="justify-center gap-2" />}
-          rightContent={
-            <SeasonSelector
-              seasons={seasons}
-              selectedSeason={selectedSeason}
-              onSeasonChange={handleSeasonChange}
-            />
+          rightContent={newDayButton}
+          centerContent={
+            !user ? (
+              <Loader2 className="h-5 w-5 animate-spin text-slate-700" />
+            ) : (
+              <SeasonDropdown
+                selectedSeason={selectedSeasonDisplayName}
+                seasonsData={seasonsDataForDropdown}
+                onSeasonChange={handleSeasonChange}
+              />
+            )
           }
         />
 

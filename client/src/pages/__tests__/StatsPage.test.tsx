@@ -41,6 +41,33 @@ jest.mock("@/components/Navbar", () => ({
   ),
 }));
 
+jest.mock("@/components/SeasonDropdown", () => ({
+  __esModule: true,
+  default: ({
+    selectedSeason,
+    seasonsData,
+    onSeasonChange,
+  }: {
+    selectedSeason: string;
+    seasonsData: Array<{ displayName: string; dateRange: string; value: string }>;
+    onSeasonChange: (seasonValue: string) => void;
+  }) => (
+    <div>
+      <div data-testid="season-selected">{selectedSeason}</div>
+      {seasonsData.map((season) => (
+        <button
+          key={season.value}
+          type="button"
+          data-testid={`season-option-${season.value}`}
+          onClick={() => onSeasonChange(season.value)}
+        >
+          {season.displayName}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 jest.mock("@/components/dashboard/ResortMap", () => ({
   ResortMap: ({ resorts }: { resorts: unknown[] }) => (
     <div data-testid="resort-map">resorts:{resorts.length}</div>
@@ -141,11 +168,7 @@ describe("StatsPage", () => {
       expect(mockGetSeasonDashboard).toHaveBeenCalledWith(-1);
     });
 
-    const combobox = screen.getByRole("combobox");
-    await user.click(combobox);
-
-    const option = await screen.findByText("2025/26 Season");
-    await user.click(option);
+    await user.click(screen.getByTestId("season-option-0"));
 
     await waitFor(() => {
       expect(mockGetSeasonDashboard).toHaveBeenCalledWith(0);
