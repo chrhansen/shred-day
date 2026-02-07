@@ -32,6 +32,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
 - **Backend:** `bundle exec rspec` (targets under `spec/models`, `spec/requests`, `spec/services`, etc.).
 - **Frontend:** Vitest for unit/component (`npm test`), Cypress for E2E (`npx cypress open` or `npx cypress run`; requires client + server running).
 - Add or update tests whenever behavior changes, especially around active initiatives (text import parsing, Google sign-in).
+- Request specs: always cover unauthenticated (401) and, where relevant, unauthorized (403/404) cases.
 
 ## Contribution Guidelines
 - Stay scoped: touch only files relevant to the assigned task unless plumbing makes a change unavoidable.
