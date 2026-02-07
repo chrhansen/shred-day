@@ -10,6 +10,9 @@ RSpec.describe "Api::V1::Dashboard", type: :request do
       it "returns unauthorized" do
         get api_v1_dashboard_path
         expect(response).to have_http_status(:unauthorized)
+        expect(JSON.parse(response.body)).to include(
+          "error" => "You must be logged in to access this section"
+        )
       end
     end
 
