@@ -380,20 +380,6 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: season_goals; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.season_goals (
-    id character varying DEFAULT public.gen_id('sgo'::text) NOT NULL,
-    user_id character varying NOT NULL,
-    season_start_year integer NOT NULL,
-    goal_days integer NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
 -- Name: skis; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -569,14 +555,6 @@ ALTER TABLE ONLY public.resorts
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: season_goals season_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.season_goals
-    ADD CONSTRAINT season_goals_pkey PRIMARY KEY (id);
 
 
 --
@@ -764,20 +742,6 @@ CREATE INDEX index_resorts_on_normalized_name ON public.resorts USING gist (norm
 --
 
 CREATE INDEX index_resorts_on_suggested_by ON public.resorts USING btree (suggested_by);
-
-
---
--- Name: index_season_goals_on_user_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_season_goals_on_user_id ON public.season_goals USING btree (user_id);
-
-
---
--- Name: index_season_goals_on_user_id_and_season_start_year; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_season_goals_on_user_id_and_season_start_year ON public.season_goals USING btree (user_id, season_start_year);
 
 
 --
@@ -1018,7 +982,6 @@ ALTER TABLE ONLY public.draft_days
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
-('20260207150000'),
 ('20260206133228'),
 ('20260202220009'),
 ('20251207120500'),

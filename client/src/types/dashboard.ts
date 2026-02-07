@@ -33,11 +33,9 @@ export type SeasonDashboard = {
     totalDays: number;
     uniqueResorts: number;
     currentStreak: number;
-    seasonGoalDays: number;
   };
   daysPerMonth: DashboardMonthDatum[];
   resorts: DashboardResortDatum[];
   tags: DashboardTagDatum[];
   skis: DashboardSkiDatum[];
 };
-

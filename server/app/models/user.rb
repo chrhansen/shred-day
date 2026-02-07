@@ -14,7 +14,6 @@ class User < ApplicationRecord
   has_many :tags, dependent: :destroy
   has_one :google_sheet_integration, dependent: :destroy
   has_one_attached :avatar
-  has_many :season_goals, dependent: :destroy
 
   has_many :recent_resorts, -> {
     select("resorts.*, MAX(days.date)")

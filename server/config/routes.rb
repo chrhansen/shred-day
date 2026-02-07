@@ -22,7 +22,6 @@ Rails.application.routes.draw do
       resources :shared_days, only: [:show, :create, :destroy]
       resource :stats, only: [:show]
       resource :dashboard, only: [:show], controller: :dashboard
-      resources :season_goals, only: [:show, :update]
       resource :account, only: [:show, :update], controller: :account
 
       # Authentication routes

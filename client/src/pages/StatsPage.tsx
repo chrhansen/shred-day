@@ -98,7 +98,6 @@ export default function StatsPage() {
             totalDays={isLoading ? 0 : dashboard?.summary.totalDays ?? 0}
             uniqueResorts={isLoading ? 0 : dashboard?.summary.uniqueResorts ?? 0}
             currentStreak={isLoading ? 0 : dashboard?.summary.currentStreak ?? 0}
-            seasonGoalDays={isLoading ? 50 : dashboard?.summary.seasonGoalDays ?? 50}
           />
 
           <DaysPerMonthChart
@@ -124,4 +123,3 @@ export default function StatsPage() {
     </>
   );
 }
-

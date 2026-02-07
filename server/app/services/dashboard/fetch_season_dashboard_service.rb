@@ -1,6 +1,4 @@
 class Dashboard::FetchSeasonDashboardService
-  DEFAULT_SEASON_GOAL_DAYS = 50
-
   def initialize(user, season_offset:)
     @user = user
     @season_offset = season_offset.to_i
@@ -11,12 +9,10 @@ class Dashboard::FetchSeasonDashboardService
     start_date, end_date = @converter.date_range(@season_offset)
     days = @user.days.where(date: start_date..end_date)
 
-    season_goal_days = fetch_season_goal_days(start_date.year)
-
     Result.new(
       fetched: true,
       season: season_payload(@season_offset, start_date, end_date),
-      summary: summary_payload(days, season_goal_days),
+      summary: summary_payload(days),
       days_per_month: days_per_month_payload(days),
       resorts: resorts_payload(days),
       tags: tags_payload(days),
@@ -36,7 +32,7 @@ class Dashboard::FetchSeasonDashboardService
     }
   end
 
-  def summary_payload(days_relation, season_goal_days)
+  def summary_payload(days_relation)
     dates_desc = days_relation.select(:date).distinct.order(date: :desc).pluck(:date)
 
     total_days = days_relation.count
@@ -45,8 +41,7 @@ class Dashboard::FetchSeasonDashboardService
     {
       totalDays: total_days,
       uniqueResorts: unique_resorts,
-      currentStreak: calculate_streak(dates_desc),
-      seasonGoalDays: season_goal_days
+      currentStreak: calculate_streak(dates_desc)
     }
   end
 
@@ -119,10 +114,6 @@ class Dashboard::FetchSeasonDashboardService
       .sort_by { |row| -row[:days] }
   end
 
-  def fetch_season_goal_days(season_start_year)
-    @user.season_goals.find_by(season_start_year: season_start_year)&.goal_days || DEFAULT_SEASON_GOAL_DAYS
-  end
-
   class Result
     attr_reader :season, :summary, :days_per_month, :resorts, :tags, :skis
 
@@ -141,4 +132,3 @@ class Dashboard::FetchSeasonDashboardService
     end
   end
 end
-

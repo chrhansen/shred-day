@@ -90,7 +90,7 @@ describe("StatsPage", () => {
         startYear: 2025,
         endYear: 2026,
       },
-      summary: { totalDays: 44, uniqueResorts: 5, currentStreak: 3, seasonGoalDays: 50 },
+      summary: { totalDays: 44, uniqueResorts: 5, currentStreak: 3 },
       daysPerMonth: [{ month: "Jan", days: 12 }],
       resorts: [
         {

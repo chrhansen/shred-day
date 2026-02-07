@@ -50,7 +50,6 @@ RSpec.describe "Api::V1::Dashboard", type: :request do
         expect(json["summary"]["totalDays"]).to eq(3)
         expect(json["summary"]["uniqueResorts"]).to eq(2)
         expect(json["summary"]["currentStreak"]).to eq(3)
-        expect(json["summary"]["seasonGoalDays"]).to be_a(Integer)
 
         expect(json["resorts"].first).to include(
           "name" => "Zermatt",

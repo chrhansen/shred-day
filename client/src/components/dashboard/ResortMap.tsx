@@ -40,10 +40,20 @@ export function ResortMap({ resorts }: ResortMapProps) {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
+    const initialCenter: L.LatLngExpression =
+      resortsWithCoords.length > 0
+        ? [
+            resortsWithCoords.reduce((sum, r) => sum + r.latitude, 0) /
+              resortsWithCoords.length,
+            resortsWithCoords.reduce((sum, r) => sum + r.longitude, 0) /
+              resortsWithCoords.length,
+          ]
+        : [46.8, 8.2];
+
     const map = L.map(mapRef.current, {
       zoomControl: false,
       attributionControl: false,
-    }).setView([46.8, 8.2], 5);
+    }).setView(initialCenter, 5);
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
@@ -60,7 +70,7 @@ export function ResortMap({ resorts }: ResortMapProps) {
       mapInstanceRef.current = null;
       markersLayerRef.current = null;
     };
-  }, []);
+  }, [resortsWithCoords]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -108,10 +118,15 @@ export function ResortMap({ resorts }: ResortMapProps) {
     });
 
     if (resortsWithCoords.length > 0) {
-      const bounds = L.latLngBounds(
-        resortsWithCoords.map((r) => [r.latitude, r.longitude])
-      );
-      map.fitBounds(bounds, { padding: [30, 30] });
+      if (resortsWithCoords.length === 1) {
+        const only = resortsWithCoords[0];
+        map.setView([only.latitude, only.longitude], 6);
+      } else {
+        const bounds = L.latLngBounds(
+          resortsWithCoords.map((r) => [r.latitude, r.longitude])
+        );
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
     } else {
       map.setView([46.8, 8.2], 2);
     }
@@ -131,4 +146,3 @@ export function ResortMap({ resorts }: ResortMapProps) {
     </Card>
   );
 }
-
