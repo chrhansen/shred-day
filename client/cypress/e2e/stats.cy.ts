@@ -43,19 +43,21 @@ describe('Stats Page', () => {
     cy.logDay({ date: '2024-01-11', resort_id: this.resortLeMassifId, ski_ids: [this.ski1Id] }); // Same resort & ski
     cy.logDay({ date: '2024-01-12', resort_id: this.resortMaikoId, ski_ids: [this.ski2Id] }); // Different resort & ski
 
-    // Visit the stats page (formerly dashboard)
-    cy.visit('/stats');
+    // Visit stats page scoped to the season containing these days (2023/24 = offset -2 for current season in CI)
+    cy.visit('/stats?season=-2');
 
     // Assertions for Stats using data-testid
 
-    // Total Days (Label: "Days Skied" -> testid: days-skied-value)
+    // Total Days
     cy.get('[data-testid="days-skied-value"]').should('contain.text', '3');
 
-    // Unique Resorts (Assuming Label: "Unique Resorts" -> testid: unique-resorts-value)
-    cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '2');
+    // Unique Resorts
+    cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '2 resorts');
 
-    // Most Used Ski (Assuming Label: "Most Used Ski" -> testid: most-used-ski-value)
-    cy.get('[data-testid="most-used-ski-value"]').should('contain.text', 'Test Ski 1');
+    // Skis Used
+    cy.contains('Skis Used').should('be.visible');
+    cy.contains('Test Ski 1').should('be.visible');
+    cy.contains('2 days').should('be.visible');
   });
 
   it('should display zero stats for a new user with no days', function() {
@@ -63,8 +65,9 @@ describe('Stats Page', () => {
     cy.visit('/stats');
 
     cy.get('[data-testid="days-skied-value"]').should('contain.text', '0');
-    cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '0');
-    cy.get('[data-testid="most-used-ski-value"]').should('contain.text', '-');
+    cy.get('[data-testid="resorts-visited-value"]').should('contain.text', '0 resorts');
+    cy.contains('Skis Used').should('be.visible');
+    cy.contains('No skis logged yet').should('be.visible');
   });
 
 });
