@@ -81,7 +81,7 @@ export default function Navbar({ rightContent, centerContent }: NavbarProps) {
     <>
       {/* Overlay - always in DOM, controlled by opacity and pointer-events */}
       <div
-        className={`fixed inset-0 bg-black/30 z-40 transition-opacity duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-black/30 z-[1990] transition-opacity duration-300 ease-in-out ${
           isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={toggleDrawer}
@@ -89,7 +89,7 @@ export default function Navbar({ rightContent, centerContent }: NavbarProps) {
 
       {/* Drawer Content - always rendered, position controlled by classes */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white text-slate-800 p-4 z-50 shadow-xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white text-slate-800 p-4 z-[2000] shadow-xl transform transition-transform duration-300 ease-in-out ${
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
