@@ -83,6 +83,7 @@ export function useLogDay() {
       skiService.logDay(data),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['recentResorts'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       toast.success("Ski day logged successfully!");
@@ -100,6 +101,7 @@ export function useLogDay() {
         skiService.updateDay(dayId!, data),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['skiStats'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['days'] });
       queryClient.invalidateQueries({ queryKey: ['day', dayId] });
       toast.success("Ski day updated successfully!");
