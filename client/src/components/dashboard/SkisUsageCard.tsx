@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Snowflake } from "lucide-react";
+import { SwatchBook } from "lucide-react";
 
 type SkiUsage = {
   name: string;
@@ -26,7 +26,7 @@ export function SkisUsageCard({ skis }: SkisUsageCardProps) {
       <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-slate-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-slate-700 flex items-center gap-2">
-            <Snowflake className="h-4 w-4 text-indigo-500" />
+            <SwatchBook className="h-4 w-4 text-indigo-500" />
             Skis Used
           </CardTitle>
         </CardHeader>
@@ -43,7 +43,7 @@ export function SkisUsageCard({ skis }: SkisUsageCardProps) {
     <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-slate-50">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-slate-700 flex items-center gap-2">
-          <Snowflake className="h-4 w-4 text-indigo-500" />
+          <SwatchBook className="h-4 w-4 text-indigo-500" />
           Skis Used
         </CardTitle>
       </CardHeader>
@@ -82,4 +82,3 @@ export function SkisUsageCard({ skis }: SkisUsageCardProps) {
     </Card>
   );
 }
-
