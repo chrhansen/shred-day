@@ -24,6 +24,8 @@ RSpec.describe Stats::FetchSeasonStatsService do
       create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current - 2, tag_names: ["Powder"])
       create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current - 1, tag_names: ["Powder", "Groomed"])
       create(:day, :with_tags, user: user, resort: resort2, skis: [ski2], date: Date.current, tag_names: ["Groomed"])
+      # Duplicate same calendar date should not increase streak.
+      create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current, tag_names: ["Groomed"])
 
       # Outside season 0 (and inside season -1)
       create(:day, user: user, resort: resort2, skis: [ski2], date: start1 + 1.day)
@@ -38,15 +40,15 @@ RSpec.describe Stats::FetchSeasonStatsService do
         endDate: end0.to_s
       )
 
-      expect(result.summary).to include(totalDays: 3, uniqueResorts: 2, currentStreak: 3)
-      expect(result.days_per_month).to include(hash_including(month: "Feb", days: 3))
+      expect(result.summary).to include(totalDays: 4, uniqueResorts: 2, longestStreak: 3)
+      expect(result.days_per_month).to include(hash_including(month: "Feb", days: 4))
 
       expect(result.resorts.first).to include(
         name: "Zermatt",
         country: "Switzerland",
         latitude: 46.0207,
         longitude: 7.7491,
-        daysSkied: 2
+        daysSkied: 3
       )
 
       expect(result.tags.map { |row| row[:name] }).to include("Powder", "Groomed")

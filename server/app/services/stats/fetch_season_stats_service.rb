@@ -33,7 +33,7 @@ class Stats::FetchSeasonStatsService
   end
 
   def summary_payload(days_relation)
-    dates_desc = days_relation.select(:date).distinct.order(date: :desc).pluck(:date)
+    unique_dates = days_relation.select(:date).distinct.order(date: :asc).pluck(:date)
 
     total_days = days_relation.count
     unique_resorts = days_relation.select(:resort_id).distinct.count
@@ -41,23 +41,26 @@ class Stats::FetchSeasonStatsService
     {
       totalDays: total_days,
       uniqueResorts: unique_resorts,
-      currentStreak: calculate_streak(dates_desc)
+      longestStreak: calculate_longest_streak(unique_dates)
     }
   end
 
-  def calculate_streak(dates_desc)
-    return 0 if dates_desc.empty?
+  def calculate_longest_streak(unique_dates_asc)
+    return 0 if unique_dates_asc.empty?
 
-    streak = 1
-    dates_desc.each_cons(2) do |current_date, next_date|
-      if next_date == current_date - 1.day
-        streak += 1
+    longest = 1
+    current = 1
+
+    unique_dates_asc.each_cons(2) do |prev_date, next_date|
+      if next_date == prev_date + 1.day
+        current += 1
+        longest = [longest, current].max
       else
-        break
+        current = 1
       end
     end
 
-    streak
+    longest
   end
 
   def days_per_month_payload(days_relation)
@@ -132,4 +135,3 @@ class Stats::FetchSeasonStatsService
     end
   end
 end
-
