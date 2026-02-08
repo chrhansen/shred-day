@@ -1,9 +1,9 @@
-export type DashboardMonthDatum = {
+export type SeasonStatsMonthDatum = {
   month: string; // "Jan", "Feb", ...
   days: number;
 };
 
-export type DashboardResortDatum = {
+export type SeasonStatsResortDatum = {
   name: string;
   country: string;
   latitude: number | null;
@@ -11,17 +11,17 @@ export type DashboardResortDatum = {
   daysSkied: number;
 };
 
-export type DashboardTagDatum = {
+export type SeasonStatsTagDatum = {
   name: string;
   count: number;
 };
 
-export type DashboardSkiDatum = {
+export type SeasonStatsSkiDatum = {
   name: string;
   days: number;
 };
 
-export type SeasonDashboard = {
+export type SeasonStats = {
   season: {
     offset: number;
     startDate: string; // YYYY-MM-DD
@@ -32,10 +32,10 @@ export type SeasonDashboard = {
   summary: {
     totalDays: number;
     uniqueResorts: number;
-    currentStreak: number;
+    longestStreak: number;
   };
-  daysPerMonth: DashboardMonthDatum[];
-  resorts: DashboardResortDatum[];
-  tags: DashboardTagDatum[];
-  skis: DashboardSkiDatum[];
+  daysPerMonth: SeasonStatsMonthDatum[];
+  resorts: SeasonStatsResortDatum[];
+  tags: SeasonStatsTagDatum[];
+  skis: SeasonStatsSkiDatum[];
 };

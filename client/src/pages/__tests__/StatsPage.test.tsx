@@ -8,11 +8,11 @@ import StatsPage from "../StatsPage";
 import "@testing-library/jest-dom";
 import type { ReactNode } from "react";
 
-const mockGetSeasonDashboard = jest.fn();
+const mockGetSeasonStats = jest.fn();
 
-jest.mock("@/services/dashboardService", () => ({
-  dashboardService: {
-    getSeasonDashboard: (...args: unknown[]) => mockGetSeasonDashboard(...args),
+jest.mock("@/services/seasonStatsService", () => ({
+  seasonStatsService: {
+    getSeasonStats: (...args: unknown[]) => mockGetSeasonStats(...args),
   },
 }));
 
@@ -68,7 +68,7 @@ jest.mock("@/components/SeasonDropdown", () => ({
   ),
 }));
 
-jest.mock("@/components/dashboard/ResortMap", () => ({
+jest.mock("@/components/stats/ResortMap", () => ({
   ResortMap: ({ resorts }: { resorts: unknown[] }) => (
     <div data-testid="resort-map">resorts:{resorts.length}</div>
   ),
@@ -109,7 +109,7 @@ describe("StatsPage", () => {
       disconnect() {}
       };
 
-    mockGetSeasonDashboard.mockResolvedValue({
+    mockGetSeasonStats.mockResolvedValue({
       season: {
         offset: 0,
         startDate: "2025-09-01",
@@ -117,7 +117,7 @@ describe("StatsPage", () => {
         startYear: 2025,
         endYear: 2026,
       },
-      summary: { totalDays: 44, uniqueResorts: 5, currentStreak: 3 },
+      summary: { totalDays: 44, uniqueResorts: 5, longestStreak: 3 },
       daysPerMonth: [{ month: "Jan", days: 12 }],
       resorts: [
         {
@@ -142,11 +142,11 @@ describe("StatsPage", () => {
     jest.useRealTimers();
   });
 
-  it("renders the dashboard cards", async () => {
+  it("renders the stats cards", async () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(mockGetSeasonDashboard).toHaveBeenCalledWith(0);
+      expect(mockGetSeasonStats).toHaveBeenCalledWith(0);
     });
 
     expect(screen.getByText("44")).toBeInTheDocument();
@@ -165,13 +165,13 @@ describe("StatsPage", () => {
     renderWithProviders("/stats?season=-1");
 
     await waitFor(() => {
-      expect(mockGetSeasonDashboard).toHaveBeenCalledWith(-1);
+      expect(mockGetSeasonStats).toHaveBeenCalledWith(-1);
     });
 
     await user.click(screen.getByTestId("season-option-0"));
 
     await waitFor(() => {
-      expect(mockGetSeasonDashboard).toHaveBeenCalledWith(0);
+      expect(mockGetSeasonStats).toHaveBeenCalledWith(0);
     });
   });
 });

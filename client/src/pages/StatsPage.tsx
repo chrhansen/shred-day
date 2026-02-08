@@ -1,15 +1,15 @@
 import Navbar from "@/components/Navbar";
 import PageMeta from "@/components/PageMeta";
-import { SeasonStatsCard } from "@/components/dashboard/SeasonStatsCard";
-import { DaysPerMonthChart } from "@/components/dashboard/DaysPerMonthChart";
-import { ResortMap } from "@/components/dashboard/ResortMap";
-import { TopResortsCard } from "@/components/dashboard/TopResortsCard";
-import { TagsBreakdownChart } from "@/components/dashboard/TagsBreakdownChart";
-import { SkisUsageCard } from "@/components/dashboard/SkisUsageCard";
+import { SeasonStatsCard } from "@/components/stats/SeasonStatsCard";
+import { DaysPerMonthChart } from "@/components/stats/DaysPerMonthChart";
+import { ResortMap } from "@/components/stats/ResortMap";
+import { TopResortsCard } from "@/components/stats/TopResortsCard";
+import { TagsBreakdownChart } from "@/components/stats/TagsBreakdownChart";
+import { SkisUsageCard } from "@/components/stats/SkisUsageCard";
 import SeasonDropdown from "@/components/SeasonDropdown";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { dashboardService } from "@/services/dashboardService";
+import { seasonStatsService } from "@/services/seasonStatsService";
 import {
   getFormattedSeasonDateRange,
   getSeasonDisplayName,
@@ -63,9 +63,9 @@ export default function StatsPage() {
     });
   }, [availableSeasonOffsets, seasonStartDay]);
 
-  const { data: dashboard, isLoading } = useQuery({
-    queryKey: ["dashboard", selectedSeason],
-    queryFn: () => dashboardService.getSeasonDashboard(selectedSeason),
+  const { data: seasonStats, isLoading } = useQuery({
+    queryKey: ["seasonStats", selectedSeason],
+    queryFn: () => seasonStatsService.getSeasonStats(selectedSeason),
     enabled: !!user,
   });
 
@@ -115,29 +115,29 @@ export default function StatsPage() {
 
         <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
           <SeasonStatsCard
-            totalDays={isLoading ? 0 : dashboard?.summary.totalDays ?? 0}
-            uniqueResorts={isLoading ? 0 : dashboard?.summary.uniqueResorts ?? 0}
-            currentStreak={isLoading ? 0 : dashboard?.summary.currentStreak ?? 0}
+            totalDays={isLoading ? 0 : seasonStats?.summary.totalDays ?? 0}
+            uniqueResorts={isLoading ? 0 : seasonStats?.summary.uniqueResorts ?? 0}
+            longestStreak={isLoading ? 0 : seasonStats?.summary.longestStreak ?? 0}
           />
 
           <DaysPerMonthChart
-            data={dashboard?.daysPerMonth ?? []}
+            data={seasonStats?.daysPerMonth ?? []}
             seasonStartMonth={seasonStartMonthIndex}
           />
 
-          <ResortMap resorts={dashboard?.resorts ?? []} />
+          <ResortMap resorts={seasonStats?.resorts ?? []} />
 
           <TopResortsCard
-            resorts={(dashboard?.resorts ?? []).map((r) => ({
+            resorts={(seasonStats?.resorts ?? []).map((r) => ({
               name: r.name,
               country: r.country,
               days: r.daysSkied,
             }))}
           />
 
-          <TagsBreakdownChart data={dashboard?.tags ?? []} />
+          <TagsBreakdownChart data={seasonStats?.tags ?? []} />
 
-          <SkisUsageCard skis={dashboard?.skis ?? []} />
+          <SkisUsageCard skis={seasonStats?.skis ?? []} />
         </div>
       </div>
     </>

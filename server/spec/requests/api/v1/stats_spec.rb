@@ -41,6 +41,8 @@ RSpec.describe "Api::V1::Stats", type: :request do
         create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current - 2, tag_names: ["Powder"])
         create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current - 1, tag_names: ["Powder", "Groomed"])
         create(:day, :with_tags, user: user, resort: resort2, skis: [ski2], date: Date.current, tag_names: ["Groomed"])
+        # Duplicate same calendar date should not increase streak.
+        create(:day, :with_tags, user: user, resort: resort1, skis: [ski1], date: Date.current, tag_names: ["Groomed"])
 
         # Outside season 0, but inside season -1 (sanity check filtering)
         create(:day, user: user, resort: resort2, skis: [ski2], date: start1 + 1.day)
@@ -57,13 +59,13 @@ RSpec.describe "Api::V1::Stats", type: :request do
         )
 
         expect(json["summary"]).to include(
-          "totalDays" => 3,
+          "totalDays" => 4,
           "uniqueResorts" => 2,
-          "currentStreak" => 3
+          "longestStreak" => 3
         )
 
         expect(json).to include(
-          "totalDays" => 3,
+          "totalDays" => 4,
           "uniqueResorts" => 2,
           "mostUsedSki" => "Atomic Redster G9, 181"
         )
@@ -73,10 +75,10 @@ RSpec.describe "Api::V1::Stats", type: :request do
           "country" => "Switzerland",
           "latitude" => 46.0207,
           "longitude" => 7.7491,
-          "daysSkied" => 2
+          "daysSkied" => 3
         )
 
-        expect(json["daysPerMonth"]).to include(hash_including("month" => "Feb", "days" => 3))
+        expect(json["daysPerMonth"]).to include(hash_including("month" => "Feb", "days" => 4))
 
         tag_names = json["tags"].map { |t| t["name"] }
         expect(tag_names).to include("Powder", "Groomed")
