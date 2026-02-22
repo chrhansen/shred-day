@@ -1,11 +1,9 @@
-require Rails.root.join("app/mailers/mailjet_delivery_method")
+require Rails.root.join("app/mailers/resend_delivery_method")
 
-mailjet_api_key = Rails.application.credentials.dig(:mailjet, :api_key)
-mailjet_secret_key = Rails.application.credentials.dig(:mailjet, :secret_key)
+resend_api_key = Rails.application.credentials.dig(:resend, :api_key)
 
 ActionMailer::Base.add_delivery_method(
-  :mailjet_api,
-  MailjetDeliveryMethod,
-  api_key: mailjet_api_key,
-  secret_key: mailjet_secret_key
+  :resend_api,
+  ResendDeliveryMethod,
+  api_key: resend_api_key
 )
