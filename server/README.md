@@ -56,8 +56,7 @@ Primary keys are prefixed IDs from `gen_id()` (see `server/db/structure.sql`).
 Stored in Rails credentials:
 - `google.client_id`
 - `google.client_secret`
-- `mailjet.api_key`
-- `mailjet.secret_key`
+- `resend.api_key`
 
 ## Tests
 
