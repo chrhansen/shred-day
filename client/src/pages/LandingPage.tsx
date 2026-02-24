@@ -118,7 +118,24 @@ export default function LandingPage() {
               </div>
 
               {/* Right - Phone Mockup */}
-              <div className="relative flex justify-center items-center mt-12 lg:mt-0 flex-shrink-0 md:-translate-x-12 lg:-translate-x-16">
+              <div className="relative flex justify-center items-center mt-12 lg:mt-0 flex-shrink-0 translate-x-4 md:-translate-x-12 lg:-translate-x-16">
+                <div className="absolute z-0 w-52 md:w-60 -left-6 md:-left-4 lg:-left-24 xl:-left-28 top-6 md:top-10 -rotate-[4deg]">
+                  <div className="bg-card rounded-[2rem] border-4 border-foreground/10 shadow-2xl shadow-primary/20 overflow-hidden">
+                    <div className="bg-foreground/10 h-5 flex items-center justify-center">
+                      <div className="w-16 h-3 bg-foreground/20 rounded-full" />
+                    </div>
+                    <img
+                      src="/landing/shred-day-stats.png"
+                      alt="Shred.day web-app showing season stats"
+                      className="w-full h-full object-cover object-top"
+                      loading="lazy"
+                    />
+                    <div className="h-5 bg-foreground/10 flex items-center justify-center">
+                      <div className="w-16 h-1 bg-foreground/30 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="relative z-10 w-56 md:w-64 rotate-[10deg]">
                   <div className="bg-card rounded-[2rem] border-4 border-foreground/10 shadow-2xl shadow-primary/20 overflow-hidden">
                     <div className="bg-foreground/10 h-5 flex items-center justify-center">
