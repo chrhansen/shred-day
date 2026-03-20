@@ -21,12 +21,14 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { HelmetProvider } from "react-helmet-async";
+import UmamiAnalytics from "@/components/UmamiAnalytics";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
+      <UmamiAnalytics />
       <TooltipProvider>
         <Toaster />
         <Sonner />
