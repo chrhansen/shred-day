@@ -63,4 +63,42 @@ describe("umami analytics", () => {
       name: "Pageview",
     });
   });
+
+  it("attaches the raw day id as event data", () => {
+    const beforeSend = createUmamiBeforeSend("https://shred.day");
+
+    expect(
+      beforeSend("event", {
+        url: "https://shred.day/d/day_123?draft=true",
+        name: "Pageview",
+      }),
+    ).toEqual({
+      url: "https://shred.day/d/:dayId",
+      name: "Pageview",
+      data: {
+        day_id: "day_123",
+      },
+    });
+  });
+
+  it("merges the raw day id into existing event data", () => {
+    const beforeSend = createUmamiBeforeSend("https://shred.day");
+
+    expect(
+      beforeSend("event", {
+        url: "https://shred.day/d/day_123",
+        name: "Opened Day",
+        data: {
+          source: "calendar",
+        },
+      }),
+    ).toEqual({
+      url: "https://shred.day/d/:dayId",
+      name: "Opened Day",
+      data: {
+        source: "calendar",
+        day_id: "day_123",
+      },
+    });
+  });
 });

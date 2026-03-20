@@ -4,6 +4,7 @@ const UMAMI_SCRIPT_SRC = "https://cloud.umami.is/script.js";
 const UMAMI_WEBSITE_ID = "964b6450-2750-4608-82ba-07ca0eec63f4";
 
 type UmamiPayload = {
+  data?: Record<string, unknown>;
   url?: string;
   [key: string]: unknown;
 };
@@ -18,6 +19,12 @@ const dynamicRouteMatchers: Array<[RegExp, string]> = [
 ];
 
 const localHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+const dayRouteMatchers: RegExp[] = [/^\/d\/([^/]+)$/, /^\/days\/([^/]+)\/edit$/];
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 export const normalizeUmamiPath = (pathname: string) => {
   for (const [matcher, replacement] of dynamicRouteMatchers) {
@@ -38,14 +45,32 @@ export const normalizeUmamiUrl = (url: string, origin: string) => {
   return parsedUrl.toString();
 };
 
+const extractUmamiDayId = (pathname: string) => {
+  for (const matcher of dayRouteMatchers) {
+    const matchedPath = pathname.match(matcher);
+
+    if (matchedPath?.[1]) {
+      return matchedPath[1];
+    }
+  }
+
+  return null;
+};
+
 export const createUmamiBeforeSend = (origin: string): UmamiBeforeSend => {
   return (_type, payload) => {
     if (typeof payload?.url !== "string") {
       return payload;
     }
 
+    const parsedUrl = new URL(payload.url, origin);
+    const dayId = extractUmamiDayId(parsedUrl.pathname);
+    const existingData = isObjectRecord(payload.data) ? payload.data : {};
+    const data = dayId ? { ...existingData, day_id: dayId } : payload.data;
+
     return {
       ...payload,
+      data,
       url: normalizeUmamiUrl(payload.url, origin),
     };
   };
