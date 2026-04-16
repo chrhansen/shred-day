@@ -3,30 +3,34 @@ import { act } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import type { ReactNode } from 'react';
 import { ResortSelection } from '../ResortSelection';
 import type { Resort } from '@/services/resortService';
 
-jest.mock('@/components/ui/select', () => {
-  return {
-    Select: ({ children, value, onValueChange, disabled }: { children: ReactNode; value: string; onValueChange: (value: string) => void; disabled?: boolean }) => (
-      <select
-        data-testid="country-select"
-        value={value}
-        onChange={(event) => onValueChange(event.target.value)}
-        disabled={disabled}
-      >
-        {children}
-      </select>
-    ),
-    SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-    SelectValue: ({ placeholder }: { placeholder: string }) => <option value="">{placeholder}</option>,
-    SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
-    SelectItem: ({ children, value }: { children: ReactNode; value: string }) => (
-      <option value={value}>{children}</option>
-    ),
-  };
-});
+jest.mock('@/components/AddResortDialog', () => ({
+  AddResortDialog: ({
+    open,
+    resortName,
+    onResortNameChange,
+    onAdd,
+  }: {
+    open: boolean;
+    resortName: string;
+    onResortNameChange: (name: string) => void;
+    onAdd: (data: { name: string; latitude?: number; longitude?: number }) => Promise<Resort | null>;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Add new resort">
+        <input
+          placeholder="Resort name"
+          value={resortName}
+          onChange={(event) => onResortNameChange(event.target.value)}
+        />
+        <button type="button" onClick={() => onAdd({ name: resortName })}>
+          Add mocked resort
+        </button>
+      </div>
+    ) : null,
+}));
 
 describe('ResortSelection', () => {
   beforeAll(() => {
@@ -53,10 +57,10 @@ describe('ResortSelection', () => {
     const createdResort: Resort = {
       id: 'res_1',
       name: 'unknown resort',
-      country: 'Germany',
-      region: '',
-      latitude: 0,
-      longitude: 0,
+      country: null,
+      region: null,
+      latitude: null,
+      longitude: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
     };
@@ -95,11 +99,7 @@ describe('ResortSelection', () => {
     const resortNameInput = screen.getByPlaceholderText('Resort name');
     expect(resortNameInput).toHaveValue('unknown resort');
 
-    await act(async () => {
-      await user.selectOptions(screen.getByTestId('country-select'), 'Germany');
-    });
-
-    const addButton = screen.getByRole('button', { name: /^add resort$/i });
+    const addButton = screen.getByRole('button', { name: /^add mocked resort$/i });
     await act(async () => {
       await user.click(addButton);
     });
@@ -107,7 +107,6 @@ describe('ResortSelection', () => {
     await waitFor(() => {
       expect(onCreateResort).toHaveBeenCalledWith({
         name: 'unknown resort',
-        country: 'Germany',
       });
     });
   });
@@ -155,7 +154,7 @@ describe('ResortSelection', () => {
       await user.click(screen.getByRole('button', { name: /add "st" as new resort/i }));
     });
 
-    expect(screen.getByText(/add new resort/i)).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /add new resort/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Resort name')).toHaveValue('st');
   });
 });

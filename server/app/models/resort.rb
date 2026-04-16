@@ -1,11 +1,11 @@
 class Resort < ApplicationRecord
   has_many :days
 
-  # Validations
   validates :name, presence: true, uniqueness: { scope: :country }
-  validates :country, presence: true
+  validates :latitude, numericality: { greater_than_or_equal_to: -90, less_than_or_equal_to: 90 }, allow_nil: true
+  validates :longitude, numericality: { greater_than_or_equal_to: -180, less_than_or_equal_to: 180 }, allow_nil: true
+  validate :coordinates_are_complete
 
-  # Callbacks
   before_save :set_normalized_name
 
   # Find resorts using fuzzy matching with trigram similarity
@@ -57,5 +57,12 @@ class Resort < ApplicationRecord
 
   def set_normalized_name
     self.normalized_name = ResortNameNormalizerService.normalize(name)
+  end
+
+  def coordinates_are_complete
+    return if latitude.blank? && longitude.blank?
+    return if latitude.present? && longitude.present?
+
+    errors.add(:base, "Latitude and longitude must both be present")
   end
 end

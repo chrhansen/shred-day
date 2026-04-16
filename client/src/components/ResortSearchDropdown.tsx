@@ -101,10 +101,13 @@ export function ResortSearchDropdown({
               data-testid={`resort-option-${resort.name.toLowerCase().replace(/[\s']/g, '-').replace(/[^\w-]/g, '')}`}
               role="option"
             >
-              {resort.name}{" "}
-              <span className="text-xs text-slate-400">
-                ({resort.region}, {resort.country})
-              </span>
+              {resort.name}
+              {[resort.region, resort.country].filter(Boolean).length > 0 ? (
+                <span className="text-xs text-slate-400">
+                  {" "}
+                  ({[resort.region, resort.country].filter(Boolean).join(", ")})
+                </span>
+              ) : null}
             </button>
           ))}
         </div>

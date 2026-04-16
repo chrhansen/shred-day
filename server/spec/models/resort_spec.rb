@@ -16,10 +16,24 @@ RSpec.describe Resort, type: :model do
       expect(subject.errors[:name]).to include("can't be blank")
     end
 
-    it 'is not valid without a country' do
+    it 'is valid without a country' do
       subject.country = nil
+      expect(subject).to be_valid
+    end
+
+    it 'requires both latitude and longitude when a location is provided' do
+      subject.latitude = 47.0123
+      subject.longitude = nil
       expect(subject).to_not be_valid
-      expect(subject.errors[:country]).to include("can't be blank")
+      expect(subject.errors[:base]).to include("Latitude and longitude must both be present")
+    end
+
+    it 'validates coordinate ranges' do
+      subject.latitude = 91
+      subject.longitude = 181
+      expect(subject).to_not be_valid
+      expect(subject.errors[:latitude]).to be_present
+      expect(subject.errors[:longitude]).to be_present
     end
 
     context 'uniqueness of name scoped to country' do

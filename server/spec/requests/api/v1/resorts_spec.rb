@@ -95,17 +95,29 @@ RSpec.describe "Api::V1::Resorts", type: :request do
     context "when authenticated" do
       before { login(user) }
 
-      it "creates an unverified resort suggestion for the current user" do
-        post api_v1_resorts_path, params: { resort: { name: "New Resort", country: "Germany" } }
+      it "creates an unverified resort suggestion for the current user without a country" do
+        post api_v1_resorts_path, params: { resort: { name: "New Resort" } }
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
         resort = Resort.find(json_response['id'])
 
         expect(resort.name).to eq("New Resort")
-        expect(resort.country).to eq("Germany")
+        expect(resort.country).to be_nil
         expect(resort.verified).to eq(false)
         expect(resort.suggested_by).to eq(user.id)
         expect(resort.suggested_at).not_to be_nil
+      end
+
+      it "stores coordinates for a new resort suggestion" do
+        post api_v1_resorts_path, params: { resort: { name: "Pinned Resort", latitude: 47.0123, longitude: 11.5012 } }
+        expect(response).to have_http_status(:created)
+        json_response = JSON.parse(response.body)
+        resort = Resort.find(json_response['id'])
+
+        expect(resort.latitude).to eq(47.0123)
+        expect(resort.longitude).to eq(11.5012)
+        expect(json_response['latitude']).to eq(47.0123)
+        expect(json_response['longitude']).to eq(11.5012)
       end
 
       it "sanitizes resort names to allowed characters" do
@@ -121,11 +133,12 @@ RSpec.describe "Api::V1::Resorts", type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
-      it "returns validation errors for invalid country" do
-        post api_v1_resorts_path, params: { resort: { name: "New Resort", country: "Atlantis" } }
+      it "returns validation errors for invalid coordinates" do
+        post api_v1_resorts_path, params: { resort: { name: "New Resort", latitude: 91, longitude: 181 } }
         expect(response).to have_http_status(:unprocessable_entity)
         json_response = JSON.parse(response.body)
-        expect(json_response['country']).to be_present
+        expect(json_response['latitude']).to be_present
+        expect(json_response['longitude']).to be_present
       end
     end
 

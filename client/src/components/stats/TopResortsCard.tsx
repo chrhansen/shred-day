@@ -4,7 +4,7 @@ import { Mountain } from "lucide-react";
 type ResortStat = {
   name: string;
   days: number;
-  country: string;
+  country: string | null;
 };
 
 type TopResortsCardProps = {
@@ -50,4 +50,3 @@ export function TopResortsCard({ resorts }: TopResortsCardProps) {
     </Card>
   );
 }
-

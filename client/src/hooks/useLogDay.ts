@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { skiService } from "@/services/skiService";
-import { resortService, type Resort } from "@/services/resortService";
+import { resortService, type CreateResortInput, type Resort } from "@/services/resortService";
 import { userService } from "@/services/userService";
 import { tagService } from "@/services/tagService";
 import { toast } from "sonner";
@@ -161,7 +161,7 @@ export function useLogDay() {
   });
 
   const { mutateAsync: createResort, isPending: isCreatingResort } = useMutation({
-    mutationFn: (data: { name: string; country: string }) => resortService.createResort(data),
+    mutationFn: (data: CreateResortInput) => resortService.createResort(data),
     onSuccess: (newResort) => {
       toast.success(`Resort "${newResort.name}" suggested!`);
     },
@@ -173,7 +173,7 @@ export function useLogDay() {
   });
 
   const suggestResort = useCallback(
-    async (data: { name: string; country: string }) => {
+    async (data: CreateResortInput) => {
       try {
         const newResort = await createResort(data);
         setSelectedResort(newResort);
@@ -190,7 +190,7 @@ export function useLogDay() {
   );
 
   // Resort search logic
-  const fetchResorts = async (query: string) => {
+  const fetchResorts = useCallback(async (query: string) => {
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
       return;
@@ -206,9 +206,9 @@ export function useLogDay() {
     } finally {
       setIsSearchingResorts(false);
     }
-  };
+  }, []);
 
-  const debouncedSearch = useCallback(debounce(fetchResorts, 300), []);
+  const debouncedSearch = useMemo(() => debounce(fetchResorts, 300), [fetchResorts]);
 
   useEffect(() => {
     if (isSearchingMode) {
