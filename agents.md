@@ -65,3 +65,4 @@ Use this document as the single source of truth for onboarded coding agents. It 
 ## Git
 1. Use the Github CLI `gh` to interact with Github, the origin
 2. Keep `main` clean: never commit directly to `main`; always branch off, open a PR, and pull from origin to sync.
+3. Open PRs ready for review; do not create draft PRs unless Christian explicitly asks for a draft.
