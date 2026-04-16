@@ -75,7 +75,13 @@ class UserMailer < ApplicationMailer
     user_email = ERB::Util.html_escape(@user.email)
     user_id = ERB::Util.html_escape(@user.id)
     resort_name = ERB::Util.html_escape(@resort.name)
-    resort_country = ERB::Util.html_escape(@resort.country)
+    resort_country = ERB::Util.html_escape(@resort.country.presence || "Not provided")
+    resort_location = if @resort.latitude.present? && @resort.longitude.present?
+      "#{@resort.latitude}, #{@resort.longitude}"
+    else
+      "Not provided"
+    end
+    resort_location = ERB::Util.html_escape(resort_location)
     resort_id = ERB::Util.html_escape(@resort.id)
 
     <<~HTML
@@ -92,6 +98,7 @@ class UserMailer < ApplicationMailer
           <p style="margin: 0 0 8px 0;"><strong>User ID:</strong> #{user_id}</p>
           <p style="margin: 0 0 8px 0;"><strong>Resort:</strong> #{resort_name}</p>
           <p style="margin: 0 0 8px 0;"><strong>Country:</strong> #{resort_country}</p>
+          <p style="margin: 0 0 8px 0;"><strong>Location:</strong> #{resort_location}</p>
           <p style="margin: 0;"><strong>Resort ID:</strong> #{resort_id}</p>
         </div>
       </div>

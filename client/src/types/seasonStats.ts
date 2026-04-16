@@ -5,7 +5,7 @@ export type SeasonStatsMonthDatum = {
 
 export type SeasonStatsResortDatum = {
   name: string;
-  country: string;
+  country: string | null;
   latitude: number | null;
   longitude: number | null;
   daysSkied: number;

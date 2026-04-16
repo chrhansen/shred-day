@@ -14,7 +14,9 @@ module Api
         result = ResortSuggestionService.new(
           user: current_user,
           name: resort_params[:name],
-          country: resort_params[:country]
+          country: resort_params[:country],
+          latitude: resort_params[:latitude],
+          longitude: resort_params[:longitude]
         ).suggest_resort
 
         if result.created?
@@ -27,7 +29,7 @@ module Api
       private
 
       def resort_params
-        params.require(:resort).permit(:name, :country)
+        params.require(:resort).permit(:name, :country, :latitude, :longitude)
       end
     end
   end

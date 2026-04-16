@@ -38,10 +38,10 @@ export interface PhotoUploadResponse {
 export interface Resort {
   id: string;
   name: string;
-  latitude: number;
-  longitude: number;
-  country: string;
-  region: string;
+  latitude: number | null;
+  longitude: number | null;
+  country: string | null;
+  region: string | null;
   created_at: string;
   updated_at: string;
 }
