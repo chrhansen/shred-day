@@ -14,7 +14,7 @@ module Api
         if result.generated?
           render json: { url: result.auth_url }
         else
-          render json: { error: result.error || "Unable to start Google Sheets connection" }, status: :unprocessable_entity
+          render json: { error: result.error || "Unable to start Google Sheets connection" }, status: :unprocessable_content
         end
       end
 
@@ -30,7 +30,7 @@ module Api
           GoogleSheetsSyncJob.perform_later(service_result.integration.id)
           render json: { integration: service_result.integration }, status: :ok
         else
-          render json: { error: service_result.error || "Unable to connect Google Sheets" }, status: :unprocessable_entity
+          render json: { error: service_result.error || "Unable to connect Google Sheets" }, status: :unprocessable_content
         end
       end
 

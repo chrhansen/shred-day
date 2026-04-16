@@ -9,7 +9,7 @@ class Api::V1::PhotoImports::PhotosController < ApplicationController
     if result.created?
       render json: result.photo, status: :created, serializer: Api::V1::PhotoSerializer
     else
-      render json: { errors: result.photo.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: result.photo.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -19,7 +19,7 @@ class Api::V1::PhotoImports::PhotosController < ApplicationController
     if result.updated?
       render json: @photo, status: :ok, serializer: Api::V1::PhotoSerializer
     else
-      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -29,7 +29,7 @@ class Api::V1::PhotoImports::PhotosController < ApplicationController
     if result.destroyed?
       head :no_content
     else
-      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_content
     end
   end
 

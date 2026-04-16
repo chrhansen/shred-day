@@ -12,7 +12,7 @@ class Api::V1::UsersController < ApplicationController
       # Exclude password_digest from the response for security
       render json: result.user.as_json(except: :password_digest), status: :created
     else
-      render json: { errors: result.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors }, status: :unprocessable_content
     end
   end
 

@@ -9,7 +9,7 @@ class Api::V1::AccountController < ApplicationController
     if result.updated?
       render json: current_user, available_seasons: calculate_available_seasons
     else
-      render json: { errors: result.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors }, status: :unprocessable_content
     end
   end
 

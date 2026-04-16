@@ -35,7 +35,7 @@ RSpec.describe "Api::V1::PhotoImports::PhotosController", type: :request do
           # Add more checks for the response body based on what the stubbed photo returns via serializer
         end
 
-        it "returns unprocessable_entity if service reports creation failure" do
+        it "returns unprocessable content if service reports creation failure" do
           photo_with_errors = build_stubbed(:photo)
           # Stub the errors.full_messages chain directly on the photo double
           allow(photo_with_errors).to receive_message_chain(:errors, :full_messages).and_return(["Service error"])
@@ -43,11 +43,11 @@ RSpec.describe "Api::V1::PhotoImports::PhotosController", type: :request do
           allow(PhotoCreateService).to receive(:new).and_return(instance_double(PhotoCreateService, create_photo: service_result))
 
           post api_v1_photo_import_photos_path(photo_import), params: valid_photo_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(JSON.parse(response.body)['errors']).to include("Service error")
         end
 
-        it "returns unprocessable_entity if no file is provided" do
+        it "returns unprocessable content if no file is provided" do
           # Simulate PhotoCreateService returning an error when no file is provided
           photo_with_file_error = build_stubbed(:photo)
           allow(photo_with_file_error).to receive_message_chain(:errors, :full_messages).and_return(["No file provided."])
@@ -61,7 +61,7 @@ RSpec.describe "Api::V1::PhotoImports::PhotosController", type: :request do
 
           post api_v1_photo_import_photos_path(photo_import), params: { file: nil } # Send params with file: nil
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(JSON.parse(response.body)['errors']).to include("No file provided.")
         end
       end
@@ -101,14 +101,14 @@ RSpec.describe "Api::V1::PhotoImports::PhotosController", type: :request do
           # exif_state is updated and taken_at and resort are present
         end
 
-        it "returns unprocessable_entity if service reports update failure" do
+        it "returns unprocessable content if service reports update failure" do
           update_service_result = instance_double(PhotoUpdateService::Result, updated?: false)
           # Stub errors on existing_photo if controller uses @photo.errors.full_messages
           allow(existing_photo).to receive_message_chain(:errors, :full_messages).and_return(["Update failed via service"])
           allow(PhotoUpdateService).to receive(:new).and_return(instance_double(PhotoUpdateService, update_photo: update_service_result))
 
           patch api_v1_photo_import_photo_path(photo_import, existing_photo), params: valid_update_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           # expect(JSON.parse(response.body)['errors']).to include("Update failed via service")
         end
       end
@@ -153,13 +153,13 @@ RSpec.describe "Api::V1::PhotoImports::PhotosController", type: :request do
           expect(response).to have_http_status(:no_content)
         end
 
-        it "returns unprocessable_entity if service reports destroy failure" do
+        it "returns unprocessable content if service reports destroy failure" do
           destroy_service_result = instance_double(PhotoDestroyService::Result, destroyed?: false)
           allow(existing_photo).to receive_message_chain(:errors, :full_messages).and_return(["Destroy failed via service"])
           allow(PhotoDestroyService).to receive(:new).and_return(instance_double(PhotoDestroyService, destroy_photo: destroy_service_result))
 
           delete api_v1_photo_import_photo_path(photo_import, existing_photo)
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
       # ... (add tests for photo not in import, other user's import, etc.) ...

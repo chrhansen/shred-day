@@ -133,13 +133,13 @@ RSpec.describe "Api::V1::PhotoImports", type: :request do
 
       context "when PhotoImportUpdateService returns an error" do
         let(:update_params) { { photo_import: { status: "committed" } } }
-        it "returns unprocessable_entity" do
+        it "returns unprocessable content" do
           photo_import.status_waiting!
           update_service_result = instance_double(PhotoImportUpdateService::Result, updated?: false, error: "Service failed")
           allow_any_instance_of(PhotoImportUpdateService).to receive(:update_photo_import).and_return(update_service_result)
 
           patch api_v1_photo_import_path(photo_import), params: update_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(JSON.parse(response.body)['error']).to eq("Service failed")
         end
       end

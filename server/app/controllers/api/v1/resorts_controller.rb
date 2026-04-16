@@ -22,7 +22,7 @@ module Api
         if result.created?
           render json: result.resort, status: :created
         else
-          render json: result.errors, status: :unprocessable_entity
+          render json: result.errors, status: :unprocessable_content
         end
       end
 

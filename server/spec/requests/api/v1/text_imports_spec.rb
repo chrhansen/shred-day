@@ -190,7 +190,7 @@ RSpec.describe "Api::V1::TextImports", type: :request do
         it "returns an error" do
           patch "/api/v1/text_imports/#{text_import.id}", params: params.to_json, headers: headers
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json = JSON.parse(response.body)
           expect(json['error']).to include('not in waiting-status')
         end

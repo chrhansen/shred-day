@@ -29,7 +29,7 @@ class Api::V1::DaysController < ApplicationController
       enqueue_sheets_sync([result.day.date])
       render json: result.day, status: :created
     else
-      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_content
     end
   end
 
@@ -48,7 +48,7 @@ class Api::V1::DaysController < ApplicationController
       enqueue_sheets_sync([previous_date, result.day.date])
       render json: result.day, status: :ok
     else
-      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_entity
+      render json: { errors: result.errors || result.day.errors }, status: :unprocessable_content
     end
   end
 
@@ -62,7 +62,7 @@ class Api::V1::DaysController < ApplicationController
       head :no_content # Return 204 No Content on success
     else
       # Handle potential destroy failures (e.g., callbacks preventing destroy)
-      render json: { errors: @day.errors }, status: :unprocessable_entity
+      render json: { errors: @day.errors }, status: :unprocessable_content
     end
   end
 
@@ -74,7 +74,7 @@ class Api::V1::DaysController < ApplicationController
       @skis = current_user.skis.find(day_params[:ski_ids])
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { errors: { ski_ids: ['One or more skis not found'] } }, status: :unprocessable_entity
+    render json: { errors: { ski_ids: ['One or more skis not found'] } }, status: :unprocessable_content
   end
 
   def set_day

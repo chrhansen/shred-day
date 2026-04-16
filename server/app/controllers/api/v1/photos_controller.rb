@@ -12,7 +12,7 @@ class Api::V1::PhotosController < ApplicationController
     else
       error_message = photo.errors.full_messages.presence || ["Failed to attach or save file."]
       error_message = ["No file provided."] if params[:file].blank?
-      render json: { errors: error_message }, status: :unprocessable_entity
+      render json: { errors: error_message }, status: :unprocessable_content
     end
   end
 
@@ -20,7 +20,7 @@ class Api::V1::PhotosController < ApplicationController
     if @photo.destroy
       head :no_content
     else
-      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @photo.errors.full_messages }, status: :unprocessable_content
     end
   end
 

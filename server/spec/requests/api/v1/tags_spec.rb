@@ -36,7 +36,7 @@ RSpec.describe "Api::V1::Tags", type: :request do
     it "returns errors when the tag is invalid" do
       post api_v1_tags_path, params: { tag: { name: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       json = JSON.parse(response.body)
       expect(json["errors"]).to include("Name can't be blank")
     end
@@ -57,7 +57,7 @@ RSpec.describe "Api::V1::Tags", type: :request do
         delete api_v1_tag_path(tag_one)
       }.not_to change(Tag, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       json = JSON.parse(response.body)
       expect(json["errors"].first).to match(/cannot delete/i)
       expect(day.reload.tags.map(&:id)).to include(tag_one.id)

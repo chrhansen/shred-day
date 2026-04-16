@@ -103,16 +103,16 @@ RSpec.describe "Api::V1::Days", type: :request do
           }.to_not change(Day, :count)
         end
 
-        it "returns unprocessable_entity status and errors" do
+        it "returns unprocessable content status and errors" do
           post api_v1_days_path, params: invalid_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
 
           json_response = JSON.parse(response.body)
           # Access errors correctly under the 'errors' key
           expect(json_response['errors']['date']).to include("can't be blank")
         end
 
-        it "returns unprocessable_entity when notes exceed 500 characters" do
+        it "returns unprocessable content when notes exceed 500 characters" do
           params_with_long_notes = {
             day: {
               date: Date.today.to_s,
@@ -126,7 +126,7 @@ RSpec.describe "Api::V1::Days", type: :request do
             post api_v1_days_path, params: params_with_long_notes
           }.not_to change(Day, :count)
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json_response = JSON.parse(response.body)
           expect(json_response['errors']['notes']).to include("is too long (maximum is 500 characters)")
         end
@@ -157,9 +157,9 @@ RSpec.describe "Api::V1::Days", type: :request do
           }.to_not change(Day, :count)
         end
 
-        it "returns unprocessable_entity status and the specific base error" do
+        it "returns unprocessable content status and the specific base error" do
           post api_v1_days_path, params: fourth_day_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json_response = JSON.parse(response.body)
           expect(json_response['errors']['base']).to include("cannot log more than 3 entries for the same date")
         end
@@ -413,9 +413,9 @@ RSpec.describe "Api::V1::Days", type: :request do
           }.not_to change { day.reload.attributes } # Check attributes haven't changed
         end
 
-        it "returns unprocessable_entity status and errors" do
+        it "returns unprocessable content status and errors" do
           patch api_v1_day_path(day), params: invalid_update_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
 
           json_response = JSON.parse(response.body)
           expect(json_response['errors']).to be_present
@@ -459,9 +459,9 @@ RSpec.describe "Api::V1::Days", type: :request do
           }.not_to change { day_on_date_b.reload.date }
         end
 
-        it "returns unprocessable_entity status and the specific base error" do
+        it "returns unprocessable content status and the specific base error" do
           patch api_v1_day_path(day_on_date_b), params: update_to_full_date_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json_response = JSON.parse(response.body)
           expect(json_response['errors']['base']).to include("cannot log more than 3 entries for the same date")
         end

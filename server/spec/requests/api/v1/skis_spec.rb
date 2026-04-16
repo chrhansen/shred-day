@@ -68,9 +68,9 @@ RSpec.describe "Api::V1::Skis", type: :request do
           }.to_not change(Ski, :count)
         end
 
-        it "returns unprocessable_entity status and errors" do
+        it "returns unprocessable content status and errors" do
           post api_v1_skis_path, params: invalid_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json_response = JSON.parse(response.body)
           expect(json_response['name']).to include("can't be blank")
         end
@@ -119,9 +119,9 @@ RSpec.describe "Api::V1::Skis", type: :request do
             expect(user_ski1.name).to eq(original_name)
           end
 
-          it "returns unprocessable_entity status and errors" do
+          it "returns unprocessable content status and errors" do
             patch api_v1_ski_path(user_ski1), params: invalid_update_params
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             json_response = JSON.parse(response.body)
             expect(json_response['name']).to include("can't be blank")
           end
@@ -185,7 +185,7 @@ RSpec.describe "Api::V1::Skis", type: :request do
           }.to change(Ski, :count).by(-1)
         end
 
-        it "returns unprocessable_entity status and an error message" do
+        it "returns unprocessable content status and an error message" do
           delete api_v1_ski_path(user_ski1)
           expect(response).to have_http_status(:no_content)
         end

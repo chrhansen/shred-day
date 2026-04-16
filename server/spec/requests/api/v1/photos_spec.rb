@@ -48,9 +48,9 @@ RSpec.describe "Api::V1::Photos", type: :request do
           }.to_not change(Photo, :count)
         end
 
-        it "returns status unprocessable_entity and error message" do
+        it "returns status unprocessable content and error message" do
           post api_v1_photos_path, params: invalid_params
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           json_response = JSON.parse(response.body)
           expect(json_response['errors']).to include("No file provided.")
         end
