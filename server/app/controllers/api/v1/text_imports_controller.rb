@@ -48,7 +48,7 @@ class Api::V1::TextImportsController < ApplicationController
         serializer: Api::V1::TextImportSerializer,
         include: ['draft_days', 'draft_days.resort']
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result.error }, status: :unprocessable_content
     end
   end
 

@@ -70,7 +70,7 @@ RSpec.describe "Api::V1::GoogleSheetIntegrationsController", type: :request do
       patch "/api/v1/google_sheet_integration", params: { code: "abc", state: "state" }
 
       body = JSON.parse(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(body["error"]).to eq("boom")
     end
   end

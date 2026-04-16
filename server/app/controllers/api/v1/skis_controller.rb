@@ -14,7 +14,7 @@ class Api::V1::SkisController < ApplicationController
     if @ski.save
       render json: @ski, status: :created
     else
-      render json: @ski.errors, status: :unprocessable_entity
+      render json: @ski.errors, status: :unprocessable_content
     end
   end
 
@@ -23,7 +23,7 @@ class Api::V1::SkisController < ApplicationController
     if @ski.update(ski_params)
       render json: @ski
     else
-      render json: @ski.errors, status: :unprocessable_entity
+      render json: @ski.errors, status: :unprocessable_content
     end
   end
 
@@ -35,7 +35,7 @@ class Api::V1::SkisController < ApplicationController
       head :no_content # Return 204 No Content on successful deletion
     else
       # Render the validation errors added by restrict_with_error
-      render json: { errors: @ski.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @ski.errors.full_messages }, status: :unprocessable_content
     end
   end
 

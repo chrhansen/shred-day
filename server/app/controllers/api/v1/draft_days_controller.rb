@@ -13,7 +13,7 @@ class Api::V1::DraftDaysController < ApplicationController
     if result.updated?
       render json: result.draft_day, serializer: Api::V1::DraftDaySerializer
     else
-      render json: { errors: result.draft_day.errors }, status: :unprocessable_entity
+      render json: { errors: result.draft_day.errors }, status: :unprocessable_content
     end
   end
 

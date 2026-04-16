@@ -35,9 +35,9 @@ RSpec.describe "Api::V1::DraftDays", type: :request do
 
         context "when the decision is 'merge'" do
           context "when the day-association is not set" do
-            it "returns unprocessable_entity status" do
+            it "returns unprocessable content status" do
               patch api_v1_draft_day_path(draft_day), params: { draft_day: { decision: "merge" } }
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
               json_response = JSON.parse(response.body)
               expect(json_response['errors']).to be_present
               expect(json_response['errors']['day']).to include("can't be blank")

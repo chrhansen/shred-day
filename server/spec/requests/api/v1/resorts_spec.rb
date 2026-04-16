@@ -130,12 +130,12 @@ RSpec.describe "Api::V1::Resorts", type: :request do
 
       it "returns validation errors for invalid suggestions" do
         post api_v1_resorts_path, params: { resort: { name: "" } }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it "returns validation errors for invalid coordinates" do
         post api_v1_resorts_path, params: { resort: { name: "New Resort", latitude: 91, longitude: 181 } }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         json_response = JSON.parse(response.body)
         expect(json_response['latitude']).to be_present
         expect(json_response['longitude']).to be_present

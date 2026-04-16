@@ -27,7 +27,7 @@ class Api::V1::PhotoImportsController < ApplicationController
     if result.updated?
       render json: photo_import, serializer: Api::V1::PhotoImportSerializer
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result.error }, status: :unprocessable_content
     end
   end
 

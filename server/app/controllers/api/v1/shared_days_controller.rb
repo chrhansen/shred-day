@@ -16,7 +16,7 @@ class Api::V1::SharedDaysController < ApplicationController
     if day.update(shared_at: Time.current)
       render json: day, status: :ok
     else
-      render json: { errors: day.errors }, status: :unprocessable_entity
+      render json: { errors: day.errors }, status: :unprocessable_content
     end
   end
 
@@ -25,7 +25,7 @@ class Api::V1::SharedDaysController < ApplicationController
     if day.update(shared_at: nil)
       render json: day, status: :ok
     else
-      render json: { errors: day.errors }, status: :unprocessable_entity
+      render json: { errors: day.errors }, status: :unprocessable_content
     end
   end
 
