@@ -43,7 +43,7 @@ bin/rails server
 API server: `http://localhost:3000`
 
 ## Data Model (Summary)
-Full details: `server/README.md` and `server/db/structure.sql`.
+Full details: [API and data model](server/README.md) and [database schema](server/db/structure.sql).
 
 Core tables:
 - `users`
@@ -76,6 +76,8 @@ bundle exec rspec
 ```
 
 ## More Docs
-- Deployment, secrets, costs, and recovery: `docs/deployment.md`
-- Client details: `client/README.md`
-- Server details: `server/README.md`
+- [Deployment, secrets, costs, and recovery](docs/deployment.md)
+- [Client details](client/README.md) and [client architecture and testing notes](client/CONTEXT.md)
+- [Server details](server/README.md)
+- [Agent contribution guide](agents.md)
+- [Project brief](memory-bank/projectbrief.md)

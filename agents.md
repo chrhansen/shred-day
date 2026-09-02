@@ -4,14 +4,14 @@ Use this document as the single source of truth for onboarded coding agents. It 
 
 ## Project Snapshot
 - **Goal:** A personal ski-day log where users capture per-day details (date, resort, skis, people, notes, photos) and review them through lists, calendars, maps, and stats.
-- **Stack:** React + TypeScript frontend (Vite, Tailwind, shadcn/ui, TanStack Query) and Ruby on Rails 8 API backend (PostgreSQL 17, Active Storage, Kamal deployments).
+- **Stack:** React + TypeScript frontend (Vite, Tailwind, shadcn/ui, TanStack Query) and Ruby on Rails 8 API backend (Neon PostgreSQL 17, Active Storage on Tigris, Fly.io deployments).
 - **Authentication:** Email/password sessions today, Google OAuth flow in progress (backend mostly wired up; frontend button pending).
 - **Bulk Workflows:** Photo imports (EXIF parsing) exist; text/CSV import is actively under development (parsing, resort lookups, frontend wiring still needed).
 
 ## Repository Map
 - `/client` – Vite React SPA with routing, Auth context, service layer, and shadcn/ui components.
 - `/server` – Rails API-only app with namespaced `/api/v1` routes, serializers, service objects, and RSpec suite.
-- Root configs – Kamal deploy config, Docker/Kamal helpers, README, etc.
+- Root configs – `fly.toml`, `fly.worker.toml`, Docker and deployment helpers, README; legacy Kamal config retained for migration rollback.
 
 ## Local Development
 1. **Install dependencies**
@@ -26,7 +26,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
 4. **Useful scripts**
    - `npm run build`, `npm run lint`, `npm test`, `npm run test:watch`
    - Rails console: `bin/rails console`
-   - Deploy: `bin/kamal deploy` (plus `bin/kamal logs`, `console`, `shell`, `dbc`)
+   - Deploy from the repository root: `bash script/deploy-fly`; see [deployment and recovery](docs/deployment.md).
 
 ## Testing Expectations
 - **Backend:** `bundle exec rspec` (targets under `spec/models`, `spec/requests`, `spec/services`, etc.).
