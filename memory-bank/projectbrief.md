@@ -1,6 +1,6 @@
 # Project Brief
 
-*   **Structure:** Monorepo with React frontend (`/client`), Ruby on Rails 8.0 API backend (`/server`), and PostgreSQL 17 database. Deployment via Kamal in a Github Action.
+*   **Structure:** Monorepo with React frontend (`/client`), Ruby on Rails 8.0 API backend (`/server`), and Neon PostgreSQL 17 database. GitHub Actions deploy the web app and image worker to Fly.io; Active Storage uses Tigris.
 *   **Core Requirements:**
     *   User accounts with email/password sign-up and sign-in (using Rails sessions).
     *   Log ski days with details (date, resort, skis, etc.), associated with the logged-in user.

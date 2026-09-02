@@ -1,1 +1,14 @@
- 
+.git
+.kamal
+.codex
+.agents
+**/node_modules
+**/.env*
+**/config/master.key
+**/config/credentials/*.key
+**/log/*
+**/tmp/*
+**/storage/*
+**/coverage
+**/vendor/bundle
+client/dist

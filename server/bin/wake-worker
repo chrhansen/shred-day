@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+require "logger"
+require_relative "../lib/worker_wake_client"
+
+exit(WorkerWakeClient.new(logger: Logger.new($stdout)).wake ? 0 : 1)

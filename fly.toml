@@ -1,0 +1,45 @@
+app = "shred-day"
+primary_region = "fra"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "server/Dockerfile"
+
+[deploy]
+  release_command = "bin/rails db:prepare"
+
+[env]
+  PORT = "3000"
+  HTTP_PORT = "8080"
+  ACTIVE_STORAGE_SERVICE = "tigris"
+  SOLID_QUEUE_IN_PUMA = "false"
+  WAKE_WORKER_ON_ENQUEUE = "true"
+  WORKER_WAKE_URL = "http://shred-day-worker.flycast/wake"
+  RAILS_MAX_THREADS = "3"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 20
+    hard_limit = 25
+  [[http_service.checks]]
+    method = "GET"
+    path = "/up"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"
+
+[[restart]]
+  policy = "on-failure"
+  retries = 3

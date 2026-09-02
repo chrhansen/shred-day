@@ -53,5 +53,5 @@ gh pr merge <id>     # Merge once checks are green
 
 ## CI/CD Notes
 - GitHub Actions run unit tests and Cypress on every PR.
-- Merges to `main` trigger deployment via Kamal; no manual steps required.
+- Merges to `main` trigger deployment to Fly.io through `script/deploy-fly`; see [deployment and recovery](../docs/deployment.md).
 - When Cypress flakes, re-check toast selectors and intercept ordering first—they are the usual culprits.
