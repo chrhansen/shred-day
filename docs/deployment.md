@@ -90,6 +90,14 @@ fly ssh console --app shred-day --command 'ruby bin/wake-worker'
 after deployment. Confirm the worker completes processing after the browser
 closes and then reaches `stopped` with exit code 0.
 
+Photo uploads read the selected file into memory before creating the multipart
+request. This works around [Safari's empty-body upload bug](https://bugs.webkit.org/show_bug.cgi?id=319985),
+which can affect files selected through the macOS Photos picker. Keep the
+original bytes, filename, and content type so HEIC data and EXIF metadata survive.
+Use the same helper for day photos and bulk photo imports.
+The helper limits reading and uploading to two photos at a time so large
+selections do not copy the entire batch into browser memory.
+
 The private worker has no public IP. Its `/wake` endpoint requires the shared
 token; `/up` does not extend its idle timer. Do not enable a public worker IP or
 point an uptime monitor at the web app if it should remain stopped off-season.

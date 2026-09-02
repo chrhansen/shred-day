@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { uploadPhotoFile } from '@/lib/photoUpload';
 import { type PhotoImport, type DraftDay as UIDraftDay } from '@/types/ski';
 import type { PhotoUploadResponse } from '@/types/api';
 
@@ -22,9 +23,7 @@ async function getPhotoImport(importId: string): Promise<PhotoImport> {
  * Uploads a photo and associates it with a specific photo import session.
  */
 async function addPhotoToImport(importId: string, file: File): Promise<{ id: string; preview_url: string | null; full_url: string; filename: string | null }> {
-  const formData = new FormData();
-  formData.append('file', file);
-  return apiClient.uploadFormData(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos`, formData);
+  return uploadPhotoFile(`${PHOTO_IMPORTS_API_PATH}/${importId}/photos`, file);
 }
 
 /**
