@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+image_label="${GITHUB_SHA:-$(git rev-parse HEAD)}"
+image="registry.fly.io/shred-day:${image_label}"
+
+fly deploy --config fly.toml --ha=false --local-only --image-label "$image_label"
+fly deploy --config fly.worker.toml --ha=false --strategy immediate --image "$image"
+python3 script/configure-worker-recovery.py "$image"

@@ -5,7 +5,8 @@ Personal ski-day log for capturing each day (date, resort, skis, tags, notes, ph
 ## Repo Layout
 - `client` React SPA (Vite, TypeScript, Tailwind, shadcn/ui, TanStack Query).
 - `server` Rails API-only app (PostgreSQL, Active Storage).
-- `config` Deployment config (Kamal).
+- `fly.toml`, `fly.worker.toml` Fly web and image-worker configuration.
+- `script` Deployment and scheduled-worker recovery.
 
 ## Key Features
 - Log ski days with date, resort, skis, tags, notes, and photos.
@@ -75,5 +76,6 @@ bundle exec rspec
 ```
 
 ## More Docs
+- Deployment, secrets, costs, and recovery: `docs/deployment.md`
 - Client details: `client/README.md`
 - Server details: `server/README.md`
