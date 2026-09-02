@@ -43,8 +43,10 @@ describe('Stats Page', () => {
     cy.logDay({ date: '2024-01-11', resort_id: this.resortLeMassifId, ski_ids: [this.ski1Id] }); // Same resort & ski
     cy.logDay({ date: '2024-01-12', resort_id: this.resortMaikoId, ski_ids: [this.ski2Id] }); // Different resort & ski
 
-    // Visit stats page scoped to the season containing these days (2023/24 = offset -2 for current season in CI)
-    cy.visit('/stats?season=-2');
+    cy.request(`${Cypress.env('apiUrl')}/api/v1/account`).then((response) => {
+      expect(response.body.available_seasons).to.have.length(1);
+      cy.visit(`/stats?season=${response.body.available_seasons[0]}`);
+    });
 
     // Assertions for Stats using data-testid
 
