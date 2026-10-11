@@ -1,10 +1,10 @@
 import type { ExpoConfig } from "expo/config";
-const bundleId = process.env.EXPO_PUBLIC_BUNDLE_ID || "day.shred.app";
+const bundleId = process.env.EXPO_PUBLIC_BUNDLE_ID || "day.shred";
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const config: ExpoConfig = {
   name: "Shred.Day",
   slug: "shred-day",
-  owner: "chrhansen",
+  owner: "shred-day",
   version: "1.0.0",
   scheme: "shredday",
   orientation: "portrait",
@@ -58,6 +58,6 @@ const config: ExpoConfig = {
         ] as NonNullable<ExpoConfig["plugins"]>)
       : []),
   ],
-  extra: { eas: { projectId: "0153b518-9651-4b86-b878-795c8cc8ce11" } },
+  extra: { eas: { projectId: "5843dd0e-9c9d-417c-baef-abcea92c179f" } },
 };
 export default config;

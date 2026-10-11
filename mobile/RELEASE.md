@@ -14,13 +14,17 @@ npx eas-cli@24.12.1 build --platform ios --profile production
 npx eas-cli@24.12.1 submit --platform ios --profile production --latest
 ```
 
-The owner selects the Apple Developer team, confirms active program membership and signs in to Apple when EAS requests it. Register `day.shred.app` (or the selected bundle), enable Sign in with Apple, create the App Store Connect app, and configure its numeric app ID as `submit.production.ios.ascAppId` in `eas.json`. EAS manages signing credentials; do not commit certificates or private keys.
+The project belongs to [@shred-day/shred-day](https://expo.dev/accounts/shred-day/projects/shred-day). The owner selects the Apple Developer team, confirms active program membership and signs in to Apple when EAS requests it. Register `day.shred` (subject to availability), enable Sign in with Apple, create the App Store Connect app, and configure its numeric app ID as `submit.production.ios.ascAppId` in `eas.json`. EAS manages signing credentials; do not commit certificates or private keys.
 
 Create an iOS Google OAuth client in the same Google Cloud project as the existing web client, using the final bundle. Set both public client IDs in EAS's production environment and the matching web audience on Rails. Configure Apple's team/key/private-key on Rails for code exchange and account deletion. Regenerate the native app after changing build-time client IDs or associated domains.
 
 Deploy the backward-compatible Rails migration and API before the app reaches testers. Verify `/privacy`, `/support`, `/up`, mobile login and the Apple association URL over HTTPS. Database rollback removes native sessions/identities; revoke Apple credentials and preserve any required encrypted identity records before rollback. Web cookie sessions do not depend on the new tables.
 
 EAS submission uploads to App Store Connect/TestFlight; public App Store release is a later App Review action. See [Expo iOS submission](https://docs.expo.dev/submit/ios/).
+
+## Dependency review
+
+SDK 57 still includes the `decode-uri-component` [CPU-exhaustion advisory](https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr). This app's Expo link parser uses `URLSearchParams`; the reviewed normal and malformed queries did not call the vulnerable decoder. A bundled React Navigation fallback retains that call. Recheck reachability if navigation changes, and test malformed links on a native device before distribution. Avoid an unchecked decoder override: the patched ESM package is incompatible with the installed CommonJS consumer. Revisit supported patched dependencies before public release; remaining tooling advisories also need review.
 
 ## Store copy
 

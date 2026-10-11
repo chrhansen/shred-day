@@ -4,7 +4,7 @@ require 'jwt'
 RSpec.describe Mobile::ProviderVerificationService do
   let(:key) { OpenSSL::PKey::RSA.generate(2048) }
   let(:jwk) { JWT::JWK.new(key, 'apple-key') }
-  let(:claims) { { 'iss' => 'https://appleid.apple.com', 'aud' => 'day.shred.app', 'sub' => 'apple-sub', 'exp' => 10.minutes.from_now.to_i, 'iat' => Time.current.to_i } }
+  let(:claims) { { 'iss' => 'https://appleid.apple.com', 'aud' => 'day.shred', 'sub' => 'apple-sub', 'exp' => 10.minutes.from_now.to_i, 'iat' => Time.current.to_i } }
   def verify(values = claims, signing_key = key)
     token = JWT.encode(values, signing_key, 'RS256', kid: 'apple-key')
     service = described_class.new(provider: 'apple', identity_token: token)

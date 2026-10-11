@@ -19,7 +19,7 @@ class Mobile::ProviderVerificationService
     when "apple"
       JWT.decode(@identity_token, nil, true,
         algorithms: [ "RS256" ], jwks: apple_keys, verify_iss: true, iss: "https://appleid.apple.com",
-        verify_aud: true, aud: ENV.fetch("APPLE_BUNDLE_ID", "day.shred.app"), required_claims: %w[sub exp iat iss aud])[0]
+        verify_aud: true, aud: ENV.fetch("APPLE_BUNDLE_ID", "day.shred"), required_claims: %w[sub exp iat iss aud])[0]
     else
       raise VerificationError, "Unsupported login provider"
     end

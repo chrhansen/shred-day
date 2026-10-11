@@ -12,6 +12,6 @@ RSpec.describe 'Public app pages', type: :request do
     allow(Rails.application.credentials).to receive(:dig).with(:apple, :team_id).and_return('TESTTEAM')
     get '/.well-known/apple-app-site-association'
     expect(response).to have_http_status(:ok)
-    expect(JSON.parse(response.body).dig('applinks', 'details', 0)).to eq('appID' => 'TESTTEAM.day.shred.app', 'paths' => [ '/d/*' ])
+    expect(JSON.parse(response.body).dig('applinks', 'details', 0)).to eq('appID' => 'TESTTEAM.day.shred', 'paths' => [ '/d/*' ])
   end
 end

@@ -21,7 +21,7 @@ class Mobile::AppleTokenService
   def request(endpoint, values)
     uri = URI("https://appleid.apple.com/auth/#{endpoint}")
     request = Net::HTTP::Post.new(uri)
-    request.set_form_data(values.merge(client_id: ENV.fetch("APPLE_BUNDLE_ID", "day.shred.app"), client_secret: client_secret))
+    request.set_form_data(values.merge(client_id: ENV.fetch("APPLE_BUNDLE_ID", "day.shred"), client_secret: client_secret))
     response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) { |http| http.request(request) }
     raise ExchangeError, "Apple authorization could not be completed. Please try again." unless response.is_a?(Net::HTTPSuccess)
     response.body.present? ? JSON.parse(response.body) : {}
@@ -35,7 +35,7 @@ class Mobile::AppleTokenService
     private_key = ENV["APPLE_PRIVATE_KEY"].presence || Rails.application.credentials.dig(:apple, :private_key)
     raise ExchangeError, "Apple login is not configured" if [ team, key_id, private_key ].any?(&:blank?)
     JWT.encode({ iss: team, iat: Time.current.to_i, exp: 5.minutes.from_now.to_i,
-      aud: "https://appleid.apple.com", sub: ENV.fetch("APPLE_BUNDLE_ID", "day.shred.app") },
+      aud: "https://appleid.apple.com", sub: ENV.fetch("APPLE_BUNDLE_ID", "day.shred") },
       OpenSSL::PKey::EC.new(private_key), "ES256", kid: key_id)
   rescue OpenSSL::PKey::PKeyError, OpenSSL::PKey::ECError, JWT::EncodeError
     raise ExchangeError, "Apple login is not configured correctly"
