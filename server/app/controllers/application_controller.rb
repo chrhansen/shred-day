@@ -7,8 +7,19 @@ class ApplicationController < ActionController::API
 
   # Helper method to find the current user based on session
   def current_user
-    # Use memoization (@current_user ||= ...) to avoid multiple DB lookups per request
-    @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
+    return @current_user if defined?(@current_user)
+    @current_user = if request.headers['Authorization'].present?
+      current_mobile_session&.user
+    elsif session[:user_id]
+      User.find_by(id: session[:user_id])
+    end
+  end
+
+  def current_mobile_session
+    return @current_mobile_session if defined?(@current_mobile_session)
+    authorization = request.headers['Authorization'].to_s
+    token = authorization.match(/\ABearer ([A-Za-z0-9_-]+)\z/i)&.captures&.first
+    @current_mobile_session = MobileSession.find_by_token(token)
   end
 
   # Helper method to check if a user is logged in

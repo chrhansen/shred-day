@@ -5,6 +5,7 @@ Personal ski-day log for capturing each day (date, resort, skis, tags, notes, ph
 ## Repo Layout
 - `client` React SPA (Vite, TypeScript, Tailwind, shadcn/ui, TanStack Query).
 - `server` Rails API-only app (PostgreSQL, Active Storage).
+- `mobile` Expo / React Native iPhone app with native login, ski-day logging, photos and season views.
 - `config` Deployment config (Kamal).
 
 ## Key Features
@@ -77,3 +78,5 @@ bundle exec rspec
 ## More Docs
 - Client details: `client/README.md`
 - Server details: `server/README.md`
+- Mobile development: `mobile/README.md`
+- iOS signing and release: `mobile/RELEASE.md`

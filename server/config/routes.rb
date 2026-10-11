@@ -9,6 +9,10 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
+  get "/privacy", to: "legal_pages#privacy"
+  get "/support", to: "legal_pages#support"
+  get "/.well-known/apple-app-site-association", to: "legal_pages#apple_association"
+
   namespace :api do
     namespace :v1 do
       resources :photos, only: [:create, :destroy]
@@ -22,6 +26,14 @@ Rails.application.routes.draw do
       resources :shared_days, only: [:show, :create, :destroy]
       resource :stats, only: [:show]
       resource :account, only: [:show, :update], controller: :account
+
+      namespace :mobile do
+        resource :sessions, only: [:create, :destroy]
+        resources :users, only: [:create]
+        resources :challenges, only: [:create]
+        resource :provider_sessions, only: [:create]
+        resource :account, only: [:destroy], controller: :accounts
+      end
 
       # Authentication routes
       resources :users, only: [:create] # Sign Up

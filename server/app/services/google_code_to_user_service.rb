@@ -23,7 +23,8 @@ class GoogleCodeToUserService
       id_token,
       aud: Rails.application.credentials.dig(:google, :client_id))
 
-    user = User.find_or_initialize_by(email: payload['email'].downcase)
+    identity = AuthIdentity.find_by(provider: 'google', subject: payload['sub'])
+    user = identity&.user || User.find_or_initialize_by(email: payload['email'].downcase)
     if user.new_record?
       user.password = SecureRandom.hex(12)
       user.save
@@ -31,6 +32,9 @@ class GoogleCodeToUserService
 
     if user.present?
       user.update(full_name: payload['name']) if payload['name']
+      identity ||= AuthIdentity.new(provider: 'google', subject: payload['sub'])
+      identity.user = user
+      identity.save!
       @session[:user_id] = user.id
       Result.new(user: user, session: @session)
     else

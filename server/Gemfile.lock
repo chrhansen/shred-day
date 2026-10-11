@@ -115,6 +115,7 @@ GEM
     concurrent-ruby (1.3.6)
     connection_pool (3.0.2)
     crass (1.0.6)
+    csv (3.3.6)
     date (3.5.1)
     debug (1.10.0)
       irb (~> 1.10)
@@ -498,11 +499,13 @@ DEPENDENCIES
   bcrypt (~> 3.1.7)
   bootsnap
   brakeman
+  csv (~> 3.3)
   debug
   factory_bot_rails
   google-apis-sheets_v4
   googleauth
   image_processing (~> 1.2)
+  jwt (~> 2.10)
   kamal
   lograge
   mission_control-jobs (~> 1.1)

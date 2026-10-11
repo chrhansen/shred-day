@@ -251,6 +251,21 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: auth_identities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.auth_identities (
+    id character varying DEFAULT public.gen_id('aid'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    provider character varying NOT NULL,
+    subject character varying NOT NULL,
+    encrypted_refresh_token text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: days; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -312,6 +327,37 @@ CREATE TABLE public.google_sheet_integrations (
     status integer DEFAULT 0 NOT NULL,
     last_synced_at timestamp(6) without time zone,
     last_error text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: mobile_auth_challenges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mobile_auth_challenges (
+    id character varying DEFAULT public.gen_id('mac'::text) NOT NULL,
+    nonce_digest character varying NOT NULL,
+    expires_at timestamp(6) without time zone NOT NULL,
+    consumed_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: mobile_sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mobile_sessions (
+    id character varying DEFAULT public.gen_id('ms'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    token_digest character varying NOT NULL,
+    authentication_method character varying DEFAULT 'password'::character varying NOT NULL,
+    provider_token_digest character varying,
+    expires_at timestamp(6) without time zone NOT NULL,
+    revoked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -502,6 +548,14 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 
 --
+-- Name: auth_identities auth_identities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auth_identities
+    ADD CONSTRAINT auth_identities_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: days days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -523,6 +577,22 @@ ALTER TABLE ONLY public.draft_days
 
 ALTER TABLE ONLY public.google_sheet_integrations
     ADD CONSTRAINT google_sheet_integrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: mobile_auth_challenges mobile_auth_challenges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_auth_challenges
+    ADD CONSTRAINT mobile_auth_challenges_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: mobile_sessions mobile_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_sessions
+    ADD CONSTRAINT mobile_sessions_pkey PRIMARY KEY (id);
 
 
 --
@@ -626,6 +696,20 @@ CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.ac
 
 
 --
+-- Name: index_auth_identities_on_provider_and_subject; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_auth_identities_on_provider_and_subject ON public.auth_identities USING btree (provider, subject);
+
+
+--
+-- Name: index_auth_identities_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_auth_identities_on_user_id ON public.auth_identities USING btree (user_id);
+
+
+--
 -- Name: index_days_on_resort_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -686,6 +770,27 @@ CREATE INDEX index_draft_days_on_text_import_id ON public.draft_days USING btree
 --
 
 CREATE UNIQUE INDEX index_google_sheet_integrations_on_user_id ON public.google_sheet_integrations USING btree (user_id);
+
+
+--
+-- Name: index_mobile_sessions_on_provider_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_mobile_sessions_on_provider_token_digest ON public.mobile_sessions USING btree (provider_token_digest);
+
+
+--
+-- Name: index_mobile_sessions_on_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_mobile_sessions_on_token_digest ON public.mobile_sessions USING btree (token_digest);
+
+
+--
+-- Name: index_mobile_sessions_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mobile_sessions_on_user_id ON public.mobile_sessions USING btree (user_id);
 
 
 --
@@ -888,6 +993,14 @@ ALTER TABLE ONLY public.days
 
 
 --
+-- Name: mobile_sessions fk_rails_a6c13db1b8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_sessions
+    ADD CONSTRAINT fk_rails_a6c13db1b8 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: photos fk_rails_abbf718543; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -976,12 +1089,21 @@ ALTER TABLE ONLY public.draft_days
 
 
 --
+-- Name: auth_identities fk_rails_fe3bac40a1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auth_identities
+    ADD CONSTRAINT fk_rails_fe3bac40a1 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261011090000'),
 ('20260206133228'),
 ('20260202220009'),
 ('20251207120500'),

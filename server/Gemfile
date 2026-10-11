@@ -68,3 +68,9 @@ end
 # Gems for Mission Control Jobs dashboard
 gem "mission_control-jobs", "~> 1.1"
 gem "propshaft", "~> 1.3"
+
+# Provider identity verification for native Apple sign-in.
+gem "jwt", "~> 2.10"
+
+# CSV is a bundled gem rather than part of Ruby 3.4.
+gem "csv", "~> 3.3"
