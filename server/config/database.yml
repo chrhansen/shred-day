@@ -61,6 +61,7 @@ test:
 production:
   primary: &primary_production
     <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
     database: shred_day_production
     username: rails
     password: <%= ENV["POSTGRES_PASSWORD"] %>
@@ -68,13 +69,16 @@ production:
     port: 5432
   queue:
     <<: *primary_production
+    url: <%= ENV["QUEUE_DATABASE_URL"] %>
     database: shred_day_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
+    url: <%= ENV["CABLE_DATABASE_URL"] %>
     database: shred_day_production_cable
     migrations_paths: db/cable_migrate
   cache:
     <<: *primary_production
+    url: <%= ENV["CACHE_DATABASE_URL"] %>
     database: shred_day_production_cache
     migrations_paths: db/cache_migrate

@@ -1,5 +1,6 @@
 import { SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry, SkiDayDetail, SharedDayDetail } from '@/types/ski';
 import { apiClient, AuthenticationError, API_BASE_URL, defaultFetchOptions, handleApiError } from '@/lib/apiClient';
+import { uploadPhotoFile } from '@/lib/photoUpload';
 
 // Re-export for backward compatibility
 export { AuthenticationError, API_BASE_URL, defaultFetchOptions, handleApiError };
@@ -86,9 +87,7 @@ export const skiService = {
   // --- Photo Service Methods ---
 
   async uploadPhoto(file: File): Promise<{ id: string; preview_url: string | null; full_url: string | null; filename: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return apiClient.uploadFormData('/api/v1/photos', formData);
+    return uploadPhotoFile('/api/v1/photos', file);
   },
 
   async deletePhoto(photoId: string): Promise<void> {

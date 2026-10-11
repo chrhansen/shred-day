@@ -6,7 +6,8 @@ Personal ski-day log for capturing each day (date, resort, skis, tags, notes, ph
 - `client` React SPA (Vite, TypeScript, Tailwind, shadcn/ui, TanStack Query).
 - `server` Rails API-only app (PostgreSQL, Active Storage).
 - `mobile` Expo / React Native iPhone app with native login, ski-day logging, photos and season views.
-- `config` Deployment config (Kamal).
+- `fly.toml`, `fly.worker.toml` Fly web and image-worker configuration.
+- `script` Deployment and scheduled-worker recovery.
 
 ## Key Features
 - Log ski days with date, resort, skis, tags, notes, and photos.
@@ -43,7 +44,7 @@ bin/rails server
 API server: `http://localhost:3000`
 
 ## Data Model (Summary)
-Full details: `server/README.md` and `server/db/structure.sql`.
+Full details: [API and data model](server/README.md) and [database schema](server/db/structure.sql).
 
 Core tables:
 - `users`
@@ -76,7 +77,9 @@ bundle exec rspec
 ```
 
 ## More Docs
-- Client details: `client/README.md`
-- Server details: `server/README.md`
-- Mobile development: `mobile/README.md`
-- iOS signing and release: `mobile/RELEASE.md`
+- [Deployment, secrets, costs, and recovery](docs/deployment.md)
+- [Client details](client/README.md) and [client architecture and testing notes](client/CONTEXT.md)
+- [Server details](server/README.md)
+- [Mobile development](mobile/README.md) and [iOS signing and release](mobile/RELEASE.md)
+- [Agent contribution guide](agents.md)
+- [Project brief](memory-bank/projectbrief.md)
