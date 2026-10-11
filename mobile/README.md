@@ -30,13 +30,15 @@ SDK 57 on Xcode 27 uses `expo-build-properties` with `ios.enableSceneSupport: tr
 | `EXPO_PUBLIC_API_BASE_URL` | Mobile env | API origin; production defaults to `https://shred.day` |
 | `EXPO_PUBLIC_BUNDLE_ID` | Mobile env | Defaults to `day.shred`; must match Apple and Google configuration |
 | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Mobile env | iOS OAuth client for this bundle |
-| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Mobile env | Existing server/web OAuth client; ID token audience |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Mobile env | Web-type OAuth client for the mobile server audience |
 | `APPLE_TEAM_ID` | Mobile build env + Rails env/credentials | Universal links and Apple client-secret signing |
-| `GOOGLE_WEB_CLIENT_ID` | Rails env or `google.client_id` credential | Expected Google ID token audience |
+| `GOOGLE_WEB_CLIENT_ID` | Rails env (fallback: `google.client_id` credential) | Expected mobile Google ID token audience |
 | `APPLE_BUNDLE_ID` | Rails env | Must match app bundle; defaults to `day.shred` |
 | `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Rails env or `apple.key_id/private_key` credentials | Sign in with Apple token exchange/revocation |
 
 Public Expo env values are bundled into the app. Never put Apple private keys, OAuth secrets or API bearer tokens there. Store production public values in EAS's production environment; keep signing/provider secrets in server credentials and EAS credential storage. Production builds should include both Google client IDs before distribution.
+
+Create the iOS OAuth client and a Web-type client for the mobile server audience in the same Google Cloud project, `shred-day`. Use their public IDs for the two mobile Google settings, and set Rails `GOOGLE_WEB_CLIENT_ID` to that Web-type client ID. This Rails setting applies only to mobile ID-token verification; existing website login and Google Sheets continue using their current Rails Google credentials. The mobile flow needs the Web-type client ID, not its client secret.
 
 Expo project: [@shred-day/shred-day](https://expo.dev/accounts/shred-day/projects/shred-day), ID `5843dd0e-9c9d-417c-baef-abcea92c179f`. EAS CLI is invoked as `npx eas-cli@24.12.1`; it is intentionally not a project dependency.
 
