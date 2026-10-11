@@ -16,7 +16,7 @@ describe('Ski Days List Page', () => {
   const DAY1_TAG = 'With Friends';
   const DAY2_TAG = 'Training';
   const formatDetailHeaderDate = (date: Date) => {
-    const today = new Date();
+    const today = new Date(displayNow);
     today.setHours(0, 0, 0, 0);
     const dayDate = new Date(date);
     dayDate.setHours(0, 0, 0, 0);
@@ -37,6 +37,7 @@ describe('Ski Days List Page', () => {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
+  const displayNow = new Date(currentYear, currentMonth >= 9 ? 10 : 1, 1);
 
   // Determine which year's season we're in based on Sept 1 start
   const inCurrentSeasonYear = currentMonth >= 9;
@@ -47,6 +48,7 @@ describe('Ski Days List Page', () => {
   const DAY2_DATE = `${currentSeasonYear}-10-10`; // Oct 10
 
   beforeEach(() => {
+    cy.clock(displayNow.getTime(), ['Date']);
     // Create user
     const userEmail = `test-dayslist-${Date.now()}@example.com`;
     cy.createUser(userEmail, PASSWORD);
@@ -120,7 +122,7 @@ describe('Ski Days List Page', () => {
     cy.get('@resortName').then(resortName => {
       // Check Day 1 content
       const day1TestDate = new Date(DAY1_DATE.replace(/-/g, '/'));
-      const currentRunYear = new Date().getFullYear();
+      const currentRunYear = displayNow.getFullYear();
       const expectedDay1DisplayDate = day1TestDate.getFullYear() === currentRunYear
         ? day1TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : day1TestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

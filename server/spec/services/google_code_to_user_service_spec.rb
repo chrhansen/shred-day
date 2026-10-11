@@ -58,6 +58,13 @@ RSpec.describe GoogleCodeToUserService do
             .and_return(validator_payload)
         end
 
+        it 'uses the established provider subject when Google changes email' do
+          owner = create(:user, email: 'original@example.com')
+          owner.auth_identities.create!(provider: 'google', subject: google_user_id)
+          expect { expect(service.to_local_user.user).to eq(owner) }.not_to change(User, :count)
+          expect(session[:user_id]).to eq(owner.id)
+        end
+
         context 'when user exists' do
           let!(:existing_user) { User.create!(email: user_email, password: 'password123', full_name: 'Old Name') }
 

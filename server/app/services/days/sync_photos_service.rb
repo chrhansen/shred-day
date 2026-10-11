@@ -3,12 +3,12 @@ class Days::SyncPhotosService
     @day = day
     @user = day.user
 
-    @incoming_photo_ids = incoming_photo_ids || []
+    @incoming_photo_ids = incoming_photo_ids
   end
 
   # Helper method to synchronize photos (used by days#update and days#create)
   def sync_photos
-    return if @incoming_photo_ids.blank?
+    return if @incoming_photo_ids.nil?
 
     incoming_photo_ids = Array(@incoming_photo_ids).compact.map(&:to_s) # Ensure array of strings
     current_photo_ids = @day.photos.pluck(:id).map(&:to_s)

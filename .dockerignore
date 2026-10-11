@@ -2,6 +2,8 @@
 .kamal
 .codex
 .agents
+/mobile
+/plans.local
 **/node_modules
 **/.env*
 **/config/master.key

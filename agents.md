@@ -5,11 +5,12 @@ Use this document as the single source of truth for onboarded coding agents. It 
 ## Project Snapshot
 - **Goal:** A personal ski-day log where users capture per-day details (date, resort, skis, people, notes, photos) and review them through lists, calendars, maps, and stats.
 - **Stack:** React + TypeScript frontend (Vite, Tailwind, shadcn/ui, TanStack Query) and Ruby on Rails 8 API backend (Neon PostgreSQL 17, Active Storage on Tigris, Fly.io deployments).
-- **Authentication:** Email/password sessions today, Google OAuth flow in progress (backend mostly wired up; frontend button pending).
+- **Authentication:** Web cookie sessions and Google OAuth; mobile uses revocable bearer sessions, verified Google/Apple identities and device-only SecureStore.
 - **Bulk Workflows:** Photo imports (EXIF parsing) exist; text/CSV import is actively under development (parsing, resort lookups, frontend wiring still needed).
 
 ## Repository Map
 - `/client` – Vite React SPA with routing, Auth context, service layer, and shadcn/ui components.
+- `/mobile` – Independent Expo/React Native iPhone app; see mobile/README.md and mobile/RELEASE.md.
 - `/server` – Rails API-only app with namespaced `/api/v1` routes, serializers, service objects, and RSpec suite.
 - Root configs – `fly.toml`, `fly.worker.toml`, Docker and deployment helpers, README; legacy Kamal config retained for migration rollback.
 
@@ -33,6 +34,8 @@ Use this document as the single source of truth for onboarded coding agents. It 
 - **Frontend:** Vitest for unit/component (`npm test`), Cypress for E2E (`npx cypress open` or `npx cypress run`; requires client + server running).
 - Add or update tests whenever behavior changes, especially around active initiatives (text import parsing, Google sign-in).
 - Request specs: always cover unauthenticated (401) and, where relevant, unauthorized (403/404) cases.
+
+- **Mobile:** `npm run check` and `npx expo-doctor` in mobile; iOS builds require a development client for native Google login. Generated native folders are ignored.
 
 ## Contribution Guidelines
 - Stay scoped: touch only files relevant to the assigned task unless plumbing makes a change unavoidable.

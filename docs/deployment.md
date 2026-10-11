@@ -38,6 +38,13 @@ Local builds avoid leaving a persistent remote builder and its volume behind.
 Use the same image for both apps. The recovery Machine is unmanaged by
 `fly deploy`; `configure-worker-recovery.py` maintains it by its unique name.
 
+`db:prepare` applies primary and queue migrations and initializes the dedicated
+cache database from `server/db/cache_structure.sql` / `server/db/cache_migrate`.
+Keep these cache schema files with the release: mobile authentication counters
+and Apple's signing-key cache require `solid_cache_entries`; `/up` alone does
+not verify that table. After deployment, confirm the cache migration is up and
+exercise a cache write/read and counter through a Rails console before beta login.
+
 The web proxy listens on port 8080 because the container runs as an unprivileged
 user. Puma listens on 3000 behind it. The worker uses Puma directly on 8080.
 
