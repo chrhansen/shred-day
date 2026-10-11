@@ -1,6 +1,7 @@
 class Api::V1::Mobile::AccountsController < ApplicationController
   def destroy
-    recent_session = current_mobile_session && current_mobile_session.created_at >= 5.minutes.ago
+    recent_session = current_mobile_session && current_mobile_session.created_at >= 5.minutes.ago &&
+      %w[password google apple].include?(current_mobile_session.authentication_method)
     unless recent_session && params[:confirmation] == "DELETE"
       return render json: { error: "Sign in again and confirm account deletion." }, status: :unauthorized
     end

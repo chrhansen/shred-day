@@ -8,8 +8,9 @@ RSpec.describe Mobile::ProviderSignInService do
     allow(Mobile::ProviderVerificationService).to receive(:new).and_return(verifier)
     allow(verifier).to receive(:verify_identity).and_return(verified)
   end
-  def google(token: 'google-id-token', user: nil)
-    described_class.new(provider: 'google', identity_token: token, user: user).sign_in
+  def google(token: 'google-id-token', user: nil, session: nil)
+    session ||= Mobile::CreateSessionService.new(user).create_session.session if user
+    described_class.new(provider: 'google', identity_token: token, session: session).sign_in
   end
 
   it 'creates one account with default tags and a subject identity' do
@@ -58,6 +59,22 @@ RSpec.describe Mobile::ProviderSignInService do
     expect(MobileSession.count).to eq(1)
   end
 
+  it 'requires recent existing-account authentication before linking a new identity' do
+    session = Mobile::CreateSessionService.new(create(:user)).create_session.session
+    session.update!(created_at: 10.minutes.ago)
+    expect(google(session: session)).not_to be_signed_in
+    expect(AuthIdentity.count).to eq(0)
+  end
+
+  it 'does not let linking establish authentication for another link' do
+    user = create(:user)
+    linked = google(user: user).session_result.session
+    expect(linked.authentication_method).to eq('linked_google')
+    claims['sub'] = 'another-provider-subject'
+    expect(google(token: 'another-proof', session: linked)).not_to be_signed_in
+    expect(user.auth_identities.count).to eq(1)
+  end
+
   it 'rejects an unverified email for new accounts' do
     claims['email_verified'] = false
     expect(google).not_to be_signed_in
@@ -73,8 +90,8 @@ RSpec.describe Mobile::ProviderSignInService do
       allow(Mobile::AppleTokenService).to receive(:new).and_return(exchange)
       allow(exchange).to receive(:exchange_code).with('authorization-code').and_return(Mobile::AppleTokenService::Result.new('refresh-secret', 'exchanged-id-token'))
     end
-    def apple(challenge_id: challenge.id)
-      described_class.new(provider: 'apple', identity_token: 'apple-id-token', authorization_code: 'authorization-code', challenge_id: challenge_id).sign_in
+    def apple(challenge_id: challenge.id, session: nil)
+      described_class.new(provider: 'apple', identity_token: 'apple-id-token', authorization_code: 'authorization-code', challenge_id: challenge_id, session: session).sign_in
     end
     it 'consumes the nonce and encrypts the revocable provider credential' do
       expect(apple).to be_signed_in
@@ -96,6 +113,24 @@ RSpec.describe Mobile::ProviderSignInService do
     it 'does not link a new Apple identity by matching email alone' do
       create(:user, email: claims['email'])
       expect(apple).not_to be_signed_in
+    end
+    it 'requires recent existing-account authentication to link Apple' do
+      session = Mobile::CreateSessionService.new(create(:user)).create_session.session
+      session.update!(created_at: 10.minutes.ago)
+      expect(apple(session: session)).not_to be_signed_in
+      expect(exchange).not_to have_received(:exchange_code)
+      expect(AuthIdentity.count).to eq(0)
+    end
+    it 'reauthenticates a returning linked Apple identity without email' do
+      user = create(:user)
+      user.auth_identities.create!(provider: 'apple', subject: claims['sub'])
+      session = Mobile::CreateSessionService.new(user).create_session.session
+      session.update!(created_at: 10.minutes.ago)
+      claims.delete('email')
+      result = apple(session: session)
+      expect(result).to be_signed_in
+      expect(result.session_result.session.user).to eq(user)
+      expect(result.session_result.session.authentication_method).to eq('apple')
     end
     it 'rejects an authorization code for a different subject' do
       mismatch = Mobile::ProviderVerificationService::Result.new(claims.merge('sub' => 'someone-else'))
