@@ -15,5 +15,5 @@
       "env": { "APP_ENV": "production" }
     }
   },
-  "submit": { "production": {} }
+  "submit": { "production": { "ios": { "ascAppId": "6821657907" } } }
 }
