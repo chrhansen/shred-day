@@ -86,7 +86,7 @@ RSpec.describe "Mobile provider endpoints", type: :request do
     end
 
     it "reauthenticates an already-linked subject through an old bearer" do
-      user.auth_identities.create!(provider: "google", subject: claims["sub"])
+      user.auth_identities.create!(provider: "google", subject: claims["sub"], ownership_verified_at: Time.current)
       source.session.update!(created_at: 10.minutes.ago)
       provider_sign_in(source.token)
       expect(response).to have_http_status(:created)

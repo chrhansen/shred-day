@@ -1,4 +1,5 @@
 const { defineConfig } = require("cypress");
+const { createConfirmedUser } = require("./cypress/tasks/confirmed-user.cjs");
 
 module.exports = defineConfig({
   env: {
@@ -7,6 +8,7 @@ module.exports = defineConfig({
   e2e: {
     baseUrl: "http://localhost:8080",
     setupNodeEvents(on, config) {
+      on('task', { createConfirmedUser: input => createConfirmedUser(config, input) });
       return config;
     },
   },

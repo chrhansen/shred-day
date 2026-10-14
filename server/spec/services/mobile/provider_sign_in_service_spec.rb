@@ -19,6 +19,8 @@ RSpec.describe Mobile::ProviderSignInService do
     user = result.session_result.session.user
     expect(user.tags).to be_present
     expect(user.auth_identities.first.subject).to eq(claims['sub'])
+    expect(user.auth_identities.first).to be_ownership_verified
+    expect(result.session_result.session.auth_identity_id).to eq(user.auth_identities.first.id)
   end
 
   it 'finds the provider identity even if its email changes' do
@@ -33,6 +35,18 @@ RSpec.describe Mobile::ProviderSignInService do
   it 'links an authoritative Google email to its existing account' do
     user = create(:user, email: claims['email'])
     expect(google.session_result.session.user).to eq(user)
+  end
+
+  it 'recovers an unconfirmed password account without confirming its provisional password' do
+    user = create(:user, :unconfirmed, email: claims['email'])
+    old = Mobile::CreateSessionService.new(user).create_session.session
+    result = google
+    expect(result).to be_signed_in
+    expect(result.session_result.session.authentication_method).to eq('google')
+    expect(user.reload.email_confirmed_at).to be_present
+    expect(user.password_confirmed_at).to be_nil
+    expect(user.authenticate('password123')).to be(false)
+    expect(old.reload.revoked_at).to be_present
   end
 
   it 'signs in to an existing password account using a verified custom-domain Google email' do
@@ -133,6 +147,45 @@ RSpec.describe Mobile::ProviderSignInService do
     expect(AuthIdentity.count).to eq(0)
   end
 
+  it 'quarantines a legacy identity whose fresh proof verifies a different primary email' do
+    user = create(:user, :unconfirmed, email: 'victim@example.com')
+    identity = user.auth_identities.create!(provider: 'google', subject: claims['sub'])
+    result = google
+    expect(result).not_to be_signed_in
+    expect(result.error).to include('ownership verification')
+    expect(identity.reload.ownership_verified_at).to be_nil
+    expect(MobileSession.count).to eq(0)
+    expect(user.reload.email_confirmed_at).to be_nil
+  end
+
+  it 'allows the same confirmed account to reconnect its quarantined identity with fresh password proof' do
+    user = create(:user, email: 'primary@example.com')
+    identity = user.auth_identities.create!(provider: 'google', subject: claims['sub'])
+    fresh = Mobile::CreateSessionService.new(user).create_session.session
+    result = google(session: fresh)
+    expect(result).to be_signed_in
+    expect(identity.reload).to be_ownership_verified
+    expect(result.session_result.session.auth_identity_id).to eq(identity.id)
+    expect(result.session_result.session.user).to eq(user)
+  end
+
+  it 'does not allow a quarantined provider session to authorize another connection' do
+    user = create(:user)
+    identity = user.auth_identities.create!(provider: 'apple', subject: 'old-apple-subject')
+    legacy = Mobile::CreateSessionService.new(user, authentication_method: 'apple', auth_identity: identity).create_session.session
+    expect(google(session: legacy)).not_to be_signed_in
+    expect(user.auth_identities.count).to eq(1)
+  end
+
+  it 'does not reconnect a quarantined identity through a stale password credential version' do
+    user = create(:user, email: 'primary@example.com')
+    identity = user.auth_identities.create!(provider: 'google', subject: claims['sub'])
+    old = Mobile::CreateSessionService.new(user).create_session.session
+    user.increment!(:password_session_version)
+    expect(google(session: old)).not_to be_signed_in
+    expect(identity.reload.ownership_verified_at).to be_nil
+  end
+
   it 'does not let linking establish authentication for another link' do
     user = create(:user)
     linked = google(user: user).session_result.session
@@ -189,6 +242,16 @@ RSpec.describe Mobile::ProviderSignInService do
       expect(user.authenticate('password123')).to eq(user)
       expect(User.count).to eq(1)
     end
+    it 'recovers an unconfirmed account through Apple without authorizing its provisional password' do
+      user = create(:user, :unconfirmed, email: claims['email'])
+      result = apple
+      expect(result).to be_signed_in
+      expect(result.session_result.session.user).to eq(user)
+      expect(result.session_result.session.authentication_method).to eq('apple')
+      expect(user.reload.email_confirmed_at).to be_present
+      expect(user.password_confirmed_at).to be_nil
+      expect(user.authenticate('password123')).to be(false)
+    end
     it 'signs in with Apple to an existing Google account with the same verified email' do
       claims['email'] = '  SKIER@example.com  '
       user = create(:user, email: 'Skier@Example.COM')
@@ -235,7 +298,7 @@ RSpec.describe Mobile::ProviderSignInService do
     end
     it 'reauthenticates a returning linked Apple identity without email' do
       user = create(:user)
-      user.auth_identities.create!(provider: 'apple', subject: claims['sub'])
+      user.auth_identities.create!(provider: 'apple', subject: claims['sub'], ownership_verified_at: Time.current)
       session = Mobile::CreateSessionService.new(user).create_session.session
       session.update!(created_at: 10.minutes.ago)
       claims.delete('email')

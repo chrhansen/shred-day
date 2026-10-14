@@ -1,4 +1,4 @@
-import { SkiStats, UserCredentials, UserInfo, UserSignUp, Ski, SkiDayEntry, SkiDayDetail, SharedDayDetail } from '@/types/ski';
+import { SkiStats, UserCredentials, UserInfo, UserSignUp, ConfirmationRequiredResponse, Ski, SkiDayEntry, SkiDayDetail, SharedDayDetail } from '@/types/ski';
 import { apiClient, AuthenticationError, API_BASE_URL, defaultFetchOptions, handleApiError } from '@/lib/apiClient';
 import { uploadPhotoFile } from '@/lib/photoUpload';
 
@@ -14,12 +14,14 @@ export const skiService = {
     return apiClient.post<SkiDayDetail>('/api/v1/days', { day: dayData });
   },
 
-  async signUp(userData: UserSignUp): Promise<UserInfo> {
-    return apiClient.post<UserInfo>('/api/v1/users', { user: userData });
+  async signUp(userData: UserSignUp): Promise<ConfirmationRequiredResponse> {
+    return apiClient.post<ConfirmationRequiredResponse>('/api/v1/users', { user: { email: userData.email } });
   },
 
   async signIn(credentials: UserCredentials): Promise<UserInfo> {
-    const response = await apiClient.post<{ user: UserInfo }>('/api/v1/sessions', credentials);
+    const response = await apiClient.post<{ user: UserInfo }>('/api/v1/sessions', {
+      email: credentials.email, password: credentials.password,
+    });
     return response.user;
   },
 

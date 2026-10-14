@@ -12,7 +12,7 @@ jest.mock('../apiClient', () => {
   };
 });
 
-import { ApiClient, AuthenticationError, ValidationError } from '../apiClient';
+import { ApiClient, AuthenticationError, EmailConfirmationRequiredError, ValidationError } from '../apiClient';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -92,6 +92,14 @@ describe('ApiClient', () => {
       await expect(apiClient.request('/api/v1/protected')).rejects.toThrow(AuthenticationError);
     });
 
+    it.each([401, 403])('preserves the confirmation requirement for status %s', async status => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse({
+        error: 'Confirm your email address before signing in with a password.',
+        code: 'email_confirmation_required', confirmation_required: true,
+      }, { status, ok: false }));
+      await expect(apiClient.post('/api/v1/sessions', {})).rejects.toThrow(EmailConfirmationRequiredError);
+    });
+
     it('should handle validation errors', async () => {
       const errors = {
         email: ['is invalid', 'is already taken'],
@@ -110,6 +118,13 @@ describe('ApiClient', () => {
         expect((error as ValidationError).errors).toEqual(errors);
         expect(error.message).toBe('is invalid, is already taken, cannot be blank');
       }
+    });
+
+    it('keeps confirmation password validation distinct from an invalid-link HTTP error', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse({
+        errors: ['Password is too long (maximum is 72 bytes)'],
+      }, { status: 422, ok: false }));
+      await expect(apiClient.post('/api/v1/email_confirmations', {})).rejects.toThrow(ValidationError);
     });
   });
 

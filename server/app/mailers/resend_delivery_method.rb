@@ -18,7 +18,7 @@ class ResendDeliveryMethod
 
     return if response.is_a?(Net::HTTPSuccess) && delivery_successful?(response.body)
 
-    raise "Resend delivery failed (#{response.code}): #{response.body}"
+    raise "Resend delivery failed (#{response.code})"
   end
 
   private

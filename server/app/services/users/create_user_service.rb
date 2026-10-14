@@ -1,14 +1,17 @@
 class Users::CreateUserService
-  def initialize(params)
+  def initialize(params, password_signup: true)
     @params = params
+    @password_signup = password_signup
   end
 
   def create_user
-    user = User.new(email: normalized_email, password: @params[:password])
+    password = @params[:password].presence || SecureRandom.hex(32)
+    user = User.new(email: normalized_email, password: password)
 
     if user.save
       EnsureDefaultTagsService.new(user).create_default_tags
       UserMailer.signup_notification(user).deliver_later
+      Users::EmailConfirmationService.new.send_confirmation(user) if @password_signup
       Result.new(user, true, nil)
     else
       Result.new(user, false, user.errors.full_messages)

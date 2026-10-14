@@ -252,6 +252,7 @@ export default function AccountPage() {
             <div className="p-2 bg-gray-50 rounded-md border">
             {accountDetails.email}
             </div>
+            <p className="text-sm text-muted-foreground">Email changes are currently unavailable.</p>
         </div>
 
         <div className="space-y-2">

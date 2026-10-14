@@ -1,5 +1,5 @@
 class Api::V1::GoogleSignInFlowController < ApplicationController
-  skip_before_action :require_login, only: [:create, :update]
+  skip_before_action :require_login, only: [ :create, :update ]
 
   # Will create the Google-account-link, incl. Client-ID, scopes, etc. and send
   # it back to the client to start the OAuth flow.
@@ -18,7 +18,7 @@ class Api::V1::GoogleSignInFlowController < ApplicationController
     result = GoogleCodeToUserService.new(session: session, code: params[:code], state: params[:state]).to_local_user
 
     if result.signed_in?
-      render json: { message: 'Signed in successfully', user: result.user.as_json(except: :password_digest) }, status: :ok
+      render json: { message: "Signed in successfully", user: result.user.authentication_payload }, status: :ok
     else
       render json: { error: result.error }, status: :unauthorized
     end
