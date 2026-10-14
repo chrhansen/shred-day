@@ -1,125 +1,45 @@
-import { useEffect, useState } from "react";
-import { Linking, View } from "react-native";
-import * as Apple from "expo-apple-authentication";
+import { useState } from "react";
+import { Pressable, View } from "react-native";
+import { router } from "expo-router";
 import { useAuth } from "../contexts/auth";
-import {
-  Button,
-  Card,
-  Field,
-  Heading,
-  Notice,
-  Screen,
-  Text,
-  colors,
-  styles,
-} from "../components/ui";
-import { googleConfigured } from "../lib/provider-login";
+import { Button, Notice, Screen, Text, colors } from "../components/ui";
+import { Brand, LegalLinks } from "../components/auth/brand";
+import { ProviderButtons, type Provider } from "../components/auth/provider-buttons";
+import { signInCanceled } from "../lib/auth-presentation";
+import { SessionExpired } from "../components/auth/session-expired";
+
 export default function AuthScreen() {
   const auth = useAuth();
-  const [register, setRegister] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [apple, setApple] = useState(false);
-  useEffect(() => {
-    void Apple.isAvailableAsync().then(setApple);
-  }, []);
-  const perform = async (action: () => Promise<void>) => {
-    setError(null);
-    setBusy(true);
-    try {
-      await action();
-    } catch (cause) {
-      if ((cause as { code?: string }).code !== "ERR_REQUEST_CANCELED")
-        setError((cause as Error).message);
-    } finally {
-      setBusy(false);
-    }
+  const [busy, setBusy] = useState<Provider | null>(null);
+  const [notice, setNotice] = useState<{ message: string; canceled: boolean } | null>(null);
+  const perform = async (provider: Provider) => {
+    if (busy) return;
+    setNotice(null); setBusy(provider);
+    try { await auth.socialLogin(provider); }
+    catch (cause) {
+      const canceled = signInCanceled(cause);
+      const name = provider === "apple" ? "Apple" : "Google";
+      setNotice({ canceled, message: canceled ? `${name} sign-in was canceled. Choose a way to continue.`
+        : `Couldn't sign in with ${name}. Check your connection and try again.` });
+    } finally { setBusy(null); }
   };
-  return (
-    <Screen>
-      <View style={{ height: 70 }} />
-      <Heading
-        title="Make every
-day count."
-        subtitle="The snow fades. The good days stay."
-      />
-      <Card style={{ backgroundColor: colors.alpine, borderWidth: 0 }}>
-        <Text style={{ fontSize: 48, lineHeight: 56 }}>↗</Text>
-        <Text style={styles.eyebrow}>A SEASON TO REMEMBER</Text>
-        <Text>Your mountains. Your memories. Your ski-day log.</Text>
-      </Card>
-      <Field
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-      />
-      <Field
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete={register ? "new-password" : "current-password"}
-      />
-      {Boolean(error) && <Notice error={error} />}
-      <Button
-        title={register ? "Create account" : "Sign in"}
-        busy={busy}
-        disabled={!email.trim() || password.length < (register ? 8 : 1)}
-        onPress={() =>
-          void perform(() =>
-            auth.passwordLogin(email.trim(), password, register),
-          )
-        }
-      />
-      {googleConfigured && (
-        <Button
-          title="Continue with Google"
-          secondary
-          disabled={busy}
-          onPress={() => void perform(() => auth.socialLogin("google"))}
-        />
-      )}
-      {apple && (
-        <Apple.AppleAuthenticationButton
-          buttonType={Apple.AppleAuthenticationButtonType.SIGN_IN}
-          buttonStyle={Apple.AppleAuthenticationButtonStyle.BLACK}
-          cornerRadius={14}
-          style={{ height: 50 }}
-          onPress={() => {
-            if (!busy) void perform(() => auth.socialLogin("apple"));
-          }}
-        />
-      )}
-      <Button
-        title={
-          register
-            ? "Already have an account? Sign in"
-            : "New here? Create an account"
-        }
-        secondary
-        disabled={busy}
-        onPress={() => {
-          setRegister(!register);
-          setError(null);
-        }}
-      />
-      <View style={styles.row}>
-        <Button
-          secondary
-          title="Privacy"
-          onPress={() => void Linking.openURL("https://shred.day/privacy")}
-        />
-        <Button
-          secondary
-          title="Support"
-          onPress={() => void Linking.openURL("https://shred.day/support")}
-        />
-      </View>
-    </Screen>
-  );
+  if (auth.expired) return <SessionExpired />;
+  return <Screen contentStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 12, gap: 0 }} edges={["top", "left", "right", "bottom"]}>
+    <Brand />
+    <View style={{ flex: 1, minHeight: 270, justifyContent: "center", gap: 16, paddingVertical: 36 }}>
+      <Text variant="display" accessibilityRole="header">Remember{"\n"}every <Text variant="display" style={{ color: colors.textSecondary }}>shred.day</Text></Text>
+      <Text style={{ fontSize: 17, lineHeight: 25, color: colors.textSecondary }}>The simplest way to track your ski or snowboard season. Log days, see stats, and never forget another epic run.</Text>
+    </View>
+    <View style={{ gap: 12 }}>
+      {notice && <Notice message={notice.message} tone={notice.canceled ? "neutral" : "error"} />}
+      <ProviderButtons busy={busy} onPress={provider => void perform(provider)} />
+      <Button title="Continue with Email" variant="secondary" icon="mail" disabled={Boolean(busy)} onPress={() => router.push("/auth/email")} />
+      <Pressable accessibilityRole="button" accessibilityLabel="Create an account" disabled={Boolean(busy)}
+        onPress={() => router.push({ pathname: "/auth/email", params: { mode: "signup" } })}
+        style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}>
+        <Text variant="footnote" style={{ color: colors.textSecondary }}>New here? <Text variant="subhead" style={{ color: colors.primary }}>Create an account</Text></Text>
+      </Pressable>
+      <LegalLinks />
+    </View>
+  </Screen>;
 }

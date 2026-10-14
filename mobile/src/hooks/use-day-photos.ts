@@ -12,13 +12,23 @@ export type EditorPhoto = {
   status: "ready" | "uploading" | "failed";
   error?: string;
 };
-export function useDayPhotos() {
-  const [photos, setPhotos] = useState<EditorPhoto[]>([]);
+export class PhotoAccessError extends Error {
+  constructor(public source: "camera" | "photos") {
+    super(`${source === "camera" ? "Camera" : "Photo"} access is disabled. Enable it in iPhone Settings to add a photo.`);
+  }
+}
+export function useDayPhotos(initial: Photo[] = []) {
+  const [photos, setPhotos] = useState<EditorPhoto[]>(() => initial.map((photo) => ({
+    key: photo.id, id: photo.id, uri: photo.preview_url || photo.full_url, status: "ready",
+  })));
   const [error, setError] = useState<unknown>(null);
   const alive = useRef(true);
   const created = useRef(new Set<string>());
   const removed = useRef(new Set<string>());
   const committed = useRef(false);
+  const pickerActive = useRef(false);
+  const uploadsActive = useRef(new Set<string>());
+  const [picking, setPicking] = useState(false);
   useEffect(() => {
     const uploads = created.current;
     alive.current = true;
@@ -31,7 +41,8 @@ export function useDayPhotos() {
     };
   }, []);
   const upload = async (item: EditorPhoto) => {
-    if (!item.asset) return;
+    if (!item.asset || uploadsActive.current.has(item.key) || removed.current.has(item.key)) return;
+    uploadsActive.current.add(item.key);
     setPhotos((current) =>
       current.map((p) =>
         p.key === item.key
@@ -60,17 +71,20 @@ export function useDayPhotos() {
               : p,
           ),
         );
+    } finally {
+      uploadsActive.current.delete(item.key);
     }
   };
   const pick = async (camera: boolean) => {
+    if (pickerActive.current) return;
+    pickerActive.current = true;
+    setPicking(true);
     setError(null);
     try {
       if (camera) {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
         if (!permission.granted) {
-          throw new Error(
-            "Camera access is disabled. Enable it in iPhone Settings to take a photo.",
-          );
+          throw new PhotoAccessError("camera");
         }
       }
       const result = camera
@@ -95,7 +109,10 @@ export function useDayPhotos() {
       setPhotos((current) => [...current, ...selected]);
       for (const photo of selected) await upload(photo);
     } catch (cause) {
-      setError(cause);
+      if (alive.current) setError(cause);
+    } finally {
+      pickerActive.current = false;
+      if (alive.current) setPicking(false);
     }
   };
   const remove = (photo: EditorPhoto) => {
@@ -116,6 +133,7 @@ export function useDayPhotos() {
   return {
     photos,
     error,
+    picking,
     pick,
     remove,
     retry: upload,
@@ -124,6 +142,6 @@ export function useDayPhotos() {
       committed.current = true;
     },
     openSettings: () => Linking.openSettings(),
-    pending: photos.some((p) => p.status !== "ready"),
+    pending: picking || photos.some((p) => p.status !== "ready"),
   };
 }

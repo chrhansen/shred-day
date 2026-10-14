@@ -1,7 +1,8 @@
 export type Tag = { id: string; name: string };
-export type Ski = Tag;
+export type Ski = Tag & { days?: DayEntry[] };
 export type Resort = Tag & {
   country: string | null;
+  region?: string | null;
   latitude: number | null;
   longitude: number | null;
 };
@@ -14,6 +15,8 @@ export type Photo = {
 export type Account = {
   id: string;
   email: string;
+  full_name?: string | null;
+  created_at?: string;
   username: string | null;
   avatar_url: string | null;
   season_start_day: string;

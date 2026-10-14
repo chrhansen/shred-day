@@ -1,0 +1,18 @@
+---
+read_when: Reviewing changes to the iPhone beta
+---
+
+# Mobile changelog
+
+## 1.0.1 — beta, 2026-10-14
+
+- Browse a month-grouped journal or calendar with a shared season picker and device week order. Open a day, long press for actions, or log the selected date.
+- View photo-led day details, retry failed images and open a full-screen gallery with zoom, paging and swipe dismissal. Public pages show a read-only day.
+- Log and edit days through a keyboard-aware modal, resort/item sheets and photo upload states. Unsaved changes ask before dismissal; successful mutations complete while lists refresh in the background.
+- Explore tappable season charts and resort markers; refreshes reconcile removed chart selections. Manage skis/tags, profile and sign-in methods through grouped settings.
+- Control sharing explicitly, copy/share/preview a confirmed link, revoke access and hide cached content after a public 404. Network failures avoid promising that nothing changed.
+- Reauthenticate for account deletion, then clear this iPhone's credentials, account queries and image caches. Journal/public pages are removed; server photo purges finish asynchronously.
+
+Existing API limits remain: used tags cannot be deleted, tag rename is unavailable, reenabling sharing reuses its URL, and provider status reflects methods confirmed on this iPhone. See [README.md](README.md#existing-api-limits).
+
+For contributors: SDK 57 patches, Router-owned navigation helpers, reusable native UI/theme and behavior regressions. The native/provider/gesture/device checks in [RELEASE.md](RELEASE.md#device-and-beta-gate) remain required before distribution; this entry does not certify them complete.

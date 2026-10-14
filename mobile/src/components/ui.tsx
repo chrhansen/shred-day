@@ -1,234 +1,57 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text as NativeText,
-  TextInput,
-  View,
-  type TextProps,
-  type TextInputProps,
-  type ViewProps,
-  type RefreshControlProps,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, View, type ViewProps, type ScrollViewProps } from "react-native";
+import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
-export const colors = {
-  paper: "#F5F1E9",
-  white: "#FFFEFA",
-  ink: "#152D35",
-  muted: "#586E73",
-  accent: "#B8482D",
-  line: "#DADFD5",
-  alpine: "#CFE1D4",
-};
+import { colors, radius, type } from "../theme";
+import { Text } from "./ui/text";
+
+export { colors, fonts, type, space, radius, layout, shadow, motion } from "../theme";
+export { Text } from "./ui/text";
+export { Button, IconButton, type ButtonProps } from "./ui/buttons";
+export { Field } from "./ui/field";
+export { Icon, type IconName } from "./ui/icon";
+export { Pill, Chip, TagPill, SkiChip, Segmented, IconSegmented } from "./ui/selection";
+export { Notice, EmptyState, Skeleton } from "./ui/feedback";
+export { Group, GroupedList, Row } from "./ui/group";
+export { BottomSheet } from "./ui/sheet";
+export { Calendar } from "./ui/calendar";
+export { ToastProvider, ToastViewport, useToast } from "./ui/toast";
+
 export const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.paper },
-  content: { padding: 24, paddingBottom: 100, gap: 18 },
-  text: {
-    fontFamily: "SpaceGrotesk_400Regular",
-    fontSize: 16,
-    color: colors.ink,
-    lineHeight: 24,
-  },
-  title: {
-    fontFamily: "SpaceGrotesk_700Bold",
-    fontSize: 36,
-    lineHeight: 42,
-    letterSpacing: -1.5,
-  },
-  eyebrow: {
-    fontFamily: "SpaceGrotesk_500Medium",
-    fontSize: 12,
-    letterSpacing: 2,
-    color: colors.accent,
-    textTransform: "uppercase",
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 20,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  field: {
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.white,
-    padding: 14,
-    borderRadius: 12,
-    color: colors.ink,
-    fontFamily: "SpaceGrotesk_400Regular",
-    fontSize: 16,
-    minHeight: 50,
-  },
-  button: {
-    backgroundColor: colors.ink,
-    minHeight: 50,
-    paddingVertical: 13,
-    paddingHorizontal: 18,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pill: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.white,
-  },
-  muted: { color: colors.muted },
-  error: { color: colors.accent },
+  screen: { flex: 1, backgroundColor: colors.canvas },
+  content: { padding: 16, paddingBottom: 32, gap: 18 },
+  text: { ...type.body, color: colors.ink },
+  title: type.titleL,
+  eyebrow: { ...type.label, color: colors.textSecondary },
+  card: { backgroundColor: colors.canvas, borderRadius: radius.card, padding: 16,
+    gap: 12, borderWidth: 1, borderColor: colors.border },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+  field: { ...type.body, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.canvas, padding: 14, borderRadius: radius.input,
+    color: colors.ink, minHeight: 50 },
+  button: { backgroundColor: colors.primary, minHeight: 52, paddingVertical: 14,
+    paddingHorizontal: 18, borderRadius: radius.l, alignItems: "center", justifyContent: "center" },
+  pill: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: radius.pill,
+    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.canvas },
+  muted: { color: colors.textSecondary },
+  error: { color: colors.destructive },
 });
-export function Text({ style, ...props }: TextProps) {
-  return <NativeText {...props} style={[styles.text, style]} />;
+export function Screen({ children, refreshControl, contentStyle, style, background = colors.canvas,
+  edges = ["top", "left", "right"], scroll = true, ...props }: {
+  children: ReactNode; contentStyle?: ScrollViewProps["contentContainerStyle"];
+  style?: ViewProps["style"]; background?: string; edges?: Edge[]; scroll?: boolean;
+} & Omit<ScrollViewProps, "style" | "children" | "contentContainerStyle">) {
+  return <SafeAreaView style={[styles.screen, { backgroundColor: background }, style]} edges={edges}>
+    {scroll ? <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
+      contentInsetAdjustmentBehavior="automatic" {...props} refreshControl={refreshControl}
+      contentContainerStyle={[styles.content, contentStyle]}>{children}</ScrollView>
+      : <View style={[{ flex: 1 }, contentStyle]}>{children}</View>}
+  </SafeAreaView>;
 }
-export function Screen({
-  children,
-  refreshControl,
-}: {
-  children: ReactNode;
-  refreshControl?: React.ReactElement<RefreshControlProps>;
-}) {
-  return (
-    <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.content}
-        refreshControl={refreshControl}
-      >
-        {children}
-      </ScrollView>
-    </SafeAreaView>
-  );
+export function Heading({ title, subtitle }: { title: string; subtitle?: string }) {
+  return <View style={{ gap: 8 }}><Text accessibilityRole="header" variant="titleL">{title}</Text>
+    {subtitle && <Text style={styles.muted}>{subtitle}</Text>}
+  </View>;
 }
-export function Heading({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
-  return (
-    <View style={{ gap: 8 }}>
-      <Text style={styles.eyebrow}>SHRED.DAY / YOUR SEASON</Text>
-      <Text accessibilityRole="header" style={styles.title}>
-        {title}
-      </Text>
-      {subtitle && <Text style={styles.muted}>{subtitle}</Text>}
-    </View>
-  );
-}
-export function Card(props: ViewProps) {
-  return <View {...props} style={[styles.card, props.style]} />;
-}
-export function Button({
-  title,
-  onPress,
-  busy,
-  secondary,
-  disabled,
-  destructive,
-}: {
-  title: string;
-  onPress: () => void;
-  busy?: boolean;
-  secondary?: boolean;
-  disabled?: boolean;
-  destructive?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: Boolean(busy || disabled) }}
-      disabled={busy || disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: destructive
-            ? colors.accent
-            : secondary
-              ? colors.alpine
-              : colors.ink,
-          opacity: busy || disabled ? 0.5 : pressed ? 0.75 : 1,
-        },
-      ]}
-    >
-      {busy ? (
-        <ActivityIndicator color={secondary ? colors.ink : colors.white} />
-      ) : (
-        <Text
-          style={{
-            fontFamily: "SpaceGrotesk_700Bold",
-            color: secondary ? colors.ink : colors.white,
-          }}
-        >
-          {title}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
-export function Field({ label, ...props }: TextInputProps & { label: string }) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ fontSize: 13, color: colors.muted }}>{label}</Text>
-      <TextInput
-        accessibilityLabel={label}
-        placeholderTextColor={colors.muted}
-        {...props}
-        style={[styles.field, props.style]}
-      />
-    </View>
-  );
-}
-export function Pill({
-  title,
-  selected,
-  onPress,
-}: {
-  title: string;
-  selected?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[styles.pill, selected && { backgroundColor: colors.ink }]}
-    >
-      <Text
-        style={{ fontSize: 14, color: selected ? colors.white : colors.ink }}
-      >
-        {title}
-      </Text>
-    </Pressable>
-  );
-}
-export function Notice({
-  error,
-  onRetry,
-}: {
-  error: unknown;
-  onRetry?: () => void;
-}) {
-  return (
-    <Card>
-      <Text style={styles.error}>
-        {error instanceof Error ? error.message : String(error)}
-      </Text>
-      {onRetry && <Button secondary title="Try again" onPress={onRetry} />}
-    </Card>
-  );
+export function Card({ style, ...props }: ViewProps) {
+  return <View {...props} style={[styles.card, style]} />;
 }
