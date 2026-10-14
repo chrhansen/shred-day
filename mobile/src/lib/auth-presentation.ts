@@ -50,7 +50,6 @@ export function emailValidation(email: string, password: string, register: boole
   return {
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
       ? undefined : "Enter a complete email address.",
-    password: !password ? "Enter your password."
-      : register && password.length < 8 ? "Use at least 8 characters." : undefined,
+    password: !register && !password ? "Enter your password." : undefined,
   };
 }

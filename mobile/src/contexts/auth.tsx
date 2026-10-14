@@ -13,10 +13,12 @@ type StoredSession = Session & { identity?: Identity; reauthentication_method?: 
 type Auth = {
   user: Account | null; session: StoredSession | null; ready: boolean; error: string | null;
   expired: boolean; expiredIdentity: Identity | null; resetExpired: () => void;
+  emailConfirmationRequired: boolean;
   reauthenticationMethod: Method; confirmedMethods: Method[];
   deletionConfirmed: boolean; markAccountDeleted: () => void; acknowledgeDeletion: () => void;
   retry: () => void; refresh: () => Promise<void>;
-  passwordLogin: (email: string, password: string, register?: boolean) => Promise<void>;
+  passwordLogin: (email: string, password: string) => Promise<void>;
+  registerEmail: (email: string) => Promise<void>;
   socialLogin: (provider: "apple" | "google", link?: boolean) => Promise<void>;
   reauthenticate: (password?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [expiredIdentity, setExpiredIdentity] = useState<Identity | null>(null);
+  const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(false);
   const [deletionConfirmed, setDeletionConfirmed] = useState(false);
   const generation = useRef(0);
   const credentialOperations = useRef<Promise<void>>(Promise.resolve());
@@ -48,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef<StoredSession | null>(null);
   const remember = useCallback((account: Account) => { userRef.current = account; setUser(account); }, []);
   const rememberSession = useCallback((stored: StoredSession | null) => { sessionRef.current = stored; setSession(stored); }, []);
-  const resetExpired = useCallback(() => { setExpired(false); setExpiredIdentity(null); }, []);
+  const resetExpired = useCallback(() => { setExpired(false); setExpiredIdentity(null); setEmailConfirmationRequired(false); }, []);
   const saveCredential = useCallback((current: number, stored: StoredSession | null) => {
     const operation = credentialOperations.current.then(async () => {
       if (stored && current !== generation.current) return;
@@ -57,13 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     credentialOperations.current = operation.then(() => {}, () => {});
     return operation;
   }, []);
-  const clear = useCallback(async (didExpire = false, identity?: Identity, expectedGeneration?: number) => {
+  const clear = useCallback(async (didExpire = false, identity?: Identity, expectedGeneration?: number, confirmationRequired = false) => {
     if (expectedGeneration !== undefined && expectedGeneration !== generation.current) return;
     const previous = identity || (userRef.current ? identityOf(userRef.current) : sessionRef.current?.identity);
     const current = ++generation.current;
     api.token = null; userRef.current = null;
     setUser(null); rememberSession(null); setError(null);
     setExpired(didExpire); setExpiredIdentity(didExpire ? previous || null : null);
+    setEmailConfirmationRequired(confirmationRequired);
     queryClient.clear(); setReady(true);
     await saveCredential(current, null);
   }, [queryClient, rememberSession, saveCredential]);
@@ -92,14 +96,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (generation.current === current) remember(account);
     } catch (cause) {
       if (generation.current !== current) return;
-      if (cause instanceof ApiError && cause.status === 401) await clear(true, undefined, current);
+      if (cause instanceof ApiError && cause.status === 401) await clear(true, undefined, current, cause.code === "email_confirmation_required");
       else setError("Could not reach Shred.Day. Check your connection and try again.");
     } finally { if (current === generation.current) setReady(true); }
   }, [clear, remember, rememberSession]);
   useEffect(() => {
-    api.onUnauthorized = () => {
+    api.onUnauthorized = code => {
       const clearedGeneration = generation.current + 1;
-      void clear(true).catch(() => { if (generation.current === clearedGeneration) setError("Please sign in again."); });
+      void clear(true, undefined, undefined, code === "email_confirmation_required")
+        .catch(() => { if (generation.current === clearedGeneration) setError("Please sign in again."); });
     };
     void Promise.resolve().then(restore);
     return () => { api.onUnauthorized = undefined; };
@@ -129,9 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw cause;
     }
   };
-  const passwordLogin = async (email: string, password: string, register = false) => {
+  const registerEmail = async (email: string) => {
     const current = ++generation.current;
-    const next = await (register ? shred.signUp(email, password) : shred.signIn(email, password));
+    await shred.signUp(email);
+    if (current !== generation.current) throw changedSignIn();
+  };
+  const passwordLogin = async (email: string, password: string) => {
+    const current = ++generation.current;
+    const next = await shred.signIn(email, password);
     await establish(next, current);
   };
   const socialLogin = async (provider: "apple" | "google", link = false) => {
@@ -178,11 +188,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = api.token;
     await Promise.all([clear(false, undefined, current), token ? revoke(token) : Promise.resolve()]);
   }, [clear]);
-  return <Context.Provider value={{ user, session, ready, error, expired, expiredIdentity, resetExpired,
+  return <Context.Provider value={{ user, session, ready, error, expired, expiredIdentity, resetExpired, emailConfirmationRequired,
     deletionConfirmed, markAccountDeleted: () => setDeletionConfirmed(true), acknowledgeDeletion: () => setDeletionConfirmed(false),
     reauthenticationMethod: session?.reauthentication_method || session?.authentication_method || "password",
     confirmedMethods: session?.confirmed_methods || (session ? [session.authentication_method] : []),
-    retry: () => { setReady(false); setError(null); void restore(); }, refresh, passwordLogin, socialLogin, reauthenticate, logout }}>
+    retry: () => { setReady(false); setError(null); void restore(); }, refresh, passwordLogin, registerEmail, socialLogin, reauthenticate, logout }}>
     {children}
   </Context.Provider>;
 }

@@ -2,6 +2,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
+    public code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -27,7 +28,7 @@ export function errorMessage(
 }
 export class ApiClient {
   token: string | null = null;
-  onUnauthorized?: () => void;
+  onUnauthorized?: (code?: string) => void;
   constructor(
     public baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ||
       (__DEV__ ? "http://127.0.0.1:3000" : "https://shred.day"),
@@ -76,17 +77,19 @@ export class ApiClient {
       options.signal?.removeEventListener("abort", abort);
     }
     if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      const code = typeof payload?.code === "string" ? payload.code : undefined;
       if (
         response.status === 401 &&
         options.authenticated !== false &&
         options.invalidateAuth !== false &&
         token === this.token
       )
-        this.onUnauthorized?.();
-      const payload = await response.json().catch(() => ({}));
+        this.onUnauthorized?.(code);
       throw new ApiError(
         errorMessage(payload, "Request failed. Please try again."),
         response.status,
+        code,
       );
     }
     return response.status === 204 ? (undefined as T) : response.json();

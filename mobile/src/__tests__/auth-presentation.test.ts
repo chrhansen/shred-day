@@ -1,8 +1,10 @@
 import { emailValidation, providerSignInNotice, signInCanceled } from "../lib/auth-presentation";
 import { ApiError } from "../lib/api";
 
-test("registration validates the full address and password length while login accepts an existing short password", () => {
-  expect(emailValidation("skier@", "short", true)).toEqual({ email: "Enter a complete email address.", password: "Use at least 8 characters." });
+test("registration needs only a valid email while login still requires its password", () => {
+  expect(emailValidation("skier@", "", true)).toEqual({ email: "Enter a complete email address.", password: undefined });
+  expect(emailValidation("skier@example.test", "", true)).toEqual({ email: undefined, password: undefined });
+  expect(emailValidation("skier@example.test", "", false).password).toBe("Enter your password.");
   expect(emailValidation("skier@example.test", "short", false)).toEqual({ email: undefined, password: undefined });
 });
 test("provider cancellation is distinguished from network and credential failures", () => {

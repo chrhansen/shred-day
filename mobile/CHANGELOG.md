@@ -10,6 +10,7 @@ read_when: Reviewing changes to the iPhone beta
 - Load day counts for every season when opening the picker, with loading and retry states for unavailable counts.
 - Keep the day editor's header and save controls within its full-screen modal's safe area on notched iPhones.
 - Sign into the same journal automatically when Apple or Google verifies the existing account's email. Manual connection is optional for providers with a different email. Explain known provider failures without replacing every rejection with a connection warning.
+- Require email confirmation before password access. Email signup sends a link for confirmation and password setup; pending accounts get no session. Existing unconfirmed password users can request a link from Log In. Google and Apple continue without an extra email step.
 
 ## 1.0.1 — beta, 2026-10-14
 

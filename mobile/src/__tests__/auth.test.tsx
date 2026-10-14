@@ -144,6 +144,39 @@ test("new sessions are stored with device-only keychain access", async () => {
   expect(JSON.parse((SecureStore.setItemAsync as jest.Mock).mock.calls[0][1])).toMatchObject(session);
   expect(result.current.user?.id).toBe(account.id);
 });
+test("email signup waits for confirmation without storing or loading an authenticated account", async () => {
+  (shred.signUp as jest.Mock).mockResolvedValue({ confirmation_required: true, message: "Check your email." });
+  const { result } = mount();
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  await act(async () => { await result.current.registerEmail(account.email); });
+  expect(shred.signUp).toHaveBeenCalledWith(account.email);
+  expect(result.current.user).toBeNull();
+  expect(result.current.session).toBeNull();
+  expect(api.token).toBeNull();
+  expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+  expect(shred.account).not.toHaveBeenCalled();
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+test("an unconfirmed password rejection never becomes an authenticated session", async () => {
+  (shred.signIn as jest.Mock).mockRejectedValue(new ApiError("Confirm your email.", 403, "email_confirmation_required"));
+  const { result } = mount();
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  await act(async () => { await expect(result.current.passwordLogin(account.email, "password")).rejects.toMatchObject({ code: "email_confirmation_required" }); });
+  expect(result.current.user).toBeNull();
+  expect(api.token).toBeNull();
+  expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+});
+test("an existing password session that needs confirmation loses access and offers email recovery", async () => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, identity: account }));
+  (shred.account as jest.Mock).mockRejectedValue(new ApiError("Confirm your email.", 401, "email_confirmation_required"));
+  const { result } = mount();
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  expect(result.current.emailConfirmationRequired).toBe(true);
+  expect(result.current.expiredIdentity?.email).toBe(account.email);
+  expect(result.current.user).toBeNull();
+  expect(api.token).toBeNull();
+  expect(SecureStore.deleteItemAsync).toHaveBeenCalled();
+});
 
 test("an expired session keeps a non-authenticating identity for the recovery screen", async () => {
   (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, expires_at: "2020-01-01", identity: account }));
