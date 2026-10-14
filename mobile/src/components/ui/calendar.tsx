@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PanResponder, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { colors, fonts } from "../../theme";
 import { dateString, parseDay } from "../../lib/dates";
@@ -11,6 +12,10 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
   weekStartsOn?: number; legend?: boolean; helper?: string;
 }) {
   const { fontScale } = useWindowDimensions();
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const gridWidth = Math.max(availableWidth, 7 * 44, Math.ceil(26 * fontScale) * 7);
+  const cellWidth = gridWidth / 7;
+  const horizontalOverflow = availableWidth > 0 && gridWidth > availableWidth;
   const first = parseDay(month);
   first.setDate(1);
   const year = first.getFullYear(), monthIndex = first.getMonth();
@@ -21,23 +26,23 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
   const today = dateString(new Date());
   const changeMonth = (delta: number) => onMonthChange(dateString(new Date(year, monthIndex + delta, 1)));
   const gesture = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, state) => Math.abs(state.dx) > 30 && Math.abs(state.dx) > Math.abs(state.dy) * 2,
+    onMoveShouldSetPanResponder: (_, state) => !horizontalOverflow && Math.abs(state.dx) > 30 && Math.abs(state.dx) > Math.abs(state.dy) * 2,
     onPanResponderRelease: (_, state) => {
       if (Math.abs(state.dx) > 40) onMonthChange(dateString(new Date(year, monthIndex + (state.dx > 0 ? -1 : 1), 1)));
     },
   });
   const days = Array.from({ length: 7 }, (_, index) => new Date(2023, 0, 1 + (index + weekStart) % 7));
   const cells = Array.from({ length: Math.ceil((blanks + count) / 7) * 7 }, (_, index) => index - blanks + 1);
-  const grid = <View {...gesture.panHandlers} style={{ minWidth: Math.max(308, Math.ceil(26 * fontScale) * 7) }}>
+  const grid = <View testID="calendar-grid" {...gesture.panHandlers} style={{ width: gridWidth }}>
     <View style={{ flexDirection: "row" }}>
       {days.map((day, index) => <Text key={index} variant="small" accessible={false}
-        style={{ width: "14.2857%", textAlign: "center", paddingVertical: 6, color: colors.textMuted }}>
+        style={{ width: cellWidth, textAlign: "center", paddingVertical: 6, color: colors.textMuted }}>
         {day.toLocaleDateString(undefined, { weekday: "short" })}
       </Text>)}
     </View>
     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
       {cells.map((number, index) => {
-        if (number < 1 || number > count) return <View key={index} style={{ width: "14.2857%", minHeight: 44 }} />;
+        if (number < 1 || number > count) return <View key={index} style={{ width: cellWidth, minHeight: 44 }} />;
         const value = dateString(new Date(year, monthIndex, number));
         const logged = dates.has(value), active = selected === value, isToday = value === today;
         return <Pressable key={index} onPress={() => onSelect(value)} accessibilityRole="button"
@@ -45,7 +50,7 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
           accessibilityLabel={new Date(year, monthIndex, number).toLocaleDateString(undefined,
             { weekday: "long", month: "long", day: "numeric", year: "numeric" }) +
             (isToday ? ", today" : "") + (logged ? ", logged day" : ", no logged day")}
-          style={({ pressed }) => [{ width: "14.2857%", minHeight: 44, alignItems: "center",
+          style={({ pressed }) => [{ width: cellWidth, minHeight: 44, alignItems: "center",
             justifyContent: "center", paddingVertical: 3, opacity: pressed ? 0.7 : 1 }]}>
           <View style={{ minHeight: 38, minWidth: 38, padding: 7, borderRadius: 999,
             alignItems: "center", justifyContent: "center",
@@ -59,7 +64,7 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
       })}
     </View>
   </View>;
-  return <View style={{ gap: 8 }}>
+  return <View testID="calendar" onLayout={(event) => setAvailableWidth(event.nativeEvent.layout.width)} style={{ gap: 8 }}>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <IconButton name="chevron-left" accessibilityLabel="Previous month" onPress={() => changeMonth(-1)} color={colors.text700} />
       <Text variant="headline" accessibilityRole="header" accessibilityLiveRegion="polite">
@@ -67,8 +72,8 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
       </Text>
       <IconButton name="chevron-right" accessibilityLabel="Next month" onPress={() => changeMonth(1)} color={colors.text700} />
     </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-      <View style={{ flex: 1 }}>{grid}</View>
+    <ScrollView horizontal scrollEnabled={horizontalOverflow} showsHorizontalScrollIndicator={false}>
+      {grid}
     </ScrollView>
     {legend && <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 16, paddingVertical: 6 }}>
       {[{ title: "Logged", fill: colors.accentFillStrong }, { title: "Selected", fill: colors.ink }].map((item) =>

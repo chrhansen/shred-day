@@ -11,7 +11,7 @@ read_when: Signing, distributing or reviewing the Shred.Day iOS app
 ```sh
 npx eas-cli@24.13.0 project:info
 npx eas-cli@24.13.0 build --platform ios --profile production
-npx eas-cli@24.13.0 submit --platform ios --profile production --latest
+npx eas-cli@24.13.0 submit --platform ios --profile production --id YOUR_VERIFIED_BUILD_ID --groups "Shred.Day Internal" --no-auto-testflight-setup
 ```
 
 The project belongs to [@shred-day/shred-day](https://expo.dev/accounts/shred-day/projects/shred-day). Apple team `DVPJZW992F` owns the registered `day.shred` App ID with Sign in with Apple and Associated Domains enabled. The Shred.Day App Store Connect record has Apple ID `6821657907`, configured as `submit.production.ios.ascAppId` in `eas.json`. Signing and upload credentials belong in EAS credential storage; do not commit certificates or private keys.
@@ -24,7 +24,13 @@ Deploy the backward-compatible Rails migration and API before the app reaches te
 
 EAS submission uploads to App Store Connect/TestFlight; public App Store release is a later App Review action. See [Expo iOS submission](https://docs.expo.dev/submit/ios/).
 
+Submit the inspected build by its exact EAS ID. Use the existing **Shred.Day Internal** group and disable automatic TestFlight setup. EAS CLI's `--what-to-test` scheduling option requires an Enterprise plan; on the current plan, update that build's What to Test notes in App Store Connect after processing.
+
 Version 1.0.1 updates the native UI against the existing deployed API; it adds no backend migration. Its [changelog](CHANGELOG.md) and [API limits](README.md#existing-api-limits) describe the beta scope. Do not treat an uploaded build or passing unit tests as completion of the physical-device gate below.
+
+## Simulator verification
+
+Use Xcode's simulator signing pipeline when building a Release artifact for Device Hub. Keep code signing and base-entitlement injection enabled; Xcode writes simulator claims separately from the code signature. An unsigned build can render screens while failing SecureStore operations. Manually adding Apple capability claims to an ad hoc signature prevents launch; signing those claims with a development certificate also requires a matching profile. Neither result establishes a product authentication failure.
 
 ## Dependency review
 

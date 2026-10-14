@@ -53,7 +53,7 @@ export function DayShareSheet({ day, visible, onClose }: { day: Day; visible: bo
   ];
   return <BottomSheet visible={visible} onClose={onClose} onDismiss={dismiss} title="Share this day"
     dismissible={!sharing.busy && !action}>
-    <Text variant="footnote" style={{ color: colors.textSecondary, marginTop: -8 }}>{title}</Text>
+    <Text variant="footnote" style={{ color: colors.textSecondary }}>{title}</Text>
     <View style={styles.toggleCard}>
       <View style={{ flex: 1, gap: 4 }}><Text variant="bodyMedium" style={{ fontFamily: "SpaceGrotesk_700Bold" }}>Public link</Text>
         <Text variant="footnote" style={{ color: colors.textSecondary }}>Anyone with the link can view this day</Text>
