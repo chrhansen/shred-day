@@ -29,6 +29,8 @@ Server: `http://localhost:3000`
 - Auth: email/password sessions with cookies.
 - Share page: `GET /d/:id` serves a public HTML page for shared days.
 
+Mobile login uses revocable bearer sessions. Rails verifies Google/Apple identity proofs; an established provider subject selects its account. For a new subject, a verified provider email matches an existing account case-insensitively without a separate connection step. Unverified email and ambiguous duplicate addresses cannot select an account. Apple relay addresses remain distinct from real addresses. Explicitly connecting a different email still requires recent authentication with the current account. Apple nonce, authorization-code verification and proof-replay protections apply to both paths.
+
 ## Data Model
 Primary keys are prefixed IDs from `gen_id()` (see `server/db/structure.sql`).
 
