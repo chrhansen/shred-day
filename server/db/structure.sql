@@ -261,7 +261,8 @@ CREATE TABLE public.auth_identities (
     subject character varying NOT NULL,
     encrypted_refresh_token text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    ownership_verified_at timestamp(6) without time zone
 );
 
 
@@ -359,7 +360,9 @@ CREATE TABLE public.mobile_sessions (
     expires_at timestamp(6) without time zone NOT NULL,
     revoked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    auth_identity_id character varying,
+    password_session_version integer
 );
 
 
@@ -490,7 +493,13 @@ CREATE TABLE public.users (
     updated_at timestamp(6) without time zone NOT NULL,
     season_start_day character varying DEFAULT '09-01'::character varying NOT NULL,
     full_name character varying,
-    username character varying
+    username character varying,
+    email_confirmed_at timestamp(6) without time zone,
+    password_confirmed_at timestamp(6) without time zone,
+    password_session_version integer DEFAULT 0 NOT NULL,
+    email_confirmation_token_digest character varying,
+    email_confirmation_expires_at timestamp(6) without time zone,
+    email_confirmation_sent_at timestamp(6) without time zone
 );
 
 
@@ -773,6 +782,13 @@ CREATE UNIQUE INDEX index_google_sheet_integrations_on_user_id ON public.google_
 
 
 --
+-- Name: index_mobile_sessions_on_auth_identity_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mobile_sessions_on_auth_identity_id ON public.mobile_sessions USING btree (auth_identity_id);
+
+
+--
 -- Name: index_mobile_sessions_on_provider_token_digest; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -906,6 +922,13 @@ CREATE INDEX index_users_on_email ON public.users USING btree (email);
 
 
 --
+-- Name: index_users_on_email_confirmation_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_email_confirmation_token_digest ON public.users USING btree (email_confirmation_token_digest);
+
+
+--
 -- Name: index_users_on_lower_username; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -926,6 +949,14 @@ ALTER TABLE ONLY public.skis
 
 ALTER TABLE ONLY public.days
     ADD CONSTRAINT fk_rails_0c6a8d09bb FOREIGN KEY (resort_id) REFERENCES public.resorts(id);
+
+
+--
+-- Name: mobile_sessions fk_rails_0e084d6841; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_sessions
+    ADD CONSTRAINT fk_rails_0e084d6841 FOREIGN KEY (auth_identity_id) REFERENCES public.auth_identities(id);
 
 
 --
@@ -1103,6 +1134,9 @@ ALTER TABLE ONLY public.auth_identities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261015091000'),
+('20261015090500'),
+('20261015090000'),
 ('20261011090000'),
 ('20260206133228'),
 ('20260202220009'),

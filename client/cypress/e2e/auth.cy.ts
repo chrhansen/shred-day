@@ -196,79 +196,93 @@ describe('Authentication Flows', () => {
     });
   });
 
-  // --- Sign Up Tests --- //
   describe('Sign Up', () => {
     beforeEach(() => {
-      // Just visit the page, no user creation needed for signup test
-      cy.clearCookies(); // Ensure no prior session
-      cy.visit(AUTH_URL);
+      cy.clearCookies();
+      cy.visit('/auth?mode=signup');
     });
 
-    it('should allow a new user to sign up successfully', () => {
-      const uniqueEmail = `test-signup-${Date.now()}@example.com`;
-
-      // 1. Click signup tab
-      cy.contains('button', /sign up/i).click();
-
-      // 2. Fill signup form
-      cy.get('#signup-email').type(uniqueEmail);
-      cy.get('#signup-password').type(PASSWORD);
-      // No confirmation field needed
-
-      // 3. Click signup button
-      // Need to be specific - find the Sign Up button within the signup form area if possible
-      // If the tab and button text are identical, we might need a more specific selector
-      // For now, assume clicking the button text after filling the form works
-      cy.contains('button', /^Sign Up$/i).click();
-
-      // 4. Assert redirection to main page (/)
-      cy.url().should('not.include', AUTH_URL);
-      cy.location('pathname').should('eq', '/');
-
-      // Optional: Assert that the user is actually logged in (e.g., check for welcome message or specific element)
-      // cy.contains(`Welcome, ${uniqueEmail}`).should('be.visible');
+    it('requests confirmation with email only and does not grant account access', () => {
+      const email = `test-signup-${Date.now()}@example.com`;
+      cy.intercept('POST', '/api/v1/users').as('signup');
+      cy.get('#signup-password').should('not.exist');
+      cy.contains('confirm your email address and set your password').should('be.visible');
+      cy.get('#signup-email').type(email);
+      cy.contains('button', 'Send confirmation link').click();
+      cy.wait('@signup').then(({ request, response }) => {
+        expect(request.body).to.deep.equal({ user: { email } });
+        expect(response?.statusCode).to.equal(201);
+        expect(response?.body.confirmation_required).to.equal(true);
+        expect(response?.body).not.to.have.property('user');
+        expect(response?.body).not.to.have.property('token');
+      });
+      cy.contains('h2', 'Check your email').should('be.visible');
+      cy.location('pathname').should('eq', '/auth');
+      cy.request({ url: `${Cypress.env('apiUrl')}/api/v1/account`, failOnStatusCode: false }).its('status').should('eq', 401);
     });
 
-    it('should show error for password too short', () => {
-      const uniqueEmail = `test-shortpass-${Date.now()}@example.com`;
-
-      // 1. Click signup tab
-      cy.contains('button', /sign up/i).click();
-
-      // 2. Fill signup form with short password
-      cy.get('#signup-email').type(uniqueEmail);
-      cy.get('#signup-password').type('short');
-
-      // 3. Click signup button
-      cy.contains('button', /^Sign Up$/i).click();
-
-      // 4. Assert validation error is shown and no redirection
-      cy.url().should('include', AUTH_URL); // Remain on auth page
-      // Check for backend validation error message (adjust if frontend shows something different)
-      cy.contains(/Password is too short/i).should('be.visible');
-    });
-
-    it('should show error for email already taken', () => {
-      const existingEmail = `test-taken-${Date.now()}@example.com`;
-      // Create the user first via API so the email is definitely taken
-      cy.createUser(existingEmail, PASSWORD);
-
-      // 1. Click signup tab
-      cy.contains('button', /sign up/i).click();
-
-      // 2. Fill signup form with the existing email
-      cy.get('#signup-email').type(existingEmail);
-      cy.get('#signup-password').type(PASSWORD);
-
-      // 3. Click signup button
-      cy.contains('button', /^Sign Up$/i).click();
-
-      // 4. Assert validation error is shown and no redirection
-      cy.url().should('include', AUTH_URL); // Remain on auth page
-      // Check for backend validation error message
+    it('shows a duplicate email error without moving to the journal', () => {
+      const email = `test-taken-${Date.now()}@example.com`;
+      cy.createUser(email, PASSWORD);
+      cy.get('#signup-email').type(email);
+      cy.contains('button', 'Send confirmation link').click();
       cy.contains(/Email has already been taken/i).should('be.visible');
+      cy.location('pathname').should('eq', '/auth');
+    });
+  });
+
+  describe('Email confirmation', () => {
+    const token = 'c'.repeat(43);
+    beforeEach(() => cy.clearCookies());
+
+    it('requires mailbox confirmation for a provisional password and offers explicit resend', () => {
+      const email = `test-unconfirmed-${Date.now()}@example.com`;
+      cy.request('POST', `${Cypress.env('apiUrl')}/api/v1/users`, { user: { email, password: PASSWORD } });
+      cy.intercept('POST', '/api/v1/sessions').as('passwordSignin');
+      cy.intercept('POST', '/api/v1/email_confirmation_requests').as('resend');
+      cy.visit('/auth');
+      cy.get('#login-email').type(email);
+      cy.get('#login-password').type(PASSWORD, { log: false });
+      cy.contains('button', /^Login$/i).click();
+      cy.wait('@passwordSignin').its('response.statusCode').should('eq', 403);
+      cy.contains('h2', 'Confirm your email before password sign-in').should('be.visible');
+      cy.get('#login-password').should('have.value', '');
+      cy.contains('button', 'Resend confirmation email').click();
+      cy.wait('@resend').its('response.statusCode').should('eq', 202);
+      cy.contains('If this address can use password sign-in').should('be.visible');
+      cy.location('pathname').should('eq', '/auth');
     });
 
-    // TODO: Add tests for invalid signup attempts (e.g., password mismatch, email taken)
+    it('removes the fragment and submits only after matching passwords, then requires normal sign-in', () => {
+      cy.intercept('POST', '/api/v1/email_confirmations', { statusCode: 200, body: { message: 'Email confirmed.' } }).as('confirm');
+      cy.visit(`/confirm-email#token=${token}`);
+      cy.location('hash').should('eq', '');
+      cy.get('#new-password').type('new-password', { log: false });
+      cy.get('#confirm-password').type('different-password', { log: false });
+      cy.contains('button', 'Confirm email and set password').click();
+      cy.contains('Your passwords do not match').should('be.visible');
+      cy.get('@confirm.all').should('have.length', 0);
+      cy.get('#confirm-password').clear().type('new-password', { log: false });
+      cy.contains('button', 'Confirm email and set password').click();
+      cy.wait('@confirm').then(({ request }) => {
+        expect(request.url).not.to.include(token);
+        expect(request.body).to.deep.equal({ token, password: 'new-password', password_confirmation: 'new-password' });
+      });
+      cy.contains('h1', 'Email confirmed').should('be.visible');
+      cy.contains('a', 'Go to sign in').should('have.attr', 'href', '/auth');
+      cy.location('pathname').should('eq', '/confirm-email');
+    });
+
+    it('offers a fresh link for expired or replayed tokens', () => {
+      cy.intercept('POST', '/api/v1/email_confirmations', { statusCode: 422, body: { error: 'This confirmation link is invalid or has expired. Request a new one.' } }).as('expired');
+      cy.visit(`/confirm-email#token=${token}`);
+      cy.get('#new-password').type('new-password', { log: false });
+      cy.get('#confirm-password').type('new-password', { log: false });
+      cy.contains('button', 'Confirm email and set password').click();
+      cy.wait('@expired');
+      cy.contains('h2', 'Request a new confirmation link').should('be.visible');
+      cy.get('#new-password').should('not.exist');
+      cy.location('hash').should('eq', '');
+    });
   });
 });

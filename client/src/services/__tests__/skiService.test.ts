@@ -60,7 +60,7 @@ jest.mock('../skiService', () => {
       const response = await fetch(`${API_BASE_URL}/api/v1/users`, {
         ...defaultFetchOptions,
         method: 'POST',
-        body: JSON.stringify({ user: userData }),
+        body: JSON.stringify({ user: { email: userData.email } }),
       });
       if (!response.ok) await handleApiError(response);
       return await response.json();
@@ -250,9 +250,9 @@ describe('skiService', () => {
   });
 
   describe('Authentication methods', () => {
-    it('should sign up a new user', async () => {
-      const userData = { email: 'test@example.com', password: 'password123', name: 'Test User' };
-      const expectedResponse = { id: 'usr_123', email: 'test@example.com', name: 'Test User' };
+    it('should request confirmation for a new user', async () => {
+      const userData = { email: 'test@example.com' };
+      const expectedResponse = { confirmation_required: true, message: 'Check your email.' };
       
       (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse(expectedResponse));
 

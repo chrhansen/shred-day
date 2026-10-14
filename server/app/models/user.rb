@@ -34,6 +34,14 @@ class User < ApplicationRecord
   validates :season_start_day, presence: true
   validate :season_start_day_must_be_valid_date
 
+  def password_confirmed?
+    email_confirmed_at.present? && password_confirmed_at.present?
+  end
+
+  def authentication_payload
+    as_json(only: %i[id email full_name username season_start_day created_at])
+  end
+
   def season_start_day_must_be_valid_date
     return if season_start_day.blank?
 
@@ -44,5 +52,4 @@ class User < ApplicationRecord
       errors.add(:season_start_day, "must be a valid date in MM-DD format (e.g., 09-15)")
     end
   end
-
 end

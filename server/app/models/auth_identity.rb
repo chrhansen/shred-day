@@ -1,7 +1,12 @@
 class AuthIdentity < ApplicationRecord
   belongs_to :user
+  has_many :mobile_sessions, dependent: :nullify
   validates :provider, inclusion: { in: %w[google apple] }
   validates :subject, presence: true, uniqueness: { scope: :provider }
+
+  def ownership_verified?
+    ownership_verified_at.present?
+  end
 
   def refresh_token
     token_encryptor.decrypt_and_verify(encrypted_refresh_token) if encrypted_refresh_token.present?

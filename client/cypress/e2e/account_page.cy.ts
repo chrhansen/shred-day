@@ -18,6 +18,9 @@ describe('Account Page', () => {
     // Wait for page elements to be ready, e.g., the email display which indicates data has loaded
     cy.contains('label', 'Email').should('be.visible');
     cy.contains('div', userEmail).should('be.visible');
+
+    cy.get('input[type="email"]').should('not.exist');
+    cy.contains('Email changes are currently unavailable.').should('be.visible');
   });
 
   it('should display initial account information correctly', () => {

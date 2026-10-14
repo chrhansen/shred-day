@@ -72,7 +72,8 @@ RSpec.describe 'Mobile sessions', type: :request do
     expect { post "#{root}/users", params: { user: { email: 'mobile@example.com', password: 'good-password' } }, as: :json }.to change(User, :count).by(1)
     expect(response).to have_http_status(:created)
     expect(User.last.tags).to be_present
-    expect(JSON.parse(response.body)['token']).to be_present
+    expect(JSON.parse(response.body)['confirmation_required']).to be(true)
+    expect(JSON.parse(response.body)['token']).to be_nil
   end
 
   it 'returns validation errors for invalid signup' do

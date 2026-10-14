@@ -19,20 +19,19 @@ RSpec.describe "Api::V1::Users", type: :request do
         }.to change(User, :count).by(1)
       end
 
-      it "returns created status and user info" do
+      it "returns created status and a confirmation requirement" do
         post api_v1_users_path, params: valid_params
         expect(response).to have_http_status(:created)
 
         json_response = JSON.parse(response.body)
-        expect(json_response['email']).to eq("newuser@example.com")
-        expect(json_response).to have_key('full_name')
+        expect(json_response['confirmation_required']).to be(true)
+        expect(json_response).not_to have_key('email')
         expect(json_response).not_to have_key('password_digest') # Ensure sensitive info isn't returned
       end
 
-      # Test if user is automatically logged in after signup
-      it "logs in the new user" do
+      it "does not log in the new user" do
         post api_v1_users_path, params: valid_params
-        expect(session[:user_id]).to eq(User.find_by(email: "newuser@example.com").id)
+        expect(session[:user_id]).to be_nil
       end
     end
 

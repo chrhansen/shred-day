@@ -2,7 +2,7 @@ class Api::V1::Mobile::ProviderSessionsController < Api::V1::Mobile::SessionsCon
   skip_before_action :require_login, only: :create
 
   def create
-    if request.headers["Authorization"].present? && current_mobile_session.nil?
+    if request.headers["Authorization"].present? && (current_mobile_session.nil? || current_user.nil?)
       return render json: { error: "Please sign in again" }, status: :unauthorized
     end
     result = Mobile::ProviderSignInService.new(provider: params[:provider], identity_token: params[:identity_token],
