@@ -18,6 +18,8 @@ export function providerSignInNotice(cause: unknown, provider: "apple" | "google
         "More than one journal uses this email. Contact support so we can help you sign in.",
       "Sign in to your existing account again before linking this login.":
         `Sign in to your existing account again before connecting ${name}.`,
+      "This sign-in method needs ownership verification. Sign in using your confirmed account email.":
+        "For security, this older sign-in needs an ownership check. Use Continue with Email to confirm your journal's address.",
       "This login is linked to another account":
         `This ${name} login is connected to another account. Use a sign-in connected to this journal.`,
       "Apple sign-in expired. Please try again.": "Apple sign-in expired. Please try again.",

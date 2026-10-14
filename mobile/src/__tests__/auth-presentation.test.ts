@@ -27,6 +27,7 @@ test("provider notices distinguish cancellation, nonce expiry and transport fail
   }
 });
 test.each([
+  ["This sign-in method needs ownership verification. Sign in using your confirmed account email.", "For security, this older sign-in needs an ownership check. Use Continue with Email to confirm your journal's address."],
   ["Provider identity token required", "Apple didn't return a sign-in identity. Please try again."],
   ["Missing provider identity", "Apple returned an incomplete sign-in identity. Please try again."],
   ["Could not verify provider identity", "Couldn't verify your Apple sign-in. Please try again."],
