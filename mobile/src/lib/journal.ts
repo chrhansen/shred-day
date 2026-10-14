@@ -1,6 +1,7 @@
 import { dateString, parseDay } from "./dates";
 import { getCalendars } from "expo-localization";
 import type { DayEntry } from "./types";
+import { seasonDateRange } from "./seasons";
 
 export function journalSections(days: readonly DayEntry[]) {
   const groups = new Map<string, DayEntry[]>();
@@ -38,10 +39,7 @@ export const monthStart = (value: string) => value.slice(0, 7) + "-01";
 export function initialSeasonDate(offset: number, startDay: string, now = new Date()) {
   const [month, day] = startDay.split("-").map(Number);
   const valid = Number.isInteger(month) && month >= 1 && month <= 12 && Number.isInteger(day) && day >= 1 && day <= 31;
-  const start = new Date(now.getFullYear(), valid ? month - 1 : 8, valid ? day : 1);
-  if (now < start) start.setFullYear(start.getFullYear() - 1);
-  start.setFullYear(start.getFullYear() + offset);
-  return dateString(offset === 0 ? now : start);
+  return dateString(offset === 0 ? now : seasonDateRange(offset, valid ? startDay : "09-01", now).start);
 }
 
 export function localeWeekStart() {

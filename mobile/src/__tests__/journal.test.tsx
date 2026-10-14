@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
-import { Pressable as MockPressable, Text as MockText, View as MockView } from "react-native";
+import { View as MockView } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
@@ -21,10 +21,12 @@ jest.mock("../components/day-gallery", () => ({ DayGallery: () => null }));
 jest.mock("../components/season-picker", () => ({
   useSeason: () => ({ season: 0, setSeason: jest.fn() }),
   SeasonHeader: ({ right }: { right: ReactNode }) => <MockView>{right}</MockView>,
-  seasonDateRange: () => ({ start: new Date(2026, 8, 1), label: "Sep 1, 2026 – Aug 31, 2027" }),
+  seasonDateRange: (offset: number, cutoff = "09-01") => {
+    const [month, day] = cutoff.split("-").map(Number);
+    return { start: new Date(2026 + offset, month - 1, day),
+      end: new Date(2027 + offset, month - 1, day - 1), label: "Selected season" };
+  },
 }));
-jest.mock("../components/ui/calendar", () => ({ Calendar: ({ onSelect }: { onSelect: (value: string) => void }) =>
-  <MockPressable accessibilityLabel="Choose empty date" onPress={() => onSelect("2026-10-07")}><MockText>Calendar test date</MockText></MockPressable> }));
 const account: Account = { id: "user_1", username: "mara_skis", email: "mara@example.test", avatar_url: null,
   available_seasons: [0], season_start_day: "09-01" };
 const entry: DayEntry = { id: "day_1", date: "2026-10-11", day_number: 4, resort_name: "Sölden",
@@ -54,9 +56,49 @@ test("an empty calendar date opens logging with that date preset", async () => {
   const view = render(<DaysScreen />, { wrapper });
   await waitFor(() => expect(view.getByText("Sölden")).toBeTruthy());
   fireEvent.press(view.getByLabelText("Calendar"));
-  fireEvent.press(view.getByLabelText("Choose empty date"));
+  fireEvent.press(view.getByLabelText(/October 7, 2026, no logged day/));
   fireEvent.press(view.getByText("Log a day on Oct 7"));
   expect(router.push).toHaveBeenCalledWith({ pathname: "/log", params: { date: "2026-10-07" } });
+});
+
+test("journal month navigation stays inside the queried season", async () => {
+  const view = render(<DaysScreen />, { wrapper });
+  await waitFor(() => expect(view.getByText("Sölden")).toBeTruthy());
+  fireEvent.press(view.getByLabelText("Calendar"));
+  fireEvent.press(view.getByLabelText("Previous month"));
+  expect(view.getByRole("header", { name: "September 2026" })).toBeTruthy();
+  expect(view.getByLabelText("Previous month").props.accessibilityState.disabled).toBe(true);
+  fireEvent.press(view.getByLabelText("Previous month"));
+  expect(view.queryByRole("header", { name: "August 2026" })).toBeNull();
+  expect(shred.days).toHaveBeenCalledWith(0);
+});
+
+test("partial season boundary dates cannot offer an unqueried Log Day", async () => {
+  mockUser = { ...account, season_start_day: "09-15" };
+  const view = render(<DaysScreen />, { wrapper });
+  await waitFor(() => expect(view.getByText("Sölden")).toBeTruthy());
+  fireEvent.press(view.getByLabelText("Calendar"));
+  fireEvent.press(view.getByLabelText("Previous month"));
+  const outside = view.getByLabelText(/September 14, 2026, unavailable/);
+  expect(outside.props.accessibilityState.disabled).toBe(true);
+  fireEvent.press(outside);
+  expect(view.queryByText("Log a day on Sep 14")).toBeNull();
+  fireEvent.press(view.getByLabelText(/September 15, 2026, no logged day/));
+  expect(view.getByText("Log a day on Sep 15")).toBeTruthy();
+});
+
+test("changing the season cutoff resets a now-outside calendar selection", async () => {
+  const view = render(<DaysScreen />, { wrapper });
+  await waitFor(() => expect(view.getByText("Sölden")).toBeTruthy());
+  fireEvent.press(view.getByLabelText("Calendar"));
+  fireEvent.press(view.getByLabelText("Previous month"));
+  fireEvent.press(view.getByLabelText(/September 7, 2026, no logged day/));
+  expect(view.getByText("Log a day on Sep 7")).toBeTruthy();
+  mockUser = { ...account, season_start_day: "10-01" };
+  view.rerender(<DaysScreen />);
+  expect(view.queryByText("Log a day on Sep 7")).toBeNull();
+  expect(view.getByRole("header", { name: "October 2026" })).toBeTruthy();
+  expect(view.getByText("Sölden")).toBeTruthy();
 });
 
 test("public detail works signed out and exposes no owner actions", async () => {

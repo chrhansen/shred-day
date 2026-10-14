@@ -74,7 +74,7 @@ The public privacy/support copy lives in `server/app/views/legal_pages/`. Review
 
 - Verify login/signup, Google and Apple on a signed physical iPhone; returning Apple login may omit email. Test existing Google users and authenticated linking.
 - Cold start, restart, background/foreground, expired/revoked session, offline launch/retry, logout, and switching accounts.
-- Create/edit/delete a day; missing resort and 500-character validation; multiple entries per date and multiple skis/tags. Verify list/calendar selection, shared season state, Monday/Sunday device settings, local dates across time zones, date presets and dirty-form cancellation.
+- Create/edit/delete a day; missing resort and 500-character validation; multiple entries per date and multiple skis/tags. Verify list/calendar selection, shared season state, calendar arrows/swipes and unavailable dates at custom season boundaries, profile cutoff changes, Monday/Sunday device settings, local dates across time zones, date presets and dirty-form cancellation.
 - Camera and library permissions; JPEG/HEIC; several uploads; retry/removal; cancel during upload; avatar; processing images; removing the final photo.
 - Gallery paging and tapped-index viewer; pinch/double-tap zoom, paging disabled while zoomed, thumbnails, swipe-down dismissal, per-image error/retry and no-photo detail.
 - Month/tag/map selection and refresh, missing/failed map fallback, small-phone chart layout, profile/season settings and gear mutation/retry. Check modal sheets and keyboard-safe Save on iPhone SE and a notched iPhone.

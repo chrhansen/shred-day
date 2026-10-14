@@ -6,10 +6,10 @@ import { IconButton } from "./buttons";
 import { Text } from "./text";
 
 export function Calendar({ month, selected, loggedDates = [], onMonthChange, onSelect,
-  weekStartsOn = 0, legend = true, helper }: {
+  weekStartsOn = 0, legend = true, helper, minDate, maxDate }: {
   month: string; selected?: string; loggedDates?: ReadonlySet<string> | readonly string[];
   onMonthChange: (month: string) => void; onSelect: (date: string) => void;
-  weekStartsOn?: number; legend?: boolean; helper?: string;
+  weekStartsOn?: number; legend?: boolean; helper?: string; minDate?: string; maxDate?: string;
 }) {
   const { fontScale } = useWindowDimensions();
   const [availableWidth, setAvailableWidth] = useState(0);
@@ -24,11 +24,16 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
   const blanks = (first.getDay() - weekStart + 7) % 7;
   const dates = new Set(loggedDates);
   const today = dateString(new Date());
-  const changeMonth = (delta: number) => onMonthChange(dateString(new Date(year, monthIndex + delta, 1)));
+  const canChangeMonth = (delta: number) =>
+    (!minDate || dateString(new Date(year, monthIndex + delta + 1, 0)) >= minDate) &&
+    (!maxDate || dateString(new Date(year, monthIndex + delta, 1)) <= maxDate);
+  const changeMonth = (delta: number) => {
+    if (canChangeMonth(delta)) onMonthChange(dateString(new Date(year, monthIndex + delta, 1)));
+  };
   const gesture = PanResponder.create({
     onMoveShouldSetPanResponder: (_, state) => !horizontalOverflow && Math.abs(state.dx) > 30 && Math.abs(state.dx) > Math.abs(state.dy) * 2,
     onPanResponderRelease: (_, state) => {
-      if (Math.abs(state.dx) > 40) onMonthChange(dateString(new Date(year, monthIndex + (state.dx > 0 ? -1 : 1), 1)));
+      if (!horizontalOverflow && Math.abs(state.dx) > 40) changeMonth(state.dx > 0 ? -1 : 1);
     },
   });
   const days = Array.from({ length: 7 }, (_, index) => new Date(2023, 0, 1 + (index + weekStart) % 7));
@@ -44,14 +49,15 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
       {cells.map((number, index) => {
         if (number < 1 || number > count) return <View key={index} style={{ width: cellWidth, minHeight: 44 }} />;
         const value = dateString(new Date(year, monthIndex, number));
-        const logged = dates.has(value), active = selected === value, isToday = value === today;
-        return <Pressable key={index} onPress={() => onSelect(value)} accessibilityRole="button"
-          accessibilityState={{ selected: active }}
+        const unavailable = Boolean((minDate && value < minDate) || (maxDate && value > maxDate));
+        const logged = !unavailable && dates.has(value), active = !unavailable && selected === value, isToday = value === today;
+        return <Pressable key={index} disabled={unavailable} onPress={() => { if (!unavailable) onSelect(value); }} accessibilityRole="button"
+          accessibilityState={{ selected: active, disabled: unavailable }}
           accessibilityLabel={new Date(year, monthIndex, number).toLocaleDateString(undefined,
             { weekday: "long", month: "long", day: "numeric", year: "numeric" }) +
-            (isToday ? ", today" : "") + (logged ? ", logged day" : ", no logged day")}
+            (isToday ? ", today" : "") + (unavailable ? ", unavailable" : logged ? ", logged day" : ", no logged day")}
           style={({ pressed }) => [{ width: cellWidth, minHeight: 44, alignItems: "center",
-            justifyContent: "center", paddingVertical: 3, opacity: pressed ? 0.7 : 1 }]}>
+            justifyContent: "center", paddingVertical: 3, opacity: unavailable ? 0.35 : pressed ? 0.7 : 1 }]}>
           <View style={{ minHeight: 38, minWidth: 38, padding: 7, borderRadius: 999,
             alignItems: "center", justifyContent: "center",
             backgroundColor: active ? colors.ink : logged ? colors.accentFillStrong : "transparent" }}>
@@ -66,11 +72,11 @@ export function Calendar({ month, selected, loggedDates = [], onMonthChange, onS
   </View>;
   return <View testID="calendar" onLayout={(event) => setAvailableWidth(event.nativeEvent.layout.width)} style={{ gap: 8 }}>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-      <IconButton name="chevron-left" accessibilityLabel="Previous month" onPress={() => changeMonth(-1)} color={colors.text700} />
+      <IconButton name="chevron-left" accessibilityLabel="Previous month" disabled={!canChangeMonth(-1)} onPress={() => changeMonth(-1)} color={colors.text700} />
       <Text variant="headline" accessibilityRole="header" accessibilityLiveRegion="polite">
         {first.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
       </Text>
-      <IconButton name="chevron-right" accessibilityLabel="Next month" onPress={() => changeMonth(1)} color={colors.text700} />
+      <IconButton name="chevron-right" accessibilityLabel="Next month" disabled={!canChangeMonth(1)} onPress={() => changeMonth(1)} color={colors.text700} />
     </View>
     <ScrollView horizontal scrollEnabled={horizontalOverflow} showsHorizontalScrollIndicator={false}>
       {grid}

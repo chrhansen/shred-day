@@ -4,20 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/auth";
 import { seasonLabel } from "../lib/dates";
+import { seasonDateRange } from "../lib/seasons";
 import { colors, Text, Icon } from "./ui";
 import { BottomSheet } from "./ui/sheet";
 
 export { SeasonProvider, useSeason } from "../contexts/season";
-
-export function seasonDateRange(offset: number, cutoff = "09-01", now = new Date()) {
-  const [month, day] = cutoff.split("-").map(Number);
-  const startThisYear = new Date(now.getFullYear(), month - 1, day);
-  const startYear = startThisYear > now ? now.getFullYear() - 1 : now.getFullYear();
-  const start = new Date(startYear + offset, month - 1, day);
-  const end = new Date(startYear + offset + 1, month - 1, day - 1);
-  const format = (date: Date) => date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  return { start, end, label: `${format(start)} – ${format(end)}` };
-}
+export { seasonDateRange } from "../lib/seasons";
 const titleForSeason = (offset: number) => {
   const label = seasonLabel(offset);
   return label.replace("season", "Season").replace(/^\w/, (letter) => letter.toUpperCase());
