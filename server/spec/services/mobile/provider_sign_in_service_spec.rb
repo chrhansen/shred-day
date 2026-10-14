@@ -24,8 +24,10 @@ RSpec.describe Mobile::ProviderSignInService do
   it 'finds the provider identity even if its email changes' do
     original = google.session_result.session.user
     claims['email'] = 'new@gmail.com'
+    other = create(:user, email: claims['email'])
     expect(google(token: 'another-token').session_result.session.user).to eq(original)
-    expect(User.count).to eq(1)
+    expect(other.auth_identities).to be_empty
+    expect(User.count).to eq(2)
   end
 
   it 'links an authoritative Google email to its existing account' do
@@ -33,11 +35,76 @@ RSpec.describe Mobile::ProviderSignInService do
     expect(google.session_result.session.user).to eq(user)
   end
 
-  it 'requires authenticated linking for a non-authoritative existing email' do
+  it 'signs in to an existing password account using a verified custom-domain Google email' do
     claims['email'] = 'skier@example.com'
     user = create(:user, email: claims['email'])
+    day = create(:day, :with_skis, :with_tags, user: user, tag_names: ['Training'])
+    ski_ids, tag_ids = user.skis.ids, user.tags.ids
+    password_digest = user.password_digest
+    result = google
+    expect(result).to be_signed_in
+    expect(result.session_result.session.user).to eq(user)
+    expect(result.session_result.session.authentication_method).to eq('google')
+    expect(user.auth_identities.find_by!(provider: 'google').subject).to eq(claims['sub'])
+    expect(user.reload.password_digest).to eq(password_digest)
+    expect(user.authenticate('password123')).to eq(user)
+    expect(user.days.ids).to eq([day.id])
+    expect(user.skis.ids).to match_array(ski_ids)
+    expect(user.tags.ids).to match_array(tag_ids)
+    expect(User.count).to eq(1)
+  end
+
+  it 'matches normalized verified Google email against a legacy mixed-case account' do
+    user = create(:user, email: 'Skier@Example.COM')
+    claims['email'] = '  SKIER@example.com  '
+    expect(google.session_result.session.user).to eq(user)
+    expect(User.count).to eq(1)
+  end
+
+  it 'signs in with Google to an account first created with Apple' do
+    claims['email'] = 'skier@example.com'
+    user = create(:user, email: claims['email'])
+    user.auth_identities.create!(provider: 'apple', subject: 'existing-apple-subject')
+    expect(google.session_result.session.user).to eq(user)
+    expect(user.auth_identities.pluck(:provider)).to contain_exactly('apple', 'google')
+    expect(User.count).to eq(1)
+  end
+
+  it 'rejects ambiguous normalized email matches without choosing or merging accounts' do
+    first = create(:user, email: 'skier@gmail.com')
+    second = create(:user)
+    second.update_columns(email: 'SKIER@GMAIL.COM')
+    claims['email'] = first.email
+    result = google
+    expect(result).not_to be_signed_in
+    expect(result.error).to eq('Multiple accounts use this email. Please contact support.')
+    expect(User.count).to eq(2)
+    expect(AuthIdentity.count).to eq(0)
+    expect(MobileSession.count).to eq(0)
+  end
+
+  [false, 'false', nil, 'TRUE', 1].each do |unverified|
+    it "rejects an existing email without a verified claim (#{unverified.inspect})" do
+      create(:user, email: claims['email'])
+      claims['email_verified'] = unverified
+      result = google
+      expect(result).not_to be_signed_in
+      expect(result.error).to eq('A verified email is required to sign in')
+      expect(AuthIdentity.count).to eq(0)
+      expect(MobileSession.count).to eq(0)
+      expect(User.count).to eq(1)
+    end
+  end
+
+  it 'rolls back a concurrent provider-identity uniqueness failure without changing the existing account' do
+    user = create(:user, email: claims['email'])
+    password_digest = user.password_digest
+    allow_any_instance_of(AuthIdentity).to receive(:save!).and_raise(ActiveRecord::RecordNotUnique)
     expect(google).not_to be_signed_in
-    expect(google(user: user).session_result.session.user).to eq(user)
+    expect(user.reload.password_digest).to eq(password_digest)
+    expect(AuthIdentity.count).to eq(0)
+    expect(MobileSession.count).to eq(0)
+    expect(User.count).to eq(1)
   end
 
   it 'recognizes an identity established by existing web Google login' do
@@ -110,9 +177,54 @@ RSpec.describe Mobile::ProviderSignInService do
       expect(apple).not_to be_signed_in
       expect(User.count).to eq(0)
     end
-    it 'does not link a new Apple identity by matching email alone' do
+    it 'signs in to an existing password account using its verified Apple email' do
+      user = create(:user, email: claims['email'])
+      password_digest = user.password_digest
+      result = apple
+      expect(result).to be_signed_in
+      expect(result.session_result.session.user).to eq(user)
+      expect(result.session_result.session.authentication_method).to eq('apple')
+      expect(user.auth_identities.find_by!(provider: 'apple').subject).to eq(claims['sub'])
+      expect(user.reload.password_digest).to eq(password_digest)
+      expect(user.authenticate('password123')).to eq(user)
+      expect(User.count).to eq(1)
+    end
+    it 'signs in with Apple to an existing Google account with the same verified email' do
+      claims['email'] = '  SKIER@example.com  '
+      user = create(:user, email: 'Skier@Example.COM')
+      user.auth_identities.create!(provider: 'google', subject: 'existing-google-subject')
+      expect(apple.session_result.session.user).to eq(user)
+      expect(user.auth_identities.pluck(:provider)).to contain_exactly('google', 'apple')
+      expect(User.count).to eq(1)
+    end
+    it 'does not infer an account match from an unrelated Apple relay address' do
+      existing = create(:user, email: 'skier@example.com')
+      result = apple
+      expect(result).to be_signed_in
+      expect(result.session_result.session.user).not_to eq(existing)
+      expect(result.session_result.session.user.email).to eq(claims['email'])
+      expect(existing.auth_identities).to be_empty
+      expect(User.count).to eq(2)
+    end
+    it 'rejects an unverified Apple email even when it matches an existing account' do
       create(:user, email: claims['email'])
+      claims['email_verified'] = 'false'
+      result = apple
+      expect(result).not_to be_signed_in
+      expect(result.error).to eq('A verified email is required to sign in')
+      expect(AuthIdentity.count).to eq(0)
+      expect(MobileSession.count).to eq(0)
+      expect(challenge.reload.consumed_at).to be_nil
+      expect(exchange).not_to have_received(:exchange_code)
+    end
+    it 'rolls back an existing-email match when Apple authorization exchange fails' do
+      user = create(:user, email: claims['email'])
+      allow(exchange).to receive(:exchange_code).and_raise(Mobile::AppleTokenService::ExchangeError, 'Apple authorization is temporarily unavailable')
       expect(apple).not_to be_signed_in
+      expect(user.auth_identities).to be_empty
+      expect(MobileSession.count).to eq(0)
+      expect(challenge.reload.consumed_at).to be_nil
+      expect(User.count).to eq(1)
     end
     it 'requires recent existing-account authentication to link Apple' do
       session = Mobile::CreateSessionService.new(create(:user)).create_session.session

@@ -51,13 +51,10 @@ class Mobile::ProviderSignInService
   def find_or_create_user(claims)
     email = claims["email"].to_s.strip.downcase
     verified = [ true, "true" ].include?(claims["email_verified"])
-    raise LinkingError, "A verified email is required for a new account" if email.blank? || !verified
-    existing = User.find_by(email: email)
-    if existing
-      google_authoritative = @provider == "google" && (email.end_with?("@gmail.com") || claims["hd"].present?)
-      raise LinkingError, "Sign in to your existing account before linking this login. If you previously used Google on the website, sign in there once and then retry." unless google_authoritative
-      return existing
-    end
+    raise LinkingError, "A verified email is required to sign in" if email.blank? || !verified
+    matching_users = User.where("LOWER(email) = ?", email).limit(2).to_a
+    raise LinkingError, "Multiple accounts use this email. Please contact support." if matching_users.many?
+    return matching_users.first if matching_users.any?
     result = Users::CreateUserService.new(email: email, password: SecureRandom.hex(32)).create_user
     raise LinkingError, "Could not create your account" unless result.created?
     result.user
