@@ -23,16 +23,14 @@ jest.mock("../components/ui", () => {
     Notice: ({ message }: { message: string }) => <Text>{message}</Text>,
   };
 });
-const existingAccount = "Sign in to your existing account before linking this login. If you previously used Google on the website, sign in there once and then retry.";
-const connectInstructions = "This Apple login isn't connected to your existing account. Sign in with Google or email, then open Settings > Sign-in methods to connect Apple.";
 beforeEach(() => jest.clearAllMocks());
 
 describe.each([["welcome", AuthScreen], ["email", EmailAuthScreen]] as const)("%s provider notices", (_name, Screen) => {
-  test("an existing-account rejection explains how to connect Apple instead of blaming the connection", async () => {
-    mockSocialLogin.mockRejectedValue(new ApiError(existingAccount, 401));
+  test("an ambiguous email offers support without asking the user to connect a provider", async () => {
+    mockSocialLogin.mockRejectedValue(new ApiError("Multiple accounts use this email. Please contact support.", 401));
     const view = render(<Screen />);
     fireEvent.press(view.getByText("Continue with Apple"));
-    await view.findByText(connectInstructions);
+    await view.findByText("More than one journal uses this email. Contact support so we can help you sign in.");
     expect(mockSocialLogin).toHaveBeenCalledWith("apple");
     expect(view.queryByText(/Check your connection/)).toBeNull();
   });
@@ -45,11 +43,11 @@ describe.each([["welcome", AuthScreen], ["email", EmailAuthScreen]] as const)("%
     expect(view.queryByText("Private server details")).toBeNull();
   });
 
-  test("a legacy Google account is directed to website Google sign-in before retrying mobile", async () => {
-    mockSocialLogin.mockRejectedValue(new ApiError(existingAccount, 401));
+  test("unverified Google email is explained without sending the user to another login flow", async () => {
+    mockSocialLogin.mockRejectedValue(new ApiError("A verified email is required to sign in", 401));
     const view = render(<Screen />);
     fireEvent.press(view.getByText("Continue with Google"));
-    await view.findByText("Sign in with Google on shred.day once, then return to the app and try again.");
+    await view.findByText("Google didn't share a verified email address. Please try another sign-in method.");
     expect(mockSocialLogin).toHaveBeenCalledWith("google");
     expect(view.queryByText(/Settings > Sign-in methods/)).toBeNull();
   });

@@ -28,7 +28,7 @@ Submit the inspected build by its exact EAS ID. Use the existing **Shred.Day Int
 
 Version 1.0.1 updates the native UI against the existing deployed API; it adds no backend migration. Its [changelog](CHANGELOG.md) and [API limits](README.md#existing-api-limits) describe the beta scope. Do not treat an uploaded build or passing unit tests as completion of the physical-device gate below.
 
-Version 1.0.2 corrects SDK 57 multipart uploads, fetches unvisited season counts through the existing stats API and measures safe areas inside the editor modal. Provider sign-in notices identify known server rejections without exposing unexpected server details. For an Apple login that is not linked to an existing account, sign in using its current method, then connect Apple in Settings → Sign-in methods; automatic linking by email remains disallowed. Legacy Google users with an unrecognized provider identity may need to sign in with Google on shred.day once before retrying mobile login. This patch adds no backend migration or deployment.
+Version 1.0.2 corrects SDK 57 multipart uploads, fetches unvisited season counts through the existing stats API and measures safe areas inside the editor modal. Deploy the provider-sign-in service change before distributing the patch: a server-verified Google or Apple email now signs into the matching existing account without a manual connection or prior website login. Established provider subjects remain authoritative; unverified email and ambiguous duplicate accounts cannot select a journal. Apple Hide My Email does not match a different real address. Provider notices expose known recovery guidance without unexpected server details. No database migration is required.
 
 ## Simulator verification
 

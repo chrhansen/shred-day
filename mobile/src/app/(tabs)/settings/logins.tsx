@@ -18,7 +18,7 @@ export default function LoginMethodsScreen() {
   };
   return <Screen edges={["left", "right"]} background={colors.surfaceSubtle} contentInsetAdjustmentBehavior="never"
     contentStyle={{ padding: 16, gap: 22, paddingBottom: 40 }}>
-    <Text variant="footnote" style={{ color: colors.textSecondary }}>Any connected method opens the same journal.</Text>
+    <Text variant="footnote" style={{ color: colors.textSecondary }}>Apple and Google open this journal automatically when they verify the same email address. Your email and password work too.</Text>
     <Group>{(["password", "google", "apple"] as const).map(method => {
       const known = connected.includes(method);
       const name = method === "password" ? "Email and password" : method === "google" ? "Google" : "Apple";
@@ -29,7 +29,7 @@ export default function LoginMethodsScreen() {
           : method !== "password" ? <Button title="Connect" variant="compact" disabled={method === "google" && !googleConfigured}
             onPress={() => setConnecting(method)} /> : <Text variant="caption" style={{ color: colors.textSecondary }}>Use your password</Text>} />;
     })}</Group>
-    <Text variant="caption" style={{ color: colors.textSecondary }}>{"This screen shows methods confirmed on this iPhone. To connect a new method, you'll confirm a sign-in you already use. A newly connected method can't be used to confirm account deletion until you've signed in with it."}</Text>
+    <Text variant="caption" style={{ color: colors.textSecondary }}>{"This screen shows methods confirmed on this iPhone. Connecting here is optional: use it to add a provider with a different email address after confirming your current sign-in. Apple’s Hide My Email uses a different address. A newly connected method can't confirm account deletion until you've signed in with it."}</Text>
     <ReauthSheet visible={Boolean(connecting)} onClose={() => setConnecting(null)} action="Confirm and Connect"
       operationProvider={connecting || undefined} onConfirmed={connect}
       reason={`To connect ${connecting === "apple" ? "Sign in with Apple" : "Google"}, confirm your current sign-in first.`} />

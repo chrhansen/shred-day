@@ -14,10 +14,8 @@ export function providerSignInNotice(cause: unknown, provider: "apple" | "google
   let message = `Couldn't sign in with ${name}. Please try again or use another sign-in method.`;
   if (cause instanceof ApiError && cause.status === 401) {
     const knownErrors: Record<string, string> = {
-      "Sign in to your existing account before linking this login. If you previously used Google on the website, sign in there once and then retry.":
-        provider === "google"
-          ? "Sign in with Google on shred.day once, then return to the app and try again."
-          : "This Apple login isn't connected to your existing account. Sign in with Google or email, then open Settings > Sign-in methods to connect Apple.",
+      "Multiple accounts use this email. Please contact support.":
+        "More than one journal uses this email. Contact support so we can help you sign in.",
       "Sign in to your existing account again before linking this login.":
         `Sign in to your existing account again before connecting ${name}.`,
       "This login is linked to another account":
@@ -36,6 +34,7 @@ export function providerSignInNotice(cause: unknown, provider: "apple" | "google
       "Apple login is temporarily unavailable": "Apple's identity verification is temporarily unavailable. Please try again later.",
       "Apple authorization is temporarily unavailable": "Apple's sign-in authorization is temporarily unavailable. Please try again later.",
       "A verified email is required for a new account": `${name} didn't share a verified email address. Please try another sign-in method.`,
+      "A verified email is required to sign in": `${name} didn't share a verified email address. Please try another sign-in method.`,
       "Could not create your account": "Couldn't create your account. Please try again or use another sign-in method.",
       "Could not sign in. Please try again or sign in to your existing account first.":
         "Couldn't complete this sign-in. Please try again or sign in to your existing account first.",

@@ -9,7 +9,7 @@ read_when: Reviewing changes to the iPhone beta
 - Upload selected photos and avatars using SDK 57's supported file bodies; preserve JPEG, HEIC and PNG bytes through multipart encoding.
 - Load day counts for every season when opening the picker, with loading and retry states for unavailable counts.
 - Keep the day editor's header and save controls within its full-screen modal's safe area on notched iPhones.
-- Explain known Apple/Google sign-in failures, including connecting a provider to an existing account, without replacing every rejection with a connection warning. Connect Apple in Settings after signing in with the existing method; subsequent Apple sign-in uses the same journal.
+- Sign into the same journal automatically when Apple or Google verifies the existing account's email. Manual connection is optional for providers with a different email. Explain known provider failures without replacing every rejection with a connection warning.
 
 ## 1.0.1 — beta, 2026-10-14
 
