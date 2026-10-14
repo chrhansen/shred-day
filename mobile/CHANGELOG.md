@@ -4,6 +4,13 @@ read_when: Reviewing changes to the iPhone beta
 
 # Mobile changelog
 
+## 1.0.2 — beta, 2026-10-14
+
+- Upload selected photos and avatars using SDK 57's supported file bodies; preserve JPEG, HEIC and PNG bytes through multipart encoding.
+- Load day counts for every season when opening the picker, with loading and retry states for unavailable counts.
+- Keep the day editor's header and save controls within its full-screen modal's safe area on notched iPhones.
+- Explain known Apple/Google sign-in failures, including connecting a provider to an existing account, without replacing every rejection with a connection warning. Connect Apple in Settings after signing in with the existing method; subsequent Apple sign-in uses the same journal.
+
 ## 1.0.1 — beta, 2026-10-14
 
 - Browse a month-grouped journal or calendar with a shared season picker and device week order. Seven calendar columns fit the measured screen width; larger text can scroll horizontally. Journal month navigation and date selection stay within the queried season, including midmonth cutoffs; bounds follow the API's UTC season reference. Open a day, long press for actions, or log the selected date.

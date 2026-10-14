@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: "Shred.Day",
   slug: "shred-day",
   owner: "shred-day",
-  version: "1.0.1",
+  version: "1.0.2",
   scheme: "shredday",
   orientation: "portrait",
   userInterfaceStyle: "light",

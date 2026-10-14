@@ -1,11 +1,7 @@
 import type { ImagePickerAsset } from "expo-image-picker";
+import { File } from "expo-file-system";
 export function photoForm(asset: ImagePickerAsset, field = "file") {
   const form = new FormData();
-  const type =
-    asset.mimeType ||
-    (asset.uri.toLowerCase().endsWith(".heic") ? "image/heic" : "image/jpeg");
-  const name =
-    asset.fileName || "photo." + (type === "image/heic" ? "heic" : "jpg");
-  form.append(field, { uri: asset.uri, name, type } as unknown as Blob);
+  form.append(field, asset.file || new File(asset.uri));
   return form;
 }

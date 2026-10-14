@@ -21,7 +21,8 @@ jest.mock("../components/editor/editor-photos", () => ({ EditorPhotos: () => nul
 jest.mock("../components/editor/resort-sheet", () => ({ ResortSheet: () => null }));
 jest.mock("../components/editor/named-item-sheet", () => ({ NamedItemSheet: () => null }));
 jest.mock("../components/ui/calendar", () => ({ Calendar: () => null }));
-jest.mock("react-native-safe-area-context", () => ({ SafeAreaView: jest.requireActual("react-native").View,
+jest.mock("react-native-safe-area-context", () => ({ SafeAreaProvider: jest.requireActual("react-native").View,
+  SafeAreaView: jest.requireActual("react-native").View,
   useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }) }));
 jest.mock("../services/shred", () => ({ shred: { day: jest.fn(), days: jest.fn(), skis: jest.fn(), tags: jest.fn(), recentResorts: jest.fn(), saveDay: jest.fn() } }));
 jest.mock("../components/ui", () => {

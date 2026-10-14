@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/auth";
 import { Button, Field, IconButton, Notice, Screen, Segmented, Text, colors } from "../../components/ui";
 import { LegalLinks } from "../../components/auth/brand";
 import { ProviderButtons, type Provider } from "../../components/auth/provider-buttons";
-import { emailValidation, signInCanceled } from "../../lib/auth-presentation";
+import { emailValidation, providerSignInNotice } from "../../lib/auth-presentation";
 import { ApiError } from "../../lib/api";
 
 export default function EmailAuthScreen() {
@@ -29,9 +29,8 @@ export default function EmailAuthScreen() {
       if (provider) await auth.socialLogin(provider);
       else await auth.passwordLogin(email.trim(), password, mode === "signup");
     } catch (cause) {
-      const canceled = signInCanceled(cause);
-      setNotice({ canceled, message: canceled ? `${provider === "apple" ? "Apple" : "Google"} sign-in was canceled. Choose a way to continue.`
-        : cause instanceof ApiError && cause.status === 401 && !provider ? "That email and password don't match. Try again."
+      if (provider) setNotice(providerSignInNotice(cause, provider));
+      else setNotice({ canceled: false, message: cause instanceof ApiError && cause.status === 401 ? "That email and password don't match. Try again."
         : mode === "signup" && cause instanceof ApiError && cause.status === 422 ? "Couldn't create this account. Check your details or try logging in."
         : "Couldn't sign in. Check your connection and try again." });
     } finally { setBusy(null); }

@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/auth";
 import { seasonLabel } from "../lib/dates";
 import { seasonDateRange } from "../lib/seasons";
-import { colors, Text, Icon } from "./ui";
+import { shred } from "../services/shred";
+import { colors, Text, Icon, Button } from "./ui";
 import { BottomSheet } from "./ui/sheet";
 
 export { SeasonProvider, useSeason } from "../contexts/season";
@@ -21,6 +22,9 @@ export function SeasonPicker({ value, onChange }: { value: number; onChange: (va
   const cutoff = user?.season_start_day || "09-01";
   const range = seasonDateRange(value, cutoff).label;
   const seasons = Array.from(new Set([0, ...(user?.available_seasons || []), value])).sort((a, b) => b - a);
+  const counts = useQueries({ queries: seasons.map((offset) => ({
+    queryKey: ["stats", offset, user?.id], queryFn: () => shred.stats(offset), enabled: open && Boolean(user),
+  })) });
   const cutoffLabel = new Date(2000, Number(cutoff.slice(0, 2)) - 1, Number(cutoff.slice(3)))
     .toLocaleDateString(undefined, { month: "long", day: "numeric" });
   return <>
@@ -35,13 +39,15 @@ export function SeasonPicker({ value, onChange }: { value: number; onChange: (va
     </Pressable>
     <BottomSheet visible={open} onClose={() => setOpen(false)} title="Season" height="medium" centerTitle
       contentStyle={{ paddingHorizontal: 0 }}>
-      {seasons.map((offset) => {
+      {seasons.map((offset, index) => {
         const days = client.getQueryData<unknown[]>(["days", offset, user?.id]);
-        const stats = client.getQueryData<{ summary: { totalDays: number } }>(["stats", offset, user?.id]);
-        const count = days?.length ?? stats?.summary.totalDays;
+        const query = counts[index];
+        const count = query.data?.summary.totalDays ?? days?.length;
+        const countLabel = count === undefined ? query.isError ? "Unavailable" : "Loading…"
+          : count ? `${count} ${count === 1 ? "day" : "days"}` : "No days";
         return <Pressable key={offset} accessibilityRole="radio" accessibilityState={{ checked: offset === value }}
           onPress={() => { onChange(offset); setOpen(false); }}
-          accessibilityLabel={`${titleForSeason(offset)}, ${seasonDateRange(offset, cutoff).label}${count === undefined ? "" : `, ${count} days`}`}
+          accessibilityLabel={`${titleForSeason(offset)}, ${seasonDateRange(offset, cutoff).label}, ${countLabel}`}
           style={({ pressed }) => [{ paddingHorizontal: 20, paddingVertical: 14, minHeight: 64,
             flexDirection: "row", alignItems: "center", gap: 12, borderTopWidth: 1,
             borderTopColor: colors.divider, backgroundColor: pressed ? colors.fill : colors.canvas }]}>
@@ -49,12 +55,12 @@ export function SeasonPicker({ value, onChange }: { value: number; onChange: (va
             <Text variant="headline">{titleForSeason(offset)}</Text>
             <Text variant="footnote" style={{ color: colors.textSecondary }}>{seasonDateRange(offset, cutoff).label}</Text>
           </View>
-          {count !== undefined && <Text variant="subhead" style={{ color: colors.textSecondary }}>
-            {count ? `${count} ${count === 1 ? "day" : "days"}` : "No days"}
-          </Text>}
+          <Text variant="subhead" style={{ color: colors.textSecondary }}>{countLabel}</Text>
           {offset === value && <Icon name="check" size={20} color={colors.primary} strokeWidth={2.25} />}
         </Pressable>;
       })}
+      {counts.some((query) => query.isError) && <Button title="Retry day counts" variant="text"
+        onPress={() => { counts.filter((query) => query.isError).forEach((query) => void query.refetch()); }} />}
       <Text variant="caption" style={{ paddingHorizontal: 20, color: colors.textSecondary }}>
         Seasons start on {cutoffLabel}. You can change this in Settings › Profile.
       </Text>

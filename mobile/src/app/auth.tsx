@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/auth";
 import { Button, Notice, Screen, Text, colors } from "../components/ui";
 import { Brand, LegalLinks } from "../components/auth/brand";
 import { ProviderButtons, type Provider } from "../components/auth/provider-buttons";
-import { signInCanceled } from "../lib/auth-presentation";
+import { providerSignInNotice } from "../lib/auth-presentation";
 import { SessionExpired } from "../components/auth/session-expired";
 
 export default function AuthScreen() {
@@ -17,10 +17,7 @@ export default function AuthScreen() {
     setNotice(null); setBusy(provider);
     try { await auth.socialLogin(provider); }
     catch (cause) {
-      const canceled = signInCanceled(cause);
-      const name = provider === "apple" ? "Apple" : "Google";
-      setNotice({ canceled, message: canceled ? `${name} sign-in was canceled. Choose a way to continue.`
-        : `Couldn't sign in with ${name}. Check your connection and try again.` });
+      setNotice(providerSignInNotice(cause, provider));
     } finally { setBusy(null); }
   };
   if (auth.expired) return <SessionExpired />;

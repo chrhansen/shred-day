@@ -28,6 +28,8 @@ Submit the inspected build by its exact EAS ID. Use the existing **Shred.Day Int
 
 Version 1.0.1 updates the native UI against the existing deployed API; it adds no backend migration. Its [changelog](CHANGELOG.md) and [API limits](README.md#existing-api-limits) describe the beta scope. Do not treat an uploaded build or passing unit tests as completion of the physical-device gate below.
 
+Version 1.0.2 corrects SDK 57 multipart uploads, fetches unvisited season counts through the existing stats API and measures safe areas inside the editor modal. Provider sign-in notices identify known server rejections without exposing unexpected server details. For an Apple login that is not linked to an existing account, sign in using its current method, then connect Apple in Settings → Sign-in methods; automatic linking by email remains disallowed. Legacy Google users with an unrecognized provider identity may need to sign in with Google on shred.day once before retrying mobile login. This patch adds no backend migration or deployment.
+
 ## Simulator verification
 
 Use Xcode's simulator signing pipeline when building a Release artifact for Device Hub. Keep code signing and base-entitlement injection enabled; Xcode writes simulator claims separately from the code signature. An unsigned build can render screens while failing SecureStore operations. Manually adding Apple capability claims to an ad hoc signature prevents launch; signing those claims with a development certificate also requires a matching profile. Neither result establishes a product authentication failure.
@@ -35,6 +37,8 @@ Use Xcode's simulator signing pipeline when building a Release artifact for Devi
 ## Dependency review
 
 The 1.0.1 lockfile uses supported SDK 57 patches (Expo 57.0.28, Router 57.0.26). Its reviewed npm runtime audit reports 64 package findings from five inherited leaf advisories, including build/test tools; these are not 64 independent app defects. UI dependencies introduced no new leaf advisory. Avoid `npm audit fix --force`, which proposes incompatible SDK/Router changes.
+
+The 1.0.2 bug-fix build preserves that lockfile's dependency versions. Expo Doctor on October 14 passed 20 of 21 checks; the remaining check recommends newly published Expo 57.0.29, Constants 57.0.22, Linking 57.0.13 and Router 57.0.27 patches. Installed packages match Expo 57.0.28's bundled recommendations. No checks were excluded; reassess the newer patches in the next dependency update.
 
 SDK 57 still includes the `decode-uri-component` [CPU-exhaustion advisory](https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr). Router 57.0.26's active link parser uses `URLSearchParams`; four normal/malformed query probes, including 10,000 invalid bytes, made zero calls to a throwing decoder-parser spy. A bundled navigation fallback retains that call. Recheck reachability if navigation changes, and test malformed links on the final native build before distribution. An unchecked decoder override is not a verified remedy: its patched ESM default export differs from the installed CommonJS consumer. Revisit supported upstream patches before public release; tooling advisories also remain open. App navigation imports must use the SDK 57 Router entry points described in [README.md](README.md).
 

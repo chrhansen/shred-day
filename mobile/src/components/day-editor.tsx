@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, Stack, useNavigation } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,7 +19,11 @@ import { ResortSheet } from "./editor/resort-sheet";
 import { NamedItemSheet } from "./editor/named-item-sheet";
 import { EditorPhotos } from "./editor/editor-photos";
 
-export function DayEditor({ id, initialDate }: { id?: string; initialDate?: string }) {
+type EditorProps = { id?: string; initialDate?: string };
+export function DayEditor(props: EditorProps) {
+  return <SafeAreaProvider><DayEditorContent {...props} /></SafeAreaProvider>;
+}
+function DayEditorContent({ id, initialDate }: EditorProps) {
   const { user } = useAuth();
   const query = useQuery({ queryKey: ["day", id, user?.id], queryFn: () => shred.day(id!), enabled: Boolean(id) });
   if (id && query.isPending) return <Screen><Text>Loading your day…</Text></Screen>;
