@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: "Shred.Day",
   slug: "shred-day",
   owner: "shred-day",
-  version: "1.0.0",
+  version: "1.0.2",
   scheme: "shredday",
   orientation: "portrait",
   userInterfaceStyle: "light",
@@ -27,6 +27,7 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-font",
     "expo-image",
+    "expo-localization",
     "expo-secure-store",
     "expo-apple-authentication",
     [
@@ -44,7 +45,7 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#F5F1E9",
+        backgroundColor: "#FFFFFF",
         image: "./assets/icon.png",
         imageWidth: 140,
       },

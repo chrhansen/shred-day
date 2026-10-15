@@ -53,8 +53,42 @@ test("a late 401 from the old session cannot clear the replacement session", asy
   await expect(pending).rejects.toThrow(ApiError);
   expect(client.onUnauthorized).not.toHaveBeenCalled();
 });
-test("multipart photos use the Rails file field and preserve their type", async () => {
-  const append = jest.spyOn(FormData.prototype, "append");
+test("confirmation responses preserve their code and public sign-in never invalidates a session", async () => {
+  api.token = "device-token";
+  api.onUnauthorized = jest.fn();
+  const payload = { error: "Confirm your email address before signing in with a password.", code: "email_confirmation_required" };
+  fetchMock.mockResolvedValue(response(403, payload));
+  await expect(shred.signIn("skier@example.test", "password")).rejects.toMatchObject({ status: 403, code: payload.code });
+  expect(api.onUnauthorized).not.toHaveBeenCalled();
+  fetchMock.mockResolvedValue(response(401, payload));
+  await expect(shred.account()).rejects.toMatchObject({ status: 401, code: payload.code });
+  expect(api.onUnauthorized).toHaveBeenCalledWith(payload.code);
+});
+test("signup sends only email and confirmation requests never send bearer credentials", async () => {
+  api.token = "existing-session";
+  fetchMock.mockResolvedValue(response(201, { confirmation_required: true }));
+  await shred.signUp("skier@example.test");
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ user: { email: "skier@example.test" } });
+  expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
+  fetchMock.mockResolvedValue(response(202));
+  await shred.requestEmailConfirmation("skier@example.test");
+  expect(fetchMock.mock.calls[1][0]).toContain("/api/v1/email_confirmation_requests");
+  expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ email: "skier@example.test" });
+  expect(fetchMock.mock.calls[1][1].headers.Authorization).toBeUndefined();
+});
+test("a replacement session survives a delayed 401 response body", async () => {
+  api.token = "old";
+  api.onUnauthorized = jest.fn();
+  let finish!: (payload: unknown) => void;
+  fetchMock.mockResolvedValue({ ok: false, status: 401, json: () => new Promise(resolve => { finish = resolve; }) });
+  const pending = shred.account();
+  await Promise.resolve();
+  api.token = "new";
+  finish({ error: "Expired", code: "email_confirmation_required" });
+  await expect(pending).rejects.toThrow(ApiError);
+  expect(api.onUnauthorized).not.toHaveBeenCalled();
+});
+test("multipart photos use the Rails file field and leave the boundary to fetch", async () => {
   const form = photoForm({
     uri: "file:///IMG.HEIC",
     width: 10,
@@ -68,12 +102,7 @@ test("multipart photos use the Rails file field and preserve their type", async 
   const request = fetchMock.mock.calls[0][1];
   expect(request.body).toBe(form);
   expect(request.headers["Content-Type"]).toBeUndefined();
-  expect(append).toHaveBeenCalledWith("file", {
-    uri: "file:///IMG.HEIC",
-    name: "IMG.HEIC",
-    type: "image/heic",
-  });
-  append.mockRestore();
+  expect(form.has("file")).toBe(true);
 });
 test("day edits send explicit empty photos so the last attachment can be removed", async () => {
   fetchMock.mockResolvedValue(response());

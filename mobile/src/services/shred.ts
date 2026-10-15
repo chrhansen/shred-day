@@ -79,10 +79,16 @@ export const shred = {
       body: { email, password },
       authenticated: false,
     }),
-  signUp: (email: string, password: string) =>
-    api.request<Session>(root + "/mobile/users", {
+  signUp: (email: string) =>
+    api.request<{ confirmation_required: true; message: string }>(root + "/mobile/users", {
       method: "POST",
-      body: { user: { email, password } },
+      body: { user: { email } },
+      authenticated: false,
+    }),
+  requestEmailConfirmation: (email: string) =>
+    api.request<{ message: string }>(root + "/email_confirmation_requests", {
+      method: "POST",
+      body: { email },
       authenticated: false,
     }),
   providerSignIn: (proof: ProviderProof, link = false) =>

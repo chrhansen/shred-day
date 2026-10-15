@@ -95,3 +95,38 @@ test("denied camera permission explains the next step without opening the camera
   expect((result.current.error as Error).message).toContain("iPhone Settings");
   expect(ImagePicker.launchCameraAsync).not.toHaveBeenCalled();
 });
+test("a second library tap cannot open another picker while selection is pending", async () => {
+  let finish!: (value: unknown) => void;
+  (ImagePicker.launchImageLibraryAsync as jest.Mock).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const { result } = renderHook(useDayPhotos);
+  let pending!: Promise<void>;
+  act(() => { pending = result.current.pick(false); });
+  await act(async () => { await result.current.pick(false); });
+  expect(result.current.pending).toBe(true);
+  expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalledTimes(1);
+  await act(async () => { finish({ canceled: true }); await pending; });
+  expect(result.current.pending).toBe(false);
+});
+test("duplicate retry taps cannot upload the same failed photo twice", async () => {
+  let finish!: (value: unknown) => void;
+  (shred.uploadPhoto as jest.Mock).mockRejectedValueOnce(new Error("Connection lost"));
+  const { result } = renderHook(useDayPhotos);
+  await act(async () => { await result.current.pick(false); });
+  (shred.uploadPhoto as jest.Mock).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  let pending!: Promise<void>;
+  act(() => { pending = result.current.retry(result.current.photos[0]); });
+  await act(async () => { await result.current.retry(result.current.photos[0]); });
+  expect(shred.uploadPhoto).toHaveBeenCalledTimes(2);
+  await act(async () => { finish(photo); await pending; });
+  expect(result.current.photos).toHaveLength(1);
+  expect(result.current.pending).toBe(false);
+});
+test("initial edit attachments are ready immediately and removing them does not delete the saved originals", () => {
+  const original = { ...photo, id: "original" };
+  const { result, unmount } = renderHook(() => useDayPhotos([original]));
+  expect(result.current.photos[0].id).toBe("original");
+  expect(result.current.pending).toBe(false);
+  act(() => result.current.remove(result.current.photos[0]));
+  unmount();
+  expect(shred.deletePhoto).not.toHaveBeenCalled();
+});
