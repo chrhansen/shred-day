@@ -46,27 +46,15 @@ import './commands'
 declare global {
   namespace Cypress {
     interface Chainable {
-      createUser(email: string, password?: string): Chainable<Response<any>>
+      createUser(email: string, password?: string): Chainable<{ status: number; body: { id: string; email: string } }>
       login(email: string, password?: string): Chainable<void>
       logDay(dayData: { date: string; resort_id: any; ski_ids: any; tag_ids?: string[]; tags?: string[]; notes?: string }): Chainable<Response<any>>
     }
   }
 }
 
-// Add command to create user via API
 Cypress.Commands.add('createUser', (email, password = 'password123') => {
-  // Default password if not provided
-  cy.request({
-    method: 'POST',
-    url: `${Cypress.env('apiUrl')}/api/v1/users`, // Use env var
-    body: {
-      user: { // Ensure body matches your UsersController expected params
-        email: email,
-        password: password
-      }
-    },
-    failOnStatusCode: false // Don't fail test if user already exists (e.g., 422)
-  });
+  return cy.task<{ status: number; body: { id: string; email: string } }>('createConfirmedUser', { email, password }, { log: false });
 });
 
 // Add command to log in via UI

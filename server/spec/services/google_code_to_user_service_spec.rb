@@ -60,9 +60,63 @@ RSpec.describe GoogleCodeToUserService do
 
         it 'uses the established provider subject when Google changes email' do
           owner = create(:user, email: 'original@example.com')
-          owner.auth_identities.create!(provider: 'google', subject: google_user_id)
+          owner.auth_identities.create!(provider: 'google', subject: google_user_id, ownership_verified_at: Time.current)
           expect { expect(service.to_local_user.user).to eq(owner) }.not_to change(User, :count)
           expect(session[:user_id]).to eq(owner.id)
+        end
+
+        it 'rejects an unverified email without creating an account, identity, or session' do
+          validator_payload['email_verified'] = false
+          expect { expect(service.to_local_user).not_to be_signed_in }.not_to change(User, :count)
+          expect(AuthIdentity.count).to eq(0)
+          expect(session[:user_id]).to be_nil
+        end
+
+        it 'continues trusting a verified stable subject when Google omits email later' do
+          owner = create(:user)
+          owner.auth_identities.create!(provider: 'google', subject: google_user_id, ownership_verified_at: Time.current)
+          validator_payload.delete('email')
+          validator_payload.delete('email_verified')
+          result = service.to_local_user
+          expect(result.user).to eq(owner)
+          expect(session[:auth_identity_id]).to eq(owner.auth_identities.first.id)
+          expect(session[:authentication_method]).to eq('google')
+        end
+
+        it 'quarantines a legacy subject whose fresh email does not prove the primary address' do
+          owner = create(:user, :unconfirmed, email: 'primary@example.com')
+          identity = owner.auth_identities.create!(provider: 'google', subject: google_user_id)
+          result = service.to_local_user
+          expect(result).not_to be_signed_in
+          expect(result.error).to include('ownership verification')
+          expect(identity.reload.ownership_verified_at).to be_nil
+          expect(session[:user_id]).to be_nil
+        end
+
+        it 'uses verified ownership to invalidate an unconfirmed password, preserving immediate Google sign-in' do
+          user = create(:user, :unconfirmed, email: user_email)
+          expect(service.to_local_user.user).to eq(user)
+          expect(session[:authentication_method]).to eq('google')
+          expect(session[:auth_identity_id]).to eq(user.auth_identities.first.id)
+          expect(user.auth_identities.first).to be_ownership_verified
+          expect(user.reload.email_confirmed_at).to be_present
+          expect(user.password_confirmed_at).to be_nil
+          expect(user.authenticate('password123')).to be(false)
+        end
+
+        it 'matches a legacy mixed-case email only after verification' do
+          user = create(:user, email: user_email.upcase)
+          expect(service.to_local_user.user).to eq(user)
+          expect(User.count).to eq(1)
+        end
+
+        it 'does not choose between ambiguous legacy email matches' do
+          create(:user, email: user_email)
+          duplicate = create(:user)
+          duplicate.update_columns(email: user_email.upcase)
+          expect(service.to_local_user.error).to eq('Multiple accounts use this email. Please contact support.')
+          expect(AuthIdentity.count).to eq(0)
+          expect(session[:user_id]).to be_nil
         end
 
         context 'when user exists' do
@@ -106,11 +160,10 @@ RSpec.describe GoogleCodeToUserService do
         context 'when user creation fails due to validation errors' do
           before do
             # Mock a user that fails to save
-            failed_user = User.new(email: user_email.downcase)
-            allow(User).to receive(:find_or_initialize_by).and_return(failed_user)
-            allow(failed_user).to receive(:new_record?).and_return(true)
-            allow(failed_user).to receive(:save).and_return(false)
-            allow(failed_user).to receive(:present?).and_return(false)
+            creator = instance_double(Users::CreateUserService)
+            failed = Users::CreateUserService::Result.new(nil, false, ["Email is invalid"])
+            allow(Users::CreateUserService).to receive(:new).and_return(creator)
+            allow(creator).to receive(:create_user).and_return(failed)
           end
 
           it 'returns a Result with user not found error' do

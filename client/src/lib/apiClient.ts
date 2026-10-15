@@ -6,11 +6,25 @@ export class AuthenticationError extends Error {
   }
 }
 
+export class EmailConfirmationRequiredError extends AuthenticationError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EmailConfirmationRequiredError';
+  }
+}
+
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 // Custom error for validation issues
 export class ValidationError extends Error {
-  errors: Record<string, string[]>;
+  errors: Record<string, string[]> | string[];
   
-  constructor(errors: Record<string, string[]>) {
+  constructor(errors: Record<string, string[]> | string[]) {
     const messages = Object.values(errors).flat();
     super(messages.join(', '));
     this.name = 'ValidationError';
@@ -32,41 +46,17 @@ const defaultFetchOptions: RequestInit = {
 
 // Helper function for handling API errors
 async function handleApiError(response: Response): Promise<void> {
+  const errorData = await response.json().catch(() => null);
+  if ((response.status === 401 || response.status === 403) && errorData?.code === 'email_confirmation_required') {
+    throw new EmailConfirmationRequiredError(errorData.error || 'Confirm your email address before signing in with a password.');
+  }
   if (response.status === 401) {
-    // Handle login/auth failure specifically
-    try {
-      const errorData = await response.json();
-      throw new AuthenticationError(errorData.error || 'User not authenticated');
-    } catch (error) {
-      if (error instanceof AuthenticationError) throw error;
-      throw new AuthenticationError('User not authenticated');
-    }
+    throw new AuthenticationError(errorData?.error || 'User not authenticated');
   }
-
-  // Handle other errors (like 422 validation)
-  try {
-    const errorData = await response.json();
-
-    // Check if Rails validation errors object exists
-    if (errorData && typeof errorData.errors === 'object' && errorData.errors !== null) {
-      throw new ValidationError(errorData.errors);
-    }
-
-    // Fallback for other JSON errors
-    throw new Error(errorData.error || `Request failed with status ${response.status}`);
-
-  } catch (error) {
-    // Re-throw known errors (AuthenticationError, ValidationError)
-    if (error instanceof AuthenticationError || error instanceof ValidationError) {
-      throw error;
-    }
-    // Check if this was an error we just threw (has specific error message)
-    if (error instanceof Error && error.message && !error.message.includes('JSON')) {
-      throw error;
-    }
-    // Fallback if response is not JSON or parsing fails
-    throw new Error(`Request failed with status ${response.status}`);
+  if (errorData && typeof errorData.errors === 'object' && errorData.errors !== null) {
+    throw new ValidationError(errorData.errors);
   }
+  throw new ApiError(errorData?.error || `Request failed with status ${response.status}`, response.status);
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';

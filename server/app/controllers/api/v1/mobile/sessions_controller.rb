@@ -5,11 +5,12 @@ class Api::V1::Mobile::SessionsController < ApplicationController
 
   def create
     user = User.find_by(email: params[:email].to_s.strip.downcase)
-    if user&.authenticate(params[:password].to_s)
+    return invalid_credentials unless user
+    user.with_lock do
+      return invalid_credentials unless user.authenticate(params[:password].to_s)
+      return render_email_confirmation_required unless user.password_confirmed?
       result = Mobile::CreateSessionService.new(user).create_session
       render json: session_payload(result), status: :created
-    else
-      render json: { error: "Invalid email or password" }, status: :unauthorized
     end
   end
 
@@ -20,6 +21,10 @@ class Api::V1::Mobile::SessionsController < ApplicationController
   end
 
   private
+
+  def invalid_credentials
+    render json: { error: "Invalid email or password" }, status: :unauthorized
+  end
 
   def session_payload(result)
     { token: result.token, expires_at: result.session.expires_at,

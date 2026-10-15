@@ -9,6 +9,7 @@ import SkisPage from "@/pages/SkisPage";
 import AccountPage from "@/pages/AccountPage";
 import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
+import ConfirmEmailPage from "@/pages/ConfirmEmailPage";
 import CallbackPage from "./pages/CallbackPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
 import TextImportPage from "@/pages/TextImportPage";
@@ -42,9 +43,17 @@ const App = () => (
   </QueryClientProvider>
 );
 
-const AppRoutes = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const AppRoutes = () => {
+  const { isAuthenticated, isLoading, emailConfirmationRequired } = useAuth();
   const location = useLocation();
+
+  if (location.pathname === '/confirm-email') {
+    return <ConfirmEmailPage />;
+  }
+
+  if (emailConfirmationRequired && location.pathname === '/') {
+    return <Navigate to="/auth" replace />;
+  }
 
   if (isLoading) {
     return (

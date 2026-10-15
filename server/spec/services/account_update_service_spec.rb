@@ -20,13 +20,40 @@ RSpec.describe AccountUpdateService do
   end
 
   describe '#update' do
+    it 'rejects changed email without changing confirmation or existing sessions' do
+      old = Mobile::CreateSessionService.new(user).create_session.session
+      version = user.password_session_version
+      expect(AccountUpdateService.new(user, email: 'new-owner@example.com').update).not_to be_updated
+      expect(user.reload.email).to eq('original@example.com')
+      expect(user).to be_password_confirmed
+      expect(user.email_confirmation_token_digest).to be_nil
+      expect(user.password_session_version).to eq(version)
+      expect(old.reload.revoked_at).to be_nil
+    end
+
+    it 'does not authorize a new password without another mailbox confirmation' do
+      original_email_confirmation = user.email_confirmed_at
+      expect(AccountUpdateService.new(user, password: 'new-password-123').update).to be_updated
+      expect(user.reload.email_confirmed_at).to eq(original_email_confirmation)
+      expect(user.password_confirmed_at).to be_nil
+      expect(user.email_confirmation_token_digest).to be_present
+    end
+
+    it 'accepts unchanged and case-equivalent profile email without discarding ownership proof' do
+      expect(AccountUpdateService.new(user, email: user.email.upcase, username: 'same_owner').update).to be_updated
+      expect(user.reload.email).to eq('original@example.com')
+      expect(user.username).to eq('same_owner')
+      expect(user).to be_password_confirmed
+      expect(user.email_confirmation_token_digest).to be_nil
+    end
+
     context 'when season_start_day is NOT changed' do
-      let(:params_without_season_change) { { email: "new@example.com" } }
+      let(:params_without_season_change) { { username: "winter_skier" } }
 
       it 'updates other user attributes' do
         service = AccountUpdateService.new(user, params_without_season_change)
         service.update
-        expect(user.reload.email).to eq("new@example.com")
+        expect(user.reload.username).to eq("winter_skier")
       end
 
       it 'calls DayNumberUpdaterService with empty affected_dates when season_start_day is not in params' do
@@ -37,10 +64,10 @@ RSpec.describe AccountUpdateService do
       end
 
       it 'calls DayNumberUpdaterService with empty affected_dates when season_start_day param is present but unchanged' do
-        params_with_same_season_day = { email: "another@example.com", season_start_day: initial_season_start_day }
+        params_with_same_season_day = { username: "another_skier", season_start_day: initial_season_start_day }
         service = AccountUpdateService.new(user, params_with_same_season_day)
         service.update
-        expect(user.reload.email).to eq("another@example.com") # Ensure other attributes can still update
+        expect(user.reload.username).to eq("another_skier")
         expect(user.reload.season_start_day).to eq(initial_season_start_day) # Ensure it truly didn't change
         expect(DayNumberUpdaterService).to have_received(:new).with(user: user, affected_dates: [])
         expect(day_number_updater_service_instance).to have_received(:update!).at_least(:once) # Could be called multiple times due to previous test in context

@@ -51,7 +51,7 @@ RSpec.describe ResendDeliveryMethod do
       end
 
       http = instance_double(Net::HTTP)
-      response = instance_double(Net::HTTPBadRequest, body: '{"Error":"bad"}', code: "400")
+      response = instance_double(Net::HTTPBadRequest, body: '{"Error":"sensitive-request-content"}', code: "400")
       allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
 
       allow(http).to receive(:request).and_return(response)
@@ -59,7 +59,7 @@ RSpec.describe ResendDeliveryMethod do
 
       expect do
         described_class.new(api_key: "re_test_123").deliver!(mail)
-      end.to raise_error("Resend delivery failed (400): {\"Error\":\"bad\"}")
+      end.to raise_error("Resend delivery failed (400)")
     end
 
     it "raises when Resend response does not include an id" do
@@ -79,7 +79,7 @@ RSpec.describe ResendDeliveryMethod do
 
       expect do
         described_class.new(api_key: "re_test_123").deliver!(mail)
-      end.to raise_error("Resend delivery failed (200): {}")
+      end.to raise_error("Resend delivery failed (200)")
     end
   end
 end

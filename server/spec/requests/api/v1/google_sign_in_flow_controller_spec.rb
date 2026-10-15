@@ -29,7 +29,7 @@ RSpec.describe "Api::V1::GoogleSignInFlowController", type: :request do
   describe "PATCH /api/v1/google_sign_in_flow (update action)" do
     let(:mock_code_to_user_service) { instance_double(GoogleCodeToUserService) }
     let(:user_attributes) { { id: SecureRandom.uuid, email: 'test@example.com', full_name: 'Test User' } }
-    let(:user_instance) { instance_double(User, id: user_attributes[:id], email: user_attributes[:email], full_name: user_attributes[:full_name], as_json: user_attributes.slice(:email, :full_name) ) }
+    let(:user_instance) { instance_double(User, id: user_attributes[:id], email: user_attributes[:email], full_name: user_attributes[:full_name], authentication_payload: user_attributes.slice(:email, :full_name) ) }
 
     before do
       allow(GoogleCodeToUserService).to receive(:new).and_return(mock_code_to_user_service)

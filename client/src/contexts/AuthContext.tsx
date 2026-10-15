@@ -1,12 +1,13 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query';
 import { accountService } from '@/services/accountService';
-import { AuthenticationError } from '@/services/skiService'; // Assuming this is a custom error type
+import { AuthenticationError, EmailConfirmationRequiredError } from '@/lib/apiClient';
 import { AccountDetails } from '@/types/ski';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  emailConfirmationRequired: boolean;
   user: AccountDetails | null;
   checkAuthStatus: () => Promise<void>;
   login: (user: AccountDetails) => void;
@@ -20,19 +21,9 @@ const accountDetailsQueryKey: QueryKey = ['accountDetails'];
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading: queryIsLoading, isError, error: queryError, refetch } = useQuery<AccountDetails, Error>({
+  const { data: user, isLoading: queryIsLoading, isError, error: queryError, refetch } = useQuery<AccountDetails | null, Error>({
     queryKey: accountDetailsQueryKey,
-    queryFn: async () => {
-      try {
-        return await accountService.getAccountDetails();
-      } catch (error) {
-        if (error instanceof AuthenticationError) {
-          // Don't throw auth errors, let them result in no user data / !isAuthenticated
-          return null; // Or undefined, handled by how `user` is used
-        }
-        throw error; // Re-throw other errors for React Query to handle
-      }
-    },
+    queryFn: () => accountService.getAccountDetails(),
     retry: (failureCount, error) => {
       if (error instanceof AuthenticationError) return false;
       return failureCount < 2; // Retry other errors (e.g. network) a couple of times
@@ -70,7 +61,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider value={{
       isAuthenticated,
       isLoading: queryIsLoading,
-      user: user || null, // Provide null if user is undefined from query
+      emailConfirmationRequired: queryError instanceof EmailConfirmationRequiredError,
+      user: isAuthenticated ? user : null,
       checkAuthStatus,
       login,
       logout
