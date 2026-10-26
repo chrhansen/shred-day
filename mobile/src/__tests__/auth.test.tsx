@@ -99,6 +99,16 @@ test("an offline account refresh preserves the cached signed-in journal", async 
   expect(result.current.error).toBeNull();
   expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
 });
+test("account deletion retains its cleanup owner even when a late 401 clears the session", async () => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, identity: account }));
+  const { result } = mount();
+  await waitFor(() => expect(result.current.user).toBeTruthy());
+  const confirmDeletion = result.current.markAccountDeleted;
+  await act(async () => { api.onUnauthorized?.(); });
+  act(() => confirmDeletion());
+  expect(result.current.user).toBeNull();
+  expect(result.current.deletedOwner).toBe(account.id);
+});
 test("expired credentials are discarded", async () => {
   (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(
     JSON.stringify({ ...session, expires_at: "2020-01-01" }),

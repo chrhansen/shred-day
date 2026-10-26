@@ -6,8 +6,8 @@ import { Button, Icon, Notice, Screen, Text, colors } from "../components/ui";
 import { clearAccountImages } from "../lib/account-cache";
 
 export default function AccountDeletedScreen() {
-  const { logout, user, deletionConfirmed, acknowledgeDeletion } = useAuth();
-  const owner = useRef(user?.id);
+  const { logout, user, deletedOwner, deletionConfirmed, acknowledgeDeletion } = useAuth();
+  const owner = useRef(deletedOwner || user?.id);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);

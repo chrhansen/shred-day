@@ -16,7 +16,7 @@ type Auth = {
   expired: boolean; expiredIdentity: Identity | null; resetExpired: () => void;
   emailConfirmationRequired: boolean;
   reauthenticationMethod: Method; confirmedMethods: Method[];
-  deletionConfirmed: boolean; markAccountDeleted: () => void; acknowledgeDeletion: () => void;
+  deletionConfirmed: boolean; deletedOwner: string | null; markAccountDeleted: () => void; acknowledgeDeletion: () => void;
   retry: () => void; refresh: () => Promise<void>;
   passwordLogin: (email: string, password: string) => Promise<void>;
   registerEmail: (email: string) => Promise<void>;
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [expiredIdentity, setExpiredIdentity] = useState<Identity | null>(null);
   const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(false);
   const [deletionConfirmed, setDeletionConfirmed] = useState(false);
+  const [deletedOwner, setDeletedOwner] = useState<string | null>(null);
   const generation = useRef(0);
   const credentialOperations = useRef<Promise<void>>(Promise.resolve());
   const userRef = useRef<Account | null>(null);
@@ -208,7 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await Promise.all([clear(false, undefined, current), token ? revoke(token) : Promise.resolve()]);
   }, [clear]);
   return <Context.Provider value={{ user, session, ready, error, expired, expiredIdentity, resetExpired, emailConfirmationRequired,
-    deletionConfirmed, markAccountDeleted: () => setDeletionConfirmed(true), acknowledgeDeletion: () => setDeletionConfirmed(false),
+    deletionConfirmed, deletedOwner,
+    markAccountDeleted: () => { setDeletedOwner(user?.id || session?.identity?.id || null); setDeletionConfirmed(true); },
+    acknowledgeDeletion: () => { setDeletedOwner(null); setDeletionConfirmed(false); },
     reauthenticationMethod: session?.reauthentication_method || session?.authentication_method || "password",
     confirmedMethods: session?.confirmed_methods || (session ? [session.authentication_method] : []),
     retry: () => { setReady(false); setError(null); void restore(); }, refresh, passwordLogin, registerEmail, socialLogin, reauthenticate, logout }}>
