@@ -367,6 +367,22 @@ CREATE TABLE public.mobile_sessions (
 
 
 --
+-- Name: mobile_sync_receipts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mobile_sync_receipts (
+    id character varying DEFAULT public.gen_id('syn'::text) NOT NULL,
+    user_id character varying NOT NULL,
+    operation_id character varying NOT NULL,
+    request_digest character varying NOT NULL,
+    response_body jsonb NOT NULL,
+    response_status integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: photo_imports; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -395,7 +411,8 @@ CREATE TABLE public.photos (
     latitude double precision,
     longitude double precision,
     taken_at timestamp(6) without time zone,
-    exif_state integer DEFAULT 0 NOT NULL
+    exif_state integer DEFAULT 0 NOT NULL,
+    upload_id character varying
 );
 
 
@@ -605,6 +622,14 @@ ALTER TABLE ONLY public.mobile_sessions
 
 
 --
+-- Name: mobile_sync_receipts mobile_sync_receipts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_sync_receipts
+    ADD CONSTRAINT mobile_sync_receipts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: photo_imports photo_imports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -810,6 +835,20 @@ CREATE INDEX index_mobile_sessions_on_user_id ON public.mobile_sessions USING bt
 
 
 --
+-- Name: index_mobile_sync_receipts_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mobile_sync_receipts_on_user_id ON public.mobile_sync_receipts USING btree (user_id);
+
+
+--
+-- Name: index_mobile_sync_receipts_on_user_id_and_operation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_mobile_sync_receipts_on_user_id_and_operation_id ON public.mobile_sync_receipts USING btree (user_id, operation_id);
+
+
+--
 -- Name: index_photo_imports_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -849,6 +888,13 @@ CREATE INDEX index_photos_on_resort_id ON public.photos USING btree (resort_id);
 --
 
 CREATE INDEX index_photos_on_user_id ON public.photos USING btree (user_id);
+
+
+--
+-- Name: index_photos_on_user_id_and_upload_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_photos_on_user_id_and_upload_id ON public.photos USING btree (user_id, upload_id) WHERE (upload_id IS NOT NULL);
 
 
 --
@@ -1008,6 +1054,14 @@ ALTER TABLE ONLY public.photos
 
 
 --
+-- Name: mobile_sync_receipts fk_rails_86542627c5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mobile_sync_receipts
+    ADD CONSTRAINT fk_rails_86542627c5 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: active_storage_variant_records fk_rails_993965df05; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1134,6 +1188,7 @@ ALTER TABLE ONLY public.auth_identities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261026170000'),
 ('20261015091000'),
 ('20261015090500'),
 ('20261015090000'),

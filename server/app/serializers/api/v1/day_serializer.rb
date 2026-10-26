@@ -5,6 +5,7 @@ module Api
       include Rails.application.routes.url_helpers
 
       attributes :id, :date, :user_id, :created_at, :updated_at, :notes, :day_number, :shared_at
+      attribute(:updated_at) { object.updated_at.iso8601(6) }
 
       # Use belongs_to to embed the full associated objects
       belongs_to :resort

@@ -15,6 +15,7 @@ class User < ApplicationRecord
   has_one :google_sheet_integration, dependent: :destroy
   has_one_attached :avatar
   has_many :mobile_sessions, dependent: :destroy
+  has_many :mobile_sync_receipts, dependent: :destroy
   has_many :auth_identities, dependent: :destroy
 
   has_many :recent_resorts, -> {
