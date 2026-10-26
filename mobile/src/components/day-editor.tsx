@@ -107,7 +107,7 @@ function EditorForm({ id, initialDate, initialDay }: { id?: string; initialDate?
       photoState.commit();
       client.setQueryData(["day", day.id, auth.user?.id], day);
       void client.invalidateQueries(); void auth.refresh().catch(() => {});
-      toast("Saved on device · waiting to sync"); setSavedId(day.id);
+      toast(day.sync_state === "failed" ? "Saved on device · needs attention" : "Saved on device · waiting to sync"); setSavedId(day.id);
     } catch { setFailed(true); }
     finally { saving.current = false; setBusy(false); }
   };

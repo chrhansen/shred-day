@@ -209,7 +209,7 @@ export const offline = {
     const change: Change = { operationId: randomUUID(), localId, kind: "save", body,
       photos: day.photos.filter((photo) => isLocalPhoto(photo.id) && photo.full_url).map((photo) => ({ id: photo.id, uri: relativePhotoUri(photo.full_url!) })) };
     if (!stillActive(context)) throw new Error("Your sign-in changed.");
-    await store.enqueue(context.owner, day, change, () => stillActive(context));
+    const saved = await store.enqueue(context.owner, day, change, () => stillActive(context));
     try {
       const account = await store.get<Account>(context.owner, "account");
       if (account) {
@@ -219,7 +219,7 @@ export const offline = {
       await publish(context);
     } catch { /* The durable day and outbox already committed; refresh can recover. */ }
     wake?.();
-    return day;
+    return saved;
   },
   async remove(id: string) {
     const context = active;

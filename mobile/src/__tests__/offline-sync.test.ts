@@ -188,3 +188,21 @@ test("a restored account includes older seasons found in its durable journal", a
   const restored = await offline.activate(account.id, client);
   expect(restored?.available_seasons).toContain(-1);
 });
+test("editing a rejected entry keeps its recovery actions visible until it is explicitly retried", async () => {
+  const saved = await offline.save(body, undefined, { resort: day.resort, skis: [], tags: [], photos: [] });
+  fetchMock.mockResolvedValueOnce(response({ error: "Too many entries for this date" }, 422)); await offline.sync();
+  const edited = await offline.save({ ...body, date: "2026-10-24" }, saved.id);
+  expect(edited.sync_state).toBe("failed");
+  expect(client.getQueryData(["day", saved.id, account.id])).toMatchObject({ sync_state: "failed", date: "2026-10-24" });
+  await offline.resolve(saved.id, true);
+  fetchMock.mockResolvedValueOnce(response({ day: { ...day, date: "2026-10-24" } })); await offline.sync();
+  expect(await (await localStore()).changes(account.id)).toEqual([]);
+});
+test("deleting a rejected new entry clears its blocked changes without leaving invisible work", async () => {
+  const saved = await offline.save(body, undefined, { resort: day.resort, skis: [], tags: [], photos: [] });
+  fetchMock.mockResolvedValueOnce(response({ error: "Too many entries for this date" }, 422)); await offline.sync();
+  await offline.remove(saved.id); await offline.sync();
+  expect(await (await localStore()).changes(account.id)).toEqual([]);
+  expect(await (await localStore()).get(account.id, "day:" + saved.id)).toBeUndefined();
+  expect(client.getQueryData(["days", 0, account.id])).toEqual([]);
+});

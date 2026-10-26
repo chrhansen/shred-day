@@ -60,14 +60,27 @@ export class OfflineStore {
     return rows.map((row) => JSON.parse(row.value));
   }
   async enqueue(owner: string, day: Day, change: Change, allowed = () => true) {
+    let saved = day;
     await this.transaction(async (tx) => {
       if (!allowed()) throw new Error("Your sign-in changed.");
       const store = new OfflineStore(tx, true);
-      await store.put(owner, "day:" + change.localId, day);
+      const previous = (await store.changes(owner)).filter((pending) => pending.localId === change.localId);
+      const rejected = previous.find((pending) => pending.error);
+      if (rejected && change.kind === "delete") {
+        await tx.runAsync("DELETE FROM pending_changes WHERE owner = ? AND local_id = ?", owner, change.localId);
+        await tx.runAsync("DELETE FROM local_values WHERE owner = ? AND key = ?", owner, "conflict:" + change.localId);
+        for (const pending of previous) {
+          await tx.runAsync("DELETE FROM local_values WHERE owner = ? AND key = ?", owner, "request:" + pending.operationId);
+        }
+      } else if (rejected) {
+        saved = { ...day, sync_state: "failed", sync_error: rejected.error };
+      }
+      await store.put(owner, "day:" + change.localId, saved);
       await tx.runAsync("INSERT INTO pending_changes (owner, operation_id, local_id, value) VALUES (?, ?, ?, ?)",
         owner, change.operationId, change.localId, JSON.stringify(change));
       await store.changed(owner);
     });
+    return saved;
   }
   async fail(owner: string, change: Change, message: string, conflict?: Day, allowed = () => true) {
     await this.transaction(async (tx) => {
