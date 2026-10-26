@@ -51,6 +51,11 @@ IDs without removing existing routes. Keep these additions through a code rollba
 while devices may retain pending changes. Verify retry deduplication, version
 conflicts and existing web saves; see the [offline beta rollout](../mobile/RELEASE.md#103-offline-beta-rollout).
 
+Deploy the 1.0.4 bearer HTTP-cache fix before its TestFlight update. It makes
+successful mobile reads return complete JSON with `Cache-Control: no-store`
+despite old device cache validators; website cookie caching is unchanged.
+This patch requires no additional migration. See the [cache warmup check](../mobile/RELEASE.md#104-cache-warmup-fix).
+
 The web proxy listens on port 8080 because the container runs as an unprivileged
 user. Puma listens on 3000 behind it. The worker uses Puma directly on 8080.
 

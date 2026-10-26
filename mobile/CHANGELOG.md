@@ -4,6 +4,13 @@ read_when: Reviewing changes to the iPhone beta
 
 # Mobile changelog
 
+## 1.0.4 — beta, 2026-10-26
+
+- Download skis, tags, recent resorts and counts for all available seasons automatically while online. After those downloads finish, the first offline editor or season-picker visit has its saved choices and counts, even after restarting the app.
+- Refresh local data with complete server responses, including on devices with old HTTP cache validators. Reference downloads start alongside queued uploads so a slow upload does not hold them up.
+
+For contributors: real-SQLite cold-launch/offline-restart/day-creation tests and bearer HTTP-cache regressions cover the fixes. Deploy the API patch before the TestFlight update; no migration or new dependency is needed. The [physical-device gate](RELEASE.md#device-and-beta-gate) remains required.
+
 ## 1.0.3 — beta, 2026-10-26
 
 - Open your saved journal immediately, then refresh it from the server in the background. Loaded seasons and cached resort/gear choices stay available offline.

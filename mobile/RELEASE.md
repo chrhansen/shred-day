@@ -40,9 +40,15 @@ Deploy `20261026170000_add_offline_sync_receipts` and the API before distributin
 
 Use a new production build because SQLite and network support add native modules. Submit its exact EAS ID to **Shred.Day Internal**, then verify processing, tester availability and What to Test notes. This is a TestFlight update; do not replace the build in an existing App Review submission or submit a public release as part of this rollout.
 
-Beta focus: first sign in and load a season online, enable airplane mode, restart, create/edit/delete days with photos, force-close, reopen, then reconnect and confirm one server copy per entry. Repeat with a lost response, a conflicting website edit, another account, logout/relogin and a TestFlight app update. Sync runs while active on launch/reconnect/foreground; closed-app scheduling is not included. Cached resort/gear choices work offline, while creating those choices and uncached content need a connection. See [offline behavior](README.md#offline-journal-in-103).
+Beta focus: first sign in and load a season online, enable airplane mode, restart, create/edit/delete days with photos, force-close, reopen, then reconnect and confirm one server copy per entry. Repeat with a lost response, a conflicting website edit, another account, logout/relogin and a TestFlight app update. Sync runs while active on launch/reconnect/foreground; closed-app scheduling is not included. Cached resort/gear choices work offline, while creating those choices and uncached content need a connection. See [offline behavior](README.md#offline-journal-in-104).
 
 The physical-device gate below remains required. Passing unit tests, JavaScript exports or an EAS build does not certify native storage, permissions, app-update file preservation or background/foreground behavior.
+
+## 1.0.4 cache warmup fix
+
+Deploy the bearer HTTP-cache fix before distributing this TestFlight update. Mobile fetches use `cache: no-store`; bearer API responses ignore conditional validators and set `Cache-Control: no-store` so successful reads return complete JSON rather than 304. Website cookie caching is unchanged. No migration or new dependency is required beyond the 1.0.3 rollout.
+
+Launch/reconnect/foreground now download skis, tags, recent resorts and statistics for all available seasons alongside the upload queue. For the device check, start online with an account that has gear, tags and past seasons. Let the downloads finish without opening the editor or season picker, then force-close, enable airplane mode and relaunch. Open the editor for the first time, select a cached resort, ski and tag, save a day, and verify the season picker's saved counts. Restart offline again before reconnecting and confirming one server entry. The real-SQLite and HTTP-cache regressions cover this flow in source tests; native verification remains part of the device gate.
 
 ## Simulator verification
 
@@ -94,6 +100,7 @@ The public privacy/support copy lives in `server/app/views/legal_pages/`. Review
 
 - Verify login/signup, Google and Apple on a signed physical iPhone; returning Apple login may omit email. Test existing Google users and authenticated linking.
 - Cold start, restart, background/foreground, expired/revoked session, offline launch/retry, logout, and switching accounts.
+- Complete the first online downloads without visiting the editor or season picker. After an airplane-mode restart, open each for the first time and verify cached skis, tags, recent resorts and counts for every available season. Save a day with those choices, restart offline, then reconnect and verify the upload.
 - On signed iOS and Android builds, verify SQLite saves during an active refresh/upload, airplane-mode restart with queued day/photo changes, lost acknowledgements, server deletions, same-date numbering, conflict resolution, season rollover/cutoff changes and account deletion during an in-flight sync. Install an app update with pending photos and confirm the files still render and upload afterward.
 - Create/edit/delete a day; missing resort and 500-character validation; multiple entries per date and multiple skis/tags. Verify list/calendar selection, shared season state, calendar arrows/swipes and unavailable dates at custom season boundaries, profile cutoff changes, Monday/Sunday device settings, local dates across time zones, date presets and dirty-form cancellation.
 - Camera and library permissions; JPEG/HEIC; several uploads; retry/removal; cancel during upload; avatar; processing images; removing the final photo.
