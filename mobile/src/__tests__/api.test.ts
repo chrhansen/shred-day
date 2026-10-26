@@ -4,7 +4,7 @@ import { photoForm } from "../lib/photo-upload";
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
 function response(status = 200, payload: unknown = {}) {
-  return { ok: status < 400, status, json: async () => payload };
+  return { ok: status >= 200 && status < 300, status, json: async () => payload };
 }
 beforeEach(() => {
   fetchMock.mockReset();
@@ -21,6 +21,12 @@ test("private requests use bearer auth and public shared days omit it", async ()
   );
   await shred.sharedDay("day_1");
   expect(fetchMock.mock.calls[1][1].headers.Authorization).toBeUndefined();
+});
+test("network refreshes bypass HTTP caches because the journal stores its own responses", async () => {
+  api.token = "device-token";
+  fetchMock.mockResolvedValue(response(200, { summary: { totalDays: 80 } }));
+  await new ApiClient().request("/api/v1/stats?season=-1");
+  expect(fetchMock.mock.calls[0][1].cache).toBe("no-store");
 });
 test("revoked sessions invalidate auth, while failed provider linking keeps it", async () => {
   api.token = "device-token";
