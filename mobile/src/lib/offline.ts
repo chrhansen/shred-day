@@ -99,7 +99,12 @@ export const offline = {
     const account = saved ? await accountWithLocalSeasons(saved, await store.get<string>(owner, "account-season")) : undefined;
     for (const key of ["skis", "tags", "recent-resorts"]) {
       const value = await store.get(owner, key);
-      if (stillActive(context) && value) client.setQueryData([key, owner], value);
+      if (stillActive(context) && value) client.setQueryData([key, owner], value, { updatedAt: 0 });
+    }
+    for (const season of new Set([0, ...(account?.available_seasons || [])])) {
+      const { start, end } = rangeFor(season, account);
+      const stats = await store.get(owner, "stats:" + start + ":" + end);
+      if (stillActive(context) && stats) client.setQueryData(["stats", season, owner], stats, { updatedAt: 0 });
     }
     await publish(context);
     return stillActive(context) ? account : undefined;

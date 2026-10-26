@@ -1,5 +1,6 @@
 import { api } from "../lib/api";
 import { offline } from "../lib/offline";
+import type { QueryClient } from "@tanstack/react-query";
 import type {
   Account,
   Day,
@@ -105,3 +106,14 @@ export const shred = {
       body: { confirmation: "DELETE" },
     }),
 };
+
+export async function cacheJournal(client: QueryClient, owner: string, seasons: number[]) {
+  const choices = [["skis", shred.skis], ["tags", shred.tags], ["recent-resorts", shred.recentResorts]] as const;
+  const offsets = [...new Set([0, ...seasons])];
+  await Promise.all([
+    ...choices.map(([key, queryFn]) => client.fetchQuery<unknown>({ queryKey: [key, owner], queryFn, staleTime: 60_000 })),
+    ...offsets.map((season) => client.fetchQuery({
+      queryKey: ["stats", season, owner], queryFn: () => shred.stats(season), staleTime: 60_000,
+    })),
+  ]);
+}

@@ -4,11 +4,13 @@ import * as Network from "expo-network";
 import { useQueryClient } from "@tanstack/react-query";
 import { offline } from "../lib/offline";
 import { useAuth } from "./auth";
+import { cacheJournal } from "../services/shred";
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { user, session, refresh } = useAuth();
   const client = useQueryClient();
   const owner = user?.id, token = session?.token;
+  const seasonKey = user?.available_seasons.join(",") || "0";
   useEffect(() => {
     if (!owner || !token) return;
     let disposed = false, busy = false, requested = false, failures = 0;
@@ -17,7 +19,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       if (disposed || busy || AppState.currentState !== "active") return;
       busy = true; requested = false; clearTimeout(timer);
       try {
-        await offline.sync();
+        const caching = offline.status().offline ? Promise.resolve() : cacheJournal(client, owner, seasonKey.split(",").map(Number));
+        await Promise.all([offline.sync(), caching]);
         if (disposed) return;
         if (offline.status().offline) return;
         failures = 0;
@@ -31,15 +34,17 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     };
     const wake = () => { if (busy) requested = true; else void run(); };
     offline.setWake(wake);
+    let receivedNetworkEvent = false;
     const network = Network.addNetworkStateListener((state) => {
+      receivedNetworkEvent = true;
       offline.setOnline(state.isConnected !== false && state.isInternetReachable !== false);
     });
     void Network.getNetworkStateAsync().then((state) => {
-      if (!disposed) offline.setOnline(state.isConnected !== false && state.isInternetReachable !== false);
+      if (!disposed && !receivedNetworkEvent) offline.setOnline(state.isConnected !== false && state.isInternetReachable !== false);
     }).catch(wake);
     const app = AppState.addEventListener("change", (state) => { if (state === "active") wake(); });
     wake();
     return () => { disposed = true; clearTimeout(timer); network.remove(); app.remove(); offline.setWake(undefined); };
-  }, [owner, token, client, refresh]);
+  }, [owner, token, client, refresh, seasonKey]);
   return children;
 }

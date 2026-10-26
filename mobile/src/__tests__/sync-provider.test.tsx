@@ -4,10 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Network from "expo-network";
 import { SyncProvider } from "../contexts/sync";
 import { offline } from "../lib/offline";
+import { cacheJournal } from "../services/shred";
 
 let mockWake: (() => void) | undefined;
 const mockRefresh = jest.fn(async () => {});
-jest.mock("../contexts/auth", () => ({ useAuth: () => ({ user: { id: "usr_1" }, session: { token: "token" }, refresh: mockRefresh }) }));
+jest.mock("../contexts/auth", () => ({ useAuth: () => ({ user: { id: "usr_1", available_seasons: [0, -1] }, session: { token: "token" }, refresh: mockRefresh }) }));
+jest.mock("../services/shred", () => ({ cacheJournal: jest.fn(async () => {}) }));
 jest.mock("expo-network", () => ({ getNetworkStateAsync: jest.fn(), addNetworkStateListener: jest.fn() }));
 jest.mock("../lib/offline", () => ({ offline: { sync: jest.fn(), setWake: jest.fn(), setOnline: jest.fn(), status: jest.fn() } }));
 let networkChanged: (state: { isConnected: boolean }) => void;
@@ -33,6 +35,7 @@ test("reconnection wakes the durable upload queue", async () => {
   const initial = (offline.sync as jest.Mock).mock.calls.length;
   await act(async () => { networkChanged({ isConnected: true }); });
   expect((offline.sync as jest.Mock).mock.calls.length).toBeGreaterThan(initial);
+  expect(cacheJournal).toHaveBeenCalledWith(client, "usr_1", [0, -1]);
   view.unmount(); expect(mockWake).toBeUndefined();
 });
 test("returning to the foreground syncs without waiting for the retry timer", async () => {
@@ -49,4 +52,12 @@ test("temporary failures back off and retry without removing queued work", async
   expect(offline.sync).toHaveBeenCalledTimes(1);
   await act(async () => { jest.advanceTimersByTime(1); });
   expect(offline.sync).toHaveBeenCalledTimes(2);
+});
+test("a stale initial connectivity result cannot overwrite a newer reconnect event", async () => {
+  let finish!: (state: { isConnected: boolean; isInternetReachable: boolean }) => void;
+  (Network.getNetworkStateAsync as jest.Mock).mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+  mount(); await act(async () => {});
+  await act(async () => { networkChanged({ isConnected: true }); });
+  await act(async () => { finish({ isConnected: false, isInternetReachable: false }); });
+  expect(offline.setOnline).toHaveBeenLastCalledWith(true);
 });
