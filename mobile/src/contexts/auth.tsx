@@ -5,6 +5,7 @@ import { api, ApiClient, ApiError } from "../lib/api";
 import type { Account, Session } from "../lib/types";
 import { shred } from "../services/shred";
 import { providerProof } from "../lib/provider-login";
+import { offline } from "../lib/offline";
 
 const key = "shredday.mobile.session";
 type Method = Session["authentication_method"];
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const previous = identity || (userRef.current ? identityOf(userRef.current) : sessionRef.current?.identity);
     const current = ++generation.current;
     api.token = null; userRef.current = null;
+    offline.detach();
     setUser(null); rememberSession(null); setError(null);
     setExpired(didExpire); setExpiredIdentity(didExpire ? previous || null : null);
     setEmailConfirmationRequired(confirmationRequired);
@@ -75,7 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const current = generation.current;
     const account = await shred.account();
     if (current !== generation.current) return;
-    remember(account);
+    const local = await offline.rememberAccount(account);
+    if (current !== generation.current) return;
+    remember(local || account);
     const stored = sessionRef.current;
     if (stored) { const next = { ...stored, identity: identityOf(account) }; rememberSession(next); await saveCredential(current, next); }
   }, [remember, rememberSession, saveCredential]);
@@ -92,14 +96,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clear(Boolean(stored?.token), stored?.identity, current); return;
       }
       api.token = stored.token; rememberSession(stored);
+      if (stored.identity?.id) {
+        const cached = await offline.activate(stored.identity.id, queryClient);
+        if (generation.current !== current) return;
+        if (cached) { remember(cached); setReady(true); }
+      }
       const account = await shred.account();
-      if (generation.current === current) remember(account);
+      if (generation.current === current) {
+        if (!stored.identity?.id) await offline.activate(account.id, queryClient);
+        if (generation.current !== current) return;
+        const local = await offline.rememberAccount(account);
+        if (generation.current === current) remember(local || account);
+      }
     } catch (cause) {
       if (generation.current !== current) return;
       if (cause instanceof ApiError && cause.status === 401) await clear(true, undefined, current, cause.code === "email_confirmation_required");
-      else setError("Could not reach Shred.Day. Check your connection and try again.");
+      else if (!userRef.current) setError("Could not reach Shred.Day. Check your connection and try again.");
     } finally { if (current === generation.current) setReady(true); }
-  }, [clear, remember, rememberSession]);
+  }, [clear, remember, rememberSession, queryClient]);
   useEffect(() => {
     api.onUnauthorized = code => {
       const clearedGeneration = generation.current + 1;
@@ -121,7 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await saveCredential(current, stored);
       if (current !== generation.current) throw changedSignIn();
       api.token = next.token;
-      queryClient.clear(); rememberSession(stored); remember(account); setError(null); resetExpired();
+      queryClient.clear();
+      await offline.activate(account.id, queryClient);
+      if (current !== generation.current) throw changedSignIn();
+      const local = await offline.rememberAccount(account);
+      if (current !== generation.current) throw changedSignIn();
+      rememberSession(stored); remember(local || account); setError(null); resetExpired();
     } catch (cause) {
       if (current !== generation.current) { await revoke(next.token); throw changedSignIn(); }
       if (!accountLoaded && !userRef.current && !(cause instanceof ApiError && cause.status === 401)) {

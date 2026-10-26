@@ -104,21 +104,6 @@ test("multipart photos use the Rails file field and leave the boundary to fetch"
   expect(request.headers["Content-Type"]).toBeUndefined();
   expect(form.has("file")).toBe(true);
 });
-test("day edits send explicit empty photos so the last attachment can be removed", async () => {
-  fetchMock.mockResolvedValue(response());
-  await shred.saveDay(
-    {
-      date: "2026-02-01",
-      resort_id: "res_1",
-      ski_ids: [],
-      tag_ids: [],
-      photo_ids: [],
-      notes: null,
-    },
-    "day_1",
-  );
-  expect(JSON.parse(fetchMock.mock.calls[0][1].body).day.photo_ids).toEqual([]);
-});
 test("no-content responses do not require JSON and network failures explain retry", async () => {
   const client = new ApiClient();
   fetchMock.mockResolvedValue(response(204));

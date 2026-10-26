@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { shred } from "../services/shred";
-import { photoForm } from "../lib/photo-upload";
+import { stagePhoto, discardLocalPhoto } from "../lib/offline-photos";
+import { useAuth } from "../contexts/auth";
 import type { Photo } from "../lib/types";
 export type EditorPhoto = {
   key: string;
@@ -18,12 +18,13 @@ export class PhotoAccessError extends Error {
   }
 }
 export function useDayPhotos(initial: Photo[] = []) {
+  const { user } = useAuth();
   const [photos, setPhotos] = useState<EditorPhoto[]>(() => initial.map((photo) => ({
     key: photo.id, id: photo.id, uri: photo.preview_url || photo.full_url, status: "ready",
   })));
   const [error, setError] = useState<unknown>(null);
   const alive = useRef(true);
-  const created = useRef(new Set<string>());
+  const created = useRef(new Map<string, string | null>());
   const removed = useRef(new Set<string>());
   const committed = useRef(false);
   const pickerActive = useRef(false);
@@ -35,9 +36,7 @@ export function useDayPhotos(initial: Photo[] = []) {
     return () => {
       alive.current = false;
       if (!committed.current)
-        uploads.forEach((id) => {
-          void shred.deletePhoto(id).catch(() => {});
-        });
+        uploads.forEach((uri) => discardLocalPhoto(uri));
     };
   }, []);
   const upload = async (item: EditorPhoto) => {
@@ -51,15 +50,16 @@ export function useDayPhotos(initial: Photo[] = []) {
       ),
     );
     try {
-      const photo = await shred.uploadPhoto(photoForm(item.asset));
+      if (!user) throw new Error("Please sign in again.");
+      const photo = await stagePhoto(item.asset, user.id);
       if (!alive.current || removed.current.has(item.key)) {
-        await shred.deletePhoto(photo.id);
+        discardLocalPhoto(photo.full_url);
         return;
       }
-      created.current.add(photo.id);
+      created.current.set(photo.id, photo.full_url);
       setPhotos((current) =>
         current.map((p) =>
-          p.key === item.key ? { ...p, id: photo.id, status: "ready" } : p,
+          p.key === item.key ? { ...p, id: photo.id, uri: photo.full_url, status: "ready" } : p,
         ),
       );
     } catch (cause) {
@@ -118,8 +118,10 @@ export function useDayPhotos(initial: Photo[] = []) {
   const remove = (photo: EditorPhoto) => {
     removed.current.add(photo.key);
     setPhotos((current) => current.filter((p) => p.key !== photo.key));
-    if (photo.id && created.current.delete(photo.id))
-      void shred.deletePhoto(photo.id).catch((cause) => setError(cause));
+    if (photo.id && created.current.has(photo.id)) {
+      discardLocalPhoto(created.current.get(photo.id) || null);
+      created.current.delete(photo.id);
+    }
   };
   const load = (initial: Photo[]) =>
     setPhotos(

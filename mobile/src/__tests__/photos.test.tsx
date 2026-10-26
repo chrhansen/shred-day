@@ -1,21 +1,20 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useDayPhotos } from "../hooks/use-day-photos";
-import { shred } from "../services/shred";
+import { stagePhoto, discardLocalPhoto } from "../lib/offline-photos";
 jest.mock("expo-image-picker", () => ({
   launchImageLibraryAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
   requestCameraPermissionsAsync: jest.fn(),
   UIImagePickerPreferredAssetRepresentationMode: { Current: "current" },
 }));
-jest.mock("../services/shred", () => ({
-  shred: { uploadPhoto: jest.fn(), deletePhoto: jest.fn() },
-}));
+jest.mock("../lib/offline-photos", () => ({ stagePhoto: jest.fn(), discardLocalPhoto: jest.fn() }));
+jest.mock("../contexts/auth", () => ({ useAuth: () => ({ user: { id: "usr_1" } }) }));
 const asset = { uri: "file:///ski.jpg", width: 100, height: 100 };
 const photo = {
   id: "photo_1",
   preview_url: null,
-  full_url: null,
+  full_url: "file:///documents/journal/usr_1/photo.jpg",
   filename: "ski.jpg",
 };
 beforeEach(() => {
@@ -24,10 +23,9 @@ beforeEach(() => {
     canceled: false,
     assets: [asset],
   });
-  (shred.deletePhoto as jest.Mock).mockResolvedValue(undefined);
 });
 test("failed photos keep saving blocked until retried or removed", async () => {
-  (shred.uploadPhoto as jest.Mock)
+  (stagePhoto as jest.Mock)
     .mockRejectedValueOnce(new Error("Connection lost"))
     .mockResolvedValueOnce(photo);
   const { result } = renderHook(useDayPhotos);
@@ -42,30 +40,30 @@ test("failed photos keep saving blocked until retried or removed", async () => {
   expect(result.current.pending).toBe(false);
   expect(result.current.photos[0].id).toBe(photo.id);
 });
-test("canceling an editor cleans up newly uploaded photos and keeps original attachments", async () => {
-  (shred.uploadPhoto as jest.Mock).mockResolvedValue(photo);
+test("canceling an editor cleans up newly copyed photos and keeps original attachments", async () => {
+  (stagePhoto as jest.Mock).mockResolvedValue(photo);
   const { result, unmount } = renderHook(useDayPhotos);
   await act(async () => {
     result.current.load([{ ...photo, id: "original" }]);
     await result.current.pick(false);
   });
   unmount();
-  expect(shred.deletePhoto).toHaveBeenCalledWith(photo.id);
-  expect(shred.deletePhoto).not.toHaveBeenCalledWith("original");
+  expect(discardLocalPhoto).toHaveBeenCalledWith(photo.full_url);
+  expect(discardLocalPhoto).not.toHaveBeenCalledWith("original");
 });
 test("saved photos survive editor unmount", async () => {
-  (shred.uploadPhoto as jest.Mock).mockResolvedValue(photo);
+  (stagePhoto as jest.Mock).mockResolvedValue(photo);
   const { result, unmount } = renderHook(useDayPhotos);
   await act(async () => {
     await result.current.pick(false);
   });
   act(() => result.current.commit());
   unmount();
-  expect(shred.deletePhoto).not.toHaveBeenCalled();
+  expect(discardLocalPhoto).not.toHaveBeenCalled();
 });
-test("a late upload is removed if its editor was closed while uploading", async () => {
+test("a late copy is removed if its editor was closed while copying", async () => {
   let finish!: (value: unknown) => void;
-  (shred.uploadPhoto as jest.Mock).mockImplementation(
+  (stagePhoto as jest.Mock).mockImplementation(
     () =>
       new Promise((resolve) => {
         finish = resolve;
@@ -76,13 +74,13 @@ test("a late upload is removed if its editor was closed while uploading", async 
   act(() => {
     pending = result.current.pick(false);
   });
-  await waitFor(() => expect(shred.uploadPhoto).toHaveBeenCalled());
+  await waitFor(() => expect(stagePhoto).toHaveBeenCalled());
   unmount();
   await act(async () => {
     finish(photo);
     await pending;
   });
-  expect(shred.deletePhoto).toHaveBeenCalledWith(photo.id);
+  expect(discardLocalPhoto).toHaveBeenCalledWith(photo.full_url);
 });
 test("denied camera permission explains the next step without opening the camera", async () => {
   (ImagePicker.requestCameraPermissionsAsync as jest.Mock).mockResolvedValue({
@@ -107,16 +105,16 @@ test("a second library tap cannot open another picker while selection is pending
   await act(async () => { finish({ canceled: true }); await pending; });
   expect(result.current.pending).toBe(false);
 });
-test("duplicate retry taps cannot upload the same failed photo twice", async () => {
+test("duplicate retry taps cannot copy the same failed photo twice", async () => {
   let finish!: (value: unknown) => void;
-  (shred.uploadPhoto as jest.Mock).mockRejectedValueOnce(new Error("Connection lost"));
+  (stagePhoto as jest.Mock).mockRejectedValueOnce(new Error("Connection lost"));
   const { result } = renderHook(useDayPhotos);
   await act(async () => { await result.current.pick(false); });
-  (shred.uploadPhoto as jest.Mock).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  (stagePhoto as jest.Mock).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
   let pending!: Promise<void>;
   act(() => { pending = result.current.retry(result.current.photos[0]); });
   await act(async () => { await result.current.retry(result.current.photos[0]); });
-  expect(shred.uploadPhoto).toHaveBeenCalledTimes(2);
+  expect(stagePhoto).toHaveBeenCalledTimes(2);
   await act(async () => { finish(photo); await pending; });
   expect(result.current.photos).toHaveLength(1);
   expect(result.current.pending).toBe(false);
@@ -128,5 +126,5 @@ test("initial edit attachments are ready immediately and removing them does not 
   expect(result.current.pending).toBe(false);
   act(() => result.current.remove(result.current.photos[0]));
   unmount();
-  expect(shred.deletePhoto).not.toHaveBeenCalled();
+  expect(discardLocalPhoto).not.toHaveBeenCalled();
 });

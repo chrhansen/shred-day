@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: "Shred.Day",
   slug: "shred-day",
   owner: "shred-day",
-  version: "1.0.2",
+  version: "1.0.3",
   scheme: "shredday",
   orientation: "portrait",
   userInterfaceStyle: "light",
@@ -29,6 +29,8 @@ const config: ExpoConfig = {
     "expo-image",
     "expo-localization",
     "expo-secure-store",
+    "expo-sqlite",
+    "expo-asset",
     "expo-apple-authentication",
     [
       "expo-image-picker",

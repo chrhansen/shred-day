@@ -1,9 +1,8 @@
 import { api } from "../lib/api";
+import { offline } from "../lib/offline";
 import type {
   Account,
   Day,
-  DayEntry,
-  DayInput,
   Photo,
   Resort,
   SeasonStats,
@@ -16,35 +15,30 @@ const root = "/api/v1";
 export const shred = {
   account: () => api.request<Account>(root + "/account"),
   days: (season: number) =>
-    api.request<DayEntry[]>(root + "/days?season=" + season),
-  day: (id: string) => api.request<Day>(root + "/days/" + id),
+    offline.days(season, () => api.request<Day[]>(root + "/days?details=true&season=" + season)),
+  day: (id: string) => offline.day(id, (serverId) => api.request<Day>(root + "/days/" + serverId)),
   sharedDay: (id: string) =>
     api.request<Day & { user: { username: string | null } }>(
       root + "/shared_days/" + id,
       { authenticated: false },
     ),
-  saveDay: (body: DayInput, id?: string) =>
-    api.request<Day>(root + "/days" + (id ? "/" + id : ""), {
-      method: id ? "PATCH" : "POST",
-      body: { day: body },
-    }),
-  deleteDay: (id: string) =>
-    api.request<void>(root + "/days/" + id, { method: "DELETE" }),
+  saveDay: offline.save,
+  deleteDay: offline.remove,
   stats: (season: number) =>
-    api.request<SeasonStats>(root + "/stats?season=" + season),
+    offline.stats(season, () => api.request<SeasonStats>(root + "/stats?season=" + season)),
   resorts: (query: string, signal?: AbortSignal) =>
-    api.request<Resort[]>(
+    offline.resorts(query, () => api.request<Resort[]>(
       root + "/resorts?query=" + encodeURIComponent(query),
       { signal },
-    ),
-  recentResorts: () => api.request<Resort[]>(root + "/recent_resorts"),
+    )),
+  recentResorts: () => offline.cached("recent-resorts", () => api.request<Resort[]>(root + "/recent_resorts")),
   suggestResort: (name: string, country: string) =>
     api.request<Resort>(root + "/resorts", {
       method: "POST",
       body: { resort: { name, country } },
     }),
-  skis: () => api.request<Ski[]>(root + "/skis"),
-  tags: () => api.request<Tag[]>(root + "/tags"),
+  skis: () => offline.cached("skis", () => api.request<Ski[]>(root + "/skis")),
+  tags: () => offline.cached("tags", () => api.request<Tag[]>(root + "/tags")),
   createNamed: (kind: "skis" | "tags", name: string) =>
     api.request<Tag>(root + "/" + kind, {
       method: "POST",

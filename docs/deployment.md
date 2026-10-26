@@ -45,6 +45,12 @@ and Apple's signing-key cache require `solid_cache_entries`; `/up` alone does
 not verify that table. After deployment, confirm the cache migration is up and
 exercise a cache write/read and counter through a Rails console before beta login.
 
+Mobile 1.0.3 also requires `20261026170000_add_offline_sync_receipts` and its API
+before TestFlight distribution. The migration adds sync receipts and photo upload
+IDs without removing existing routes. Keep these additions through a code rollback
+while devices may retain pending changes. Verify retry deduplication, version
+conflicts and existing web saves; see the [offline beta rollout](../mobile/RELEASE.md#103-offline-beta-rollout).
+
 The web proxy listens on port 8080 because the container runs as an unprivileged
 user. Puma listens on 3000 behind it. The worker uses Puma directly on 8080.
 

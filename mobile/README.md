@@ -6,15 +6,24 @@ read_when: Developing or configuring the Shred.Day Expo app
 
 Independent npm project using Expo SDK 57, React Native 0.86, TypeScript, Expo Router and TanStack Query. Uses the existing Rails accounts, data and API. Native screens cover login/signup, season lists/calendars, day editing, photos, stats/maps, equipment, tags, profile settings, sharing and account deletion.
 
-## Native UI in 1.0.1
+## Offline journal in 1.0.3
+
+- After an online sign-in and download, the account's saved days appear from SQLite on launch while account validation and server refresh run in the background. Loaded seasons remain available offline; an unvisited season or uncached item still needs a connection.
+- Creating, editing or deleting a day writes the local day and its pending change together. Entries marked **Waiting to sync** survive app restarts. One worker uploads on launch, reconnection and return to the foreground, with retries for temporary failures. This release does not schedule uploads while the app is closed.
+- Selected photos are copied into the app's document storage before Save becomes available, then uploaded from the durable queue. A slow connection does not block saving a day. Local copies remain usable after upload. Other devices' photos depend on the image cache or a connection.
+- Skis, tags, recent resorts and successful resort searches are cached for offline selection. Creating a ski/tag or suggesting a new resort still needs a connection. Offline statistics show the last downloaded result and may not include pending changes.
+- Server operation receipts prevent duplicate days after a lost response. If another device changed a day, its local version remains visible as **Needs attention**; open it to retry the local version or discard local changes. Server refreshes preserve pending work and reconcile deleted days.
+- Local journals are separated by account. Logout, expiry and revocation clear credentials and visible queries, while retaining that account's saved days and queue for recovery after signing into the same account. Confirmed account deletion also clears its SQLite records and local photo files. Removing the app can lose changes that have not synced.
+
+## Native UI
 
 - Days and Season share a season picker. The journal groups days by month; calendar mode follows the device's first weekday and stays within the selected season, including custom midmonth cutoffs. Change the header's season to browse another season. Select an available date to open logging with that date; the editor can choose any date. Long press a day for sharing, editing or deletion.
 - Day details lead with a paged gallery. The full-screen viewer opens at the tapped photo and supports pinch/double-tap zoom, thumbnails and swipe-down dismissal. Failed images can be retried individually.
-- Logging uses a full-screen editor with resort and ski/tag sheets, a keyboard-aware Save button, per-photo upload states and an unsaved-change confirmation. Failed or pending uploads block Save; confirmed saves complete before background refreshes.
+- Logging uses a full-screen editor with resort and ski/tag sheets, a keyboard-aware Save button, per-photo local-copy states and an unsaved-change confirmation. A failed or unfinished local photo copy blocks Save; network uploads continue after the local save.
 - Season cards provide tappable month bars, tag selection, equipment counts and native resort markers. A map fallback keeps resort counts available. Settings contains profile, sign-in methods, gear and account deletion.
 - Sharing requires an explicit public-link toggle before Copy or the system share sheet. Public day pages remain read-only for signed-in and signed-out visitors.
 
-This is a beta UI update. See [the changelog](CHANGELOG.md) and [the device gate](RELEASE.md#device-and-beta-gate); source/unit checks do not establish native gesture, keyboard or provider behavior.
+See [the changelog](CHANGELOG.md) and [the device gate](RELEASE.md#device-and-beta-gate); source/unit checks and an uploaded beta do not establish physical-device offline, gesture, keyboard or provider behavior.
 
 ## Run locally
 
@@ -63,9 +72,9 @@ Expo project: [@shred-day/shred-day](https://expo.dev/accounts/shred-day/project
 - A new Google or Apple subject signs into the existing account when its server-verified email matches, ignoring case and surrounding whitespace. No manual connection or prior website login is required. An established provider subject takes precedence over later email changes; ambiguous duplicate emails fail closed without merging journals. Unverified or client-supplied email cannot select an account.
 - Apple Hide My Email is a separate address and does not imply a match with the real email. Optionally connecting a provider with a different email requires authentication with the current account within five minutes. Connecting alone does not authorize account deletion; deletion requires fresh password or previously proven provider authentication.
 - Legacy sessions require a fresh sign-in after the confirmation rollout. Existing provider identities gain ownership proof when the provider verifies the journal's primary email. A legacy identity with a different or missing email must be reconnected from an already confirmed account; its stored identity and encrypted Apple credential remain quarantined until then. Newly trusted subjects remain authoritative on later sign-ins that omit or change email. Primary email changes are currently unavailable.
-- Account deletion requires a newly created mobile session (five minutes) and `DELETE` confirmation. The app reauthenticates first, removes dependent account data and schedules photo purges. Its completion screen clears local credentials, account queries and Expo image memory/disk caches before enabling Done. Global resort suggestions remain without their deleted owner.
+- Account deletion requires a newly created mobile session (five minutes) and `DELETE` confirmation. The app reauthenticates first, removes dependent account data and schedules photo purges. Its completion screen clears local credentials, account queries, the account's SQLite journal and photo files, and Expo image memory/disk caches before enabling Done. Global resort suggestions remain without their deleted owner.
 - Dates remain local `YYYY-MM-DD` calendar values. Season selectors use API offsets and the API's UTC date for the annual cutoff, so calendar bounds stay aligned when the device's local date differs from the server's date. Photo upload sends multipart `file`, then day saves send `photo_ids`. Empty arrays remove every attachment; omitted IDs preserve existing attachments.
-- Upload failures stay visible and block saving until retried or removed. Canceling an editor cleans up new uploads where requests can complete. Process termination/network loss can leave unattached uploads; durable offline/background recovery is outside this release.
+- Canceling an unsaved editor removes its newly copied local photos. Saved days retain their files for queued uploads, including after process termination. A lost upload response is retried with the same upload ID; failed day changes remain available for review.
 - Shared links use `/d/:id`, the native share sheet and a public-link notice listing photos, resort/date, skis/tags, notes and username. Photos may expose recorded location/capture time; email stays private. Stopping sharing revokes day-page access. Reenabling sharing reuses the same URL. Cached public content is hidden after a confirmed 404; an uncertain toggle response evicts the public cache and refreshes owner state. Previously copied Active Storage image links can remain accessible until the photos are deleted, matching the existing web storage behavior.
 - CSV/import/export and Google Sheets connection interfaces remain on the website. Existing server Sheets synchronization still runs for mobile day changes.
 
@@ -83,9 +92,9 @@ Public Rails routes `/privacy`, `/support` and `/.well-known/apple-app-site-asso
 ```sh
 npm run check
 npx expo-doctor
-npx expo export --platform ios
+npx expo export --platform ios --platform android
 ```
 
-`check` runs strict TypeScript, Expo ESLint and Jest. Tests cover auth restoration/revocation, stale responses, multipart uploads/cleanup, editor save/discard, date presets/device weekdays, sharing confirmation/revocation, cached public 404s, gear failures and chart selection after refresh. CI runs the mobile gate separately from web/Rails and blocks deployment unless both jobs pass. Keep design handoff sources, implementation plans, native build artifacts and credentials uncommitted.
+`check` runs strict TypeScript, Expo ESLint and Jest. Tests include SQLite transactions and rollback, restart recovery, lost acknowledgements, stale refreshes, account isolation/purge, queued photos, conflicts, offline deletion and reconnect scheduling, alongside the existing auth, editor, sharing and UI regressions. CI runs the mobile gate separately from web/Rails and blocks deployment unless both jobs pass. Keep design handoff sources, implementation plans, native build artifacts and credentials uncommitted.
 
 See [RELEASE.md](RELEASE.md) for signing, TestFlight, metadata and device verification.

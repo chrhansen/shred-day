@@ -99,11 +99,15 @@ function EditorForm({ id, initialDate, initialDay }: { id?: string; initialDate?
     try {
       const day = await shred.saveDay({ date: form.date, resort_id: form.resort.id, ski_ids: form.skiIds,
         tag_ids: form.tagIds, notes: form.notes.trim() || null,
-        photo_ids: photoState.photos.flatMap((photo) => photo.id ? [photo.id] : []) }, id);
+        photo_ids: photoState.photos.flatMap((photo) => photo.id ? [photo.id] : []) }, id, {
+        resort: form.resort, skis: (skis.data || []).filter((ski) => form.skiIds.includes(ski.id)),
+        tags: (tags.data || []).filter((tag) => form.tagIds.includes(tag.id)),
+        photos: photoState.photos.flatMap((photo) => photo.id ? [{ id: photo.id, filename: null, preview_url: photo.uri, full_url: photo.uri }] : []),
+      });
       photoState.commit();
       client.setQueryData(["day", day.id, auth.user?.id], day);
       void client.invalidateQueries(); void auth.refresh().catch(() => {});
-      toast(id ? "Day updated" : "Day saved"); setSavedId(day.id);
+      toast("Saved on device · waiting to sync"); setSavedId(day.id);
     } catch { setFailed(true); }
     finally { saving.current = false; setBusy(false); }
   };
@@ -185,7 +189,7 @@ function EditorForm({ id, initialDate, initialDay }: { id?: string; initialDate?
         </Section>
       </ScrollView>
       <View style={[editorStyles.footer, { paddingBottom: 12 + (keyboardVisible ? 0 : insets.bottom) }]}>
-        {failed && <Notice error={new Error("Couldn't save this day. Check your connection and try again.")} />}
+        {failed && <Notice error={new Error("Couldn't save this day on your device. Your changes are still here. Please try again.")} />}
         <Button title={busy ? "Saving…" : id ? "Update Day" : "Save Day"} busy={busy} disabled={photoState.pending}
           accessibilityHint={photoState.pending ? "Retry or remove failed photos and wait for uploads to finish." : undefined} onPress={() => void save()} />
       </View>

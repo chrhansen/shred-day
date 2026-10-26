@@ -4,6 +4,16 @@ read_when: Reviewing changes to the iPhone beta
 
 # Mobile changelog
 
+## 1.0.3 — beta, 2026-10-26
+
+- Open your saved journal immediately, then refresh it from the server in the background. Loaded seasons and cached resort/gear choices stay available offline.
+- Create, edit and delete days without a connection. Changes survive app restarts and upload on launch, reconnection or return to the foreground. Waiting and attention states show what still needs to sync.
+- Save selected photos on the device with the day, then upload them when connected. Local copies remain viewable after upload.
+- Retry interrupted requests without creating duplicate days or photos. Preserve local work when another device changes a day, with a choice to retry your version or discard local changes.
+- Keep journals separated by account; recover pending work after signing into the same account, and clear local journal/photo data after confirmed account deletion.
+
+For contributors: SQLite transactions, serialized writes, durable operation IDs, server version checks and restart/concurrency regressions accompany the beta. Deploy the backward-compatible sync migration/API first. The [physical-device gate](RELEASE.md#device-and-beta-gate) remains unverified by unit tests and build completion; this release is for internal TestFlight testing.
+
 ## 1.0.2 — beta, 2026-10-14
 
 - Upload selected photos and avatars using SDK 57's supported file bodies; preserve JPEG, HEIC and PNG bytes through multipart encoding.
