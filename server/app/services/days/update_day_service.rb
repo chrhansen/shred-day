@@ -9,7 +9,7 @@ class Days::UpdateDayService
     previous_date = @day.date
     updated = false
 
-    Day.transaction do
+    Day.transaction(requires_new: true) do
       unless @day.update(@params)
         raise ActiveRecord::Rollback
       end

@@ -24,7 +24,8 @@ export function seasonForDate(date: string, cutoff: string, today = new Date()) 
   const value = parseDay(date);
   const yearFor = (input: Date) => input.getFullYear() -
     (input < new Date(input.getFullYear(), month - 1, day) ? 1 : 0);
-  return yearFor(value) - yearFor(today);
+  const apiToday = new Date(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  return yearFor(value) - yearFor(apiToday);
 }
 export function projectedDayNumber(days: DayEntry[], date: string, id?: string) {
   return days.filter((day) => day.id !== id && day.date <= date).length + 1;

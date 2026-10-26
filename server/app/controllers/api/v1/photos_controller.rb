@@ -2,9 +2,16 @@ class Api::V1::PhotosController < ApplicationController
   before_action :set_photo, only: [:destroy]
 
   def create
-    photo = current_user.photos.build
-
-    if params[:file].present? && photo.image.attach(params[:file]) && photo.save
+    upload_id = params[:upload_id].presence
+    if upload_id && !upload_id.match?(/\A[\w-]{16,100}\z/)
+      return render json: { error: "Invalid upload ID" }, status: :unprocessable_content
+    end
+    photo = if upload_id
+      current_user.with_lock { current_user.photos.find_by(upload_id: upload_id) || save_photo(upload_id) }
+    else
+      save_photo
+    end
+    if photo.persisted? && photo.image.attached?
       ExifExtractService.new(photo).extract_from_file
       SetNearestResortService.new(photo).set_nearest_resort
 
@@ -25,6 +32,13 @@ class Api::V1::PhotosController < ApplicationController
   end
 
   private
+
+  def save_photo(upload_id = nil)
+    photo = current_user.photos.build(upload_id: upload_id)
+    photo.image.attach(params[:file]) if params[:file].present?
+    photo.save if photo.image.attached?
+    photo
+  end
 
   def set_photo
     @photo = current_user.photos.find_by(id: params[:id])

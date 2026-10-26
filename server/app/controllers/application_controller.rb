@@ -2,6 +2,8 @@ class ApplicationController < ActionController::API
   # Include cookie methods needed for session management
   include ActionController::Cookies
 
+  before_action :prevent_mobile_http_caching
+
   # Apply require_login globally to all inheriting controllers
   before_action :require_login
 
@@ -51,6 +53,14 @@ class ApplicationController < ActionController::API
   end
 
   private
+
+  def prevent_mobile_http_caching
+    return if request.headers["Authorization"].blank?
+
+    request.delete_header("HTTP_IF_NONE_MATCH")
+    request.delete_header("HTTP_IF_MODIFIED_SINCE")
+    response.headers["Cache-Control"] = "no-store"
+  end
 
   def authenticated_user(user, method, password_version = nil, auth_identity_id: nil)
     return unless user

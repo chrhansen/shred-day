@@ -58,6 +58,7 @@ export class ApiClient {
     try {
       response = await fetch(this.baseUrl.replace(/\/$/, "") + path, {
         method: options.method || "GET",
+        cache: "no-store",
         headers,
         body:
           options.body === undefined

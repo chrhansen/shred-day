@@ -14,6 +14,7 @@ import { Calendar } from "../../components/ui/calendar";
 import { JournalRow, JournalSeparator } from "../../components/journal-row";
 import { showDayActions, useDayActions } from "../../hooks/use-day-actions";
 import type { DayEntry } from "../../lib/types";
+import { SyncNotice } from "../../components/sync-notice";
 
 export default function DaysScreen() {
   const { user } = useAuth();
@@ -62,6 +63,7 @@ export default function DaysScreen() {
       action={firstUse ? <Button title="Log a Day" icon="plus" onPress={() => log()} style={{ borderRadius: 24 }} /> : undefined} /> : null;
   return <View style={styles.screen}>
     <SeasonHeader value={season} onChange={setSeason} right={<IconSegmented value={mode} onChange={setMode} />} />
+    <View style={{ paddingHorizontal: 16, paddingTop: 4 }}><SyncNotice /></View>
     {mode === "list" ? <SectionList ref={listRef} sections={journalSections(entries)}
       keyExtractor={(day) => day.id} stickySectionHeadersEnabled refreshControl={refreshControl}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 + insets.bottom }}
@@ -93,7 +95,7 @@ export default function DaysScreen() {
         </View>}
       </>}
     </ScrollView>}
-    {!firstLoad && !failed && <Pressable accessibilityRole="button" accessibilityLabel="Log Day" onPress={() => log()}
+    {<Pressable accessibilityRole="button" accessibilityLabel="Log Day" onPress={() => log()}
       style={({ pressed }) => [styles.fab, { bottom: 16, opacity: pressed ? 0.7 : 1 }]}>
       <LinearGradient colors={colors.primaryGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fabFill}>
         <Icon name="plus" color={colors.canvas} size={20} strokeWidth={2.25} />

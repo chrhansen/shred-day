@@ -17,6 +17,7 @@ import { DayGallery } from "./day-gallery";
 import { DayShareSheet } from "./day-share-sheet";
 import { PhotoViewer } from "./photo-viewer";
 import { showDayActions, useDayActions } from "../hooks/use-day-actions";
+import { SyncNotice } from "./sync-notice";
 
 type ReadableDay = Day & { user?: { username: string | null; avatar_url?: string | null } };
 export function DayDetail({ id, shared = false, openSharing = false }: { id: string; shared?: boolean; openSharing?: boolean }) {
@@ -67,6 +68,7 @@ export function DayDetail({ id, shared = false, openSharing = false }: { id: str
       scrollEventThrottle={32} onScroll={(event) => setOverPhoto(event.nativeEvent.contentOffset.y < 330)}>
       {hasPhotos && <DayGallery photos={day.photos} publicDay={shared} onOpen={setViewerIndex} />}
       <View style={styles.content}>
+        {!shared && <SyncNotice day={day} />}
         {shared ? <View style={styles.ownerRow}>
           <View style={styles.avatar}>{day.user?.avatar_url ? <Image source={day.user.avatar_url} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Text variant="bodyMedium" style={{ color: colors.text600 }}>{initials}</Text>}</View>
           <View style={{ flex: 1, gap: 2 }}><Text variant="bodyMedium" style={{ fontFamily: "SpaceGrotesk_700Bold" }}>{owner ? "@" + owner : "Shred.Day skier"}</Text><Text variant="caption" style={{ color: colors.textSecondary }}>Shared a ski day</Text></View>
@@ -91,7 +93,7 @@ export function DayDetail({ id, shared = false, openSharing = false }: { id: str
         {!shared && !hasPhotos && <Pressable accessibilityRole="button" onPress={edit} style={styles.noPhotos}>
           <Icon name="image" size={22} color={colors.textSecondary} /><Text variant="callout" style={styles.secondary}>No photos for this day. Add some when you edit it.</Text>
         </Pressable>}
-        {!shared && <Pressable accessibilityRole="button" accessibilityLabel={"Public link, " + (day.shared_at ? "on" : "off")}
+        {!shared && !day.sync_state && <Pressable accessibilityRole="button" accessibilityLabel={"Public link, " + (day.shared_at ? "on" : "off")}
           onPress={() => setSharingOpen(true)} style={styles.linkCard}>
           <View style={styles.linkIcon}><Icon name="link" size={20} /></View>
           <View style={{ flex: 1, gap: 3 }}><Text variant="bodyMedium" style={{ fontFamily: "SpaceGrotesk_700Bold" }}>Public link</Text>
@@ -115,7 +117,7 @@ export function DayDetail({ id, shared = false, openSharing = false }: { id: str
       </Pressable>
       <IconButton name="more" accessibilityLabel="Day actions" disabled={deleting} onPress={actions} style={styles.floating} size={24} />
     </View>}
-    {!shared && <DayShareSheet day={day} visible={sharingOpen} onClose={() => setSharingOpen(false)} />}
+    {!shared && !day.sync_state && <DayShareSheet day={day} visible={sharingOpen} onClose={() => setSharingOpen(false)} />}
     {viewerIndex !== null && <PhotoViewer photos={day.photos} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />}
   </View>;
 }

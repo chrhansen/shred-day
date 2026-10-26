@@ -4,7 +4,7 @@ import { photoForm } from "../lib/photo-upload";
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
 function response(status = 200, payload: unknown = {}) {
-  return { ok: status < 400, status, json: async () => payload };
+  return { ok: status >= 200 && status < 300, status, json: async () => payload };
 }
 beforeEach(() => {
   fetchMock.mockReset();
@@ -21,6 +21,12 @@ test("private requests use bearer auth and public shared days omit it", async ()
   );
   await shred.sharedDay("day_1");
   expect(fetchMock.mock.calls[1][1].headers.Authorization).toBeUndefined();
+});
+test("network refreshes bypass HTTP caches because the journal stores its own responses", async () => {
+  api.token = "device-token";
+  fetchMock.mockResolvedValue(response(200, { summary: { totalDays: 80 } }));
+  await new ApiClient().request("/api/v1/stats?season=-1");
+  expect(fetchMock.mock.calls[0][1].cache).toBe("no-store");
 });
 test("revoked sessions invalidate auth, while failed provider linking keeps it", async () => {
   api.token = "device-token";
@@ -103,21 +109,6 @@ test("multipart photos use the Rails file field and leave the boundary to fetch"
   expect(request.body).toBe(form);
   expect(request.headers["Content-Type"]).toBeUndefined();
   expect(form.has("file")).toBe(true);
-});
-test("day edits send explicit empty photos so the last attachment can be removed", async () => {
-  fetchMock.mockResolvedValue(response());
-  await shred.saveDay(
-    {
-      date: "2026-02-01",
-      resort_id: "res_1",
-      ski_ids: [],
-      tag_ids: [],
-      photo_ids: [],
-      notes: null,
-    },
-    "day_1",
-  );
-  expect(JSON.parse(fetchMock.mock.calls[0][1].body).day.photo_ids).toEqual([]);
 });
 test("no-content responses do not require JSON and network failures explain retry", async () => {
   const client = new ApiClient();

@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       resource :account, only: [:show, :update], controller: :account
 
       namespace :mobile do
+        resources :day_changes, only: [:create]
         resource :sessions, only: [:create, :destroy]
         resources :users, only: [:create]
         resources :challenges, only: [:create]

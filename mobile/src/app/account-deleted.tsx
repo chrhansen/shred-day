@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../contexts/auth";
@@ -6,7 +6,8 @@ import { Button, Icon, Notice, Screen, Text, colors } from "../components/ui";
 import { clearAccountImages } from "../lib/account-cache";
 
 export default function AccountDeletedScreen() {
-  const { logout, deletionConfirmed, acknowledgeDeletion } = useAuth();
+  const { logout, user, deletedOwner, deletionConfirmed, acknowledgeDeletion } = useAuth();
+  const owner = useRef(deletedOwner || user?.id);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -15,7 +16,7 @@ export default function AccountDeletedScreen() {
     let mounted = true;
     const finish = async () => {
       try {
-        await logout(); await clearAccountImages();
+        await logout(); await clearAccountImages(owner.current);
         if (mounted) setReady(true);
       } catch { if (mounted) setFailed(true); }
     };

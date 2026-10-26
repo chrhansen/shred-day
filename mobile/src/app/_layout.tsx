@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { Image } from "expo-image";
 import { AuthProvider, useAuth } from "../contexts/auth";
 import { SeasonProvider } from "../contexts/season";
+import { SyncProvider } from "../contexts/sync";
 import { Button, Notice, Screen, Text, ToastProvider, colors, fonts } from "../components/ui";
 import { Brand } from "../components/auth/brand";
 import { ApiError } from "../lib/api";
@@ -59,6 +60,6 @@ export default function RootLayout() {
   }, []);
   if (!loaded && !error) return <View style={{ flex: 1, backgroundColor: colors.canvas }} />;
   return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider><StatusBar style="dark" />
-    <QueryClientProvider client={queryClient}><AuthProvider><SeasonProvider><ToastProvider><Routes /></ToastProvider></SeasonProvider></AuthProvider></QueryClientProvider>
+    <QueryClientProvider client={queryClient}><AuthProvider><SyncProvider><SeasonProvider><ToastProvider><Routes /></ToastProvider></SeasonProvider></SyncProvider></AuthProvider></QueryClientProvider>
   </SafeAreaProvider></GestureHandlerRootView>;
 }

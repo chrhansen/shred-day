@@ -67,14 +67,14 @@ test("failed save retains edited fields and retries with the same selected date"
   fireEvent.press(await view.findByLabelText("Sölden"));
   fireEvent.changeText(view.getByLabelText("Notes"), "Good turns with friends.");
   fireEvent.press(view.getByText("Save Day"));
-  await view.findByText("Couldn't save this day. Check your connection and try again.");
+  await view.findByText("Couldn't save this day on your device. Your changes are still here. Please try again.");
   expect(view.getByLabelText("Notes").props.value).toBe("Good turns with friends.");
   expect(view.queryByText("Sensitive server details")).toBeNull();
   expect(mockCommit).not.toHaveBeenCalled();
   expect(router.replace).not.toHaveBeenCalled();
   fireEvent.press(view.getByText("Save Day"));
   await waitFor(() => expect(router.replace).toHaveBeenCalledWith({ pathname: "/day/[id]", params: { id: "day_saved" } }));
-  expect(shred.saveDay).toHaveBeenLastCalledWith(expect.objectContaining({ date: "2026-10-04", resort_id: resort.id, notes: "Good turns with friends." }), undefined);
+  expect(shred.saveDay).toHaveBeenLastCalledWith(expect.objectContaining({ date: "2026-10-04", resort_id: resort.id, notes: "Good turns with friends." }), undefined, expect.objectContaining({ resort }));
   expect(mockCommit).toHaveBeenCalledTimes(1);
   expect(view.client.getQueryData(["day", "day_saved", "user_demo"])).toEqual(expect.objectContaining({ id: "day_saved" }));
 });

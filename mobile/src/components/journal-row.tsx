@@ -32,6 +32,8 @@ export function JournalRow({ day, calendar = false, onPress, onLongPress }: {
     <View style={[styles.copy, stacked && { flex: undefined, width: "100%" }]}>
       <Text variant="headline" numberOfLines={stacked ? undefined : 1}>{day.resort_name}</Text>
       <Text variant="subhead" style={styles.secondary}>#{day.day_number} · {date}</Text>
+      {day.sync_state && <Text variant="caption" style={{ color: day.sync_state === "failed" ? colors.destructive : colors.textSecondary }}>
+        {day.sync_state === "failed" ? "Needs attention" : "Waiting to sync"}</Text>}
       {equipment ? <Text variant="footnote" style={{ color: colors.text700 }} numberOfLines={stacked ? undefined : 1}>{equipment}</Text> : null}
       {!calendar && day.notes ? <Text variant="footnote" style={styles.secondary} numberOfLines={stacked ? undefined : 1}>{day.notes}</Text> : null}
     </View>

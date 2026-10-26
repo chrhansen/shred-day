@@ -23,6 +23,7 @@ export type Account = {
   available_seasons: number[];
 };
 export type DayEntry = {
+  sync_state?: "pending" | "failed";
   id: string;
   date: string;
   notes: string | null;
@@ -33,6 +34,10 @@ export type DayEntry = {
   photos?: Photo[];
 };
 export type Day = {
+  created_at?: string;
+  updated_at?: string;
+  sync_state?: "pending" | "failed";
+  sync_error?: string;
   id: string;
   date: string;
   notes: string | null;

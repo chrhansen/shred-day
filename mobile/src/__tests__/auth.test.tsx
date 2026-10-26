@@ -6,6 +6,8 @@ import { AuthProvider, useAuth } from "../contexts/auth";
 import { shred } from "../services/shred";
 import { api, ApiError } from "../lib/api";
 import { providerProof } from "../lib/provider-login";
+import { offline } from "../lib/offline";
+jest.mock("../lib/offline", () => ({ offline: { activate: jest.fn(), rememberAccount: jest.fn(), detach: jest.fn() } }));
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),
   setItemAsync: jest.fn(),
@@ -76,6 +78,36 @@ test("restores a valid secure session and loads its account", async () => {
   const { result } = mount();
   await waitFor(() => expect(result.current.user?.email).toBe(account.email));
   expect(api.token).toBe(session.token);
+});
+test("cached journals open before account validation finishes on a slow connection", async () => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, identity: account }));
+  (offline.activate as jest.Mock).mockResolvedValue(account);
+  const pending = deferred<typeof account>();
+  (shred.account as jest.Mock).mockReturnValue(pending.promise);
+  const { result } = mount();
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  expect(result.current.user).toEqual(account);
+  await act(async () => { pending.resolve(account); });
+});
+test("an offline account refresh preserves the cached signed-in journal", async () => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, identity: account }));
+  (offline.activate as jest.Mock).mockResolvedValue(account);
+  (shred.account as jest.Mock).mockRejectedValue(new Error("Offline"));
+  const { result } = mount();
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  expect(result.current.user).toEqual(account);
+  expect(result.current.error).toBeNull();
+  expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
+});
+test("account deletion retains its cleanup owner even when a late 401 clears the session", async () => {
+  (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify({ ...session, identity: account }));
+  const { result } = mount();
+  await waitFor(() => expect(result.current.user).toBeTruthy());
+  const confirmDeletion = result.current.markAccountDeleted;
+  await act(async () => { api.onUnauthorized?.(); });
+  act(() => confirmDeletion());
+  expect(result.current.user).toBeNull();
+  expect(result.current.deletedOwner).toBe(account.id);
 });
 test("expired credentials are discarded", async () => {
   (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(

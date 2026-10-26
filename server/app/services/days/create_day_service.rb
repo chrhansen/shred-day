@@ -9,7 +9,7 @@ class Days::CreateDayService
     day = @user.days.build(@params)
     created = false
 
-    Day.transaction do
+    Day.transaction(requires_new: true) do
       unless day.save
         raise ActiveRecord::Rollback
       end

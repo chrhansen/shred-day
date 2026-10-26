@@ -6,7 +6,8 @@ class Api::V1::DaysController < ApplicationController
   def index
     days = Days::IndexDayService.new(current_user, params).fetch_days
 
-    render json: days, each_serializer: Api::V1::DayEntrySerializer
+    serializer = params[:details] == "true" ? Api::V1::DaySerializer : Api::V1::DayEntrySerializer
+    render json: days, each_serializer: serializer
   end
 
   # GET /api/v1/days/:id
@@ -44,6 +45,7 @@ class Api::V1::DaysController < ApplicationController
 
     if result.updated?
       Days::SyncPhotosService.new(result.day, day_params[:photo_ids]).sync_photos
+      result.day.touch
       result.day.reload(include: [:skis, :resort, :photos, :tags])
       enqueue_sheets_sync([previous_date, result.day.date])
       render json: result.day, status: :ok

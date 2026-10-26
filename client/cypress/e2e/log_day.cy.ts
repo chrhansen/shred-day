@@ -242,24 +242,13 @@ describe('Create and Edit a Ski Day', () => {
     // 9. Verify changes are reflected in the list (wait for dayId alias)
     cy.wait('@getDaysList');
     cy.get('@dayId').then(dayId => {
-      // Dynamically determine the expected date format
-      // Date was edited to the 20th (line 211), so we expect Oct 20
-      const testMonth = 9; // 0-indexed for October
-      const testDay = 20;
-      const dateForDisplay = new Date(currentSeasonYear, testMonth, testDay);
-      const currentRunYear = new Date().getFullYear();
-      const expectedDisplayDate = dateForDisplay.getFullYear() === currentRunYear
-        ? dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // e.g., "Oct 20"
-        : dateForDisplay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Oct 20, 2025"
+      const dateForDisplay = new Date(currentSeasonYear, 9, 20, 12);
+      const expectedDisplayDate = formatExpectedDisplayDate(dateForDisplay);
 
       // Use the new data-testid selector
       cy.get(`[data-testid="ski-day-item-${dayId}"]`)
         .should('contain.text', SKI_B_NAME)
-        .and(($el) => {
-          // Check for Oct 19, 20, or 21 due to potential timezone and date calculation differences
-          const text = $el.text();
-          expect(text).to.match(/Oct (19|20|21)/);
-        });
+        .and('contain.text', expectedDisplayDate);
     });
   });
 

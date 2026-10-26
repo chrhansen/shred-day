@@ -31,7 +31,7 @@ export function useDayActions() {
         await shred.deleteDay(day.id);
         client.removeQueries({ queryKey: ["day", day.id] });
         client.removeQueries({ queryKey: ["shared-day", day.id] });
-        onDeleted(); toast("Day deleted");
+        onDeleted(); toast("Removed on device · waiting to sync");
         void Promise.all([client.invalidateQueries({ queryKey: ["days"] }),
           client.invalidateQueries({ queryKey: ["stats"] }), client.invalidateQueries({ queryKey: ["account"] })]);
       } catch {

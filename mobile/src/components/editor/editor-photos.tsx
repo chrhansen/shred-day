@@ -30,8 +30,8 @@ export function EditorPhotos({ state, disabled = false }: { state: ReturnType<ty
       {state.photos.map((photo, index) => <PhotoTile key={photo.key} photo={photo} index={index} disabled={disabled}
         onRemove={() => state.remove(photo)} onRetry={() => void state.retry(photo)} />)}
     </ScrollView>
-    {Boolean(uploading) && <PhotoNotice>{uploading} {uploading === 1 ? "photo uploading" : "photos uploading"}. You can save when {uploading === 1 ? "it's" : "they're"} done.</PhotoNotice>}
-    {Boolean(failed) && <PhotoNotice error>{failed} {failed === 1 ? "photo didn't" : "photos didn't"} upload. Retry or remove {failed === 1 ? "it" : "them"} to save.</PhotoNotice>}
+    {Boolean(uploading) && <PhotoNotice>Saving photos on your device…</PhotoNotice>}
+    {Boolean(failed) && <PhotoNotice error>Some photos could not be saved on this device. Retry or remove them to save.</PhotoNotice>}
     {Boolean(state.error) && <View style={[photoStyles.notice, photoStyles.errorNotice]}>
       <Text variant="headline" style={{ color: colors.errorText }}>{access ? `${access === "camera" ? "Camera" : "Photo"} access is off` : "Couldn't add photos"}</Text>
       <Text variant="footnote" style={{ color: colors.errorText }}>{access
@@ -51,7 +51,7 @@ function PhotoTile({ photo, index, disabled, onRemove, onRetry }: {
       accessibilityLabel={`Selected photo ${index + 1}`} onError={() => setUnavailable(true)} />
       : <Icon name="image-off" color={colors.textSecondary} size={24} />}
     {photo.status === "uploading" && <View style={[StyleSheet.absoluteFill, photoStyles.overlay, { backgroundColor: colors.uploadOverlay }]}>
-      <ActivityIndicator color={colors.indigo} accessibilityLabel="Uploading photo" /><Text variant="small">Uploading</Text>
+      <ActivityIndicator color={colors.indigo} accessibilityLabel="Saving photo" /><Text variant="small">Saving</Text>
     </View>}
     {photo.status === "failed" && <View style={[StyleSheet.absoluteFill, photoStyles.overlay, { backgroundColor: colors.failedOverlay }]}>
       <Icon name="alert" color={colors.canvas} />
