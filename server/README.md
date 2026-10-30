@@ -45,6 +45,21 @@ Links expire after 24 hours, work once, and carry their token in the URL fragmen
 
 Verified Google/Apple sign-in requires no additional email. Provider ownership can recover an unconfirmed account, but it never authorizes a password chosen before that ownership proof: the provisional password and its sessions are invalidated. Independently confirmed passwords stay valid. Setting up password sign-in still requires the mailbox link. Changing a password requires another confirmation and invalidates password sessions; normal profile changes do not. Primary email changes are rejected until a dedicated new-email confirmation flow is available; unchanged addresses remain accepted by existing profile clients.
 
+### Password recovery
+
+The web sign-in form links to `/forgot-password`. Entering an existing account email sends a link to `/reset-password`; the user chooses and confirms a new password, then signs in normally. Recovery also confirms mailbox ownership for legacy or pending accounts and invalidates their outstanding email confirmation links. A reset request alone leaves the current password and sessions usable.
+
+| Endpoint | Request | Result |
+| --- | --- | --- |
+| `POST /api/v1/password_reset_requests` | `{ "email": "..." }` | Generic `202` response for existing and unknown addresses; does not disclose account details. |
+| `POST /api/v1/password_resets` | `{ "token": "...", "password": "...", "password_confirmation": "..." }` | `200` sets the password without signing in. Invalid/expired/used links return `422` with `error`; password validation failures return `422` with `errors` and leave the link usable. |
+
+Reset links expire after one hour and work once. Resends replace earlier links, with a 60-second account cooldown and a 10-request hourly IP limit. Reset submissions are limited to 20 attempts per IP per minute. Opening a link performs no reset: its fragment token is held in page memory, removed from the address bar, and submitted only with both password fields. A page refresh requires reopening the email link. Passwords follow the existing minimum of eight characters and BCrypt's 72-byte maximum.
+
+Successful recovery increments the password credential version and revokes mobile password sessions, invalidating existing password cookies and bearers. Trusted Google/Apple identities remain usable. A password change or mailbox confirmation invalidates previously requested reset links through their credential-version binding.
+
+Run `20261030090000_add_password_resets` before deploying the feature. Recovery uses the existing Resend configuration and Solid Queue worker, with encrypted job arguments, digest-only account storage, and sanitized retries. No new credentials are required. Obsolete deliveries are skipped. Production links always use `https://shred.day/reset-password`; development links use `http://localhost:8080/reset-password`. Keep the worker running and verify delivery to a synthetic mailbox after deployment. Do not log or share reset links, queue envelopes, or passwords.
+
 ### Confirmation rollout and mail delivery
 
 Run the three primary database migrations before serving the new authentication code. Existing accounts are intentionally left unconfirmed for password sign-in; do not backfill confirmation timestamps merely because an account or provider identity exists. Existing password cookies and bearers without the current credential-version binding cannot bypass confirmation or revive after ownership changes. Coordinate the backend rollout with the updated web and iPhone signup/error screens.

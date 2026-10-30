@@ -516,7 +516,11 @@ CREATE TABLE public.users (
     password_session_version integer DEFAULT 0 NOT NULL,
     email_confirmation_token_digest character varying,
     email_confirmation_expires_at timestamp(6) without time zone,
-    email_confirmation_sent_at timestamp(6) without time zone
+    email_confirmation_sent_at timestamp(6) without time zone,
+    password_reset_token_digest character varying,
+    password_reset_expires_at timestamp(6) without time zone,
+    password_reset_sent_at timestamp(6) without time zone,
+    password_reset_session_version integer
 );
 
 
@@ -982,6 +986,13 @@ CREATE UNIQUE INDEX index_users_on_lower_username ON public.users USING btree (l
 
 
 --
+-- Name: index_users_on_password_reset_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_password_reset_token_digest ON public.users USING btree (password_reset_token_digest);
+
+
+--
 -- Name: skis fk_rails_0249827881; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1188,6 +1199,7 @@ ALTER TABLE ONLY public.auth_identities
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261030090000'),
 ('20261026170000'),
 ('20261015091000'),
 ('20261015090500'),

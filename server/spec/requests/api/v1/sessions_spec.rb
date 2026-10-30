@@ -59,10 +59,10 @@ RSpec.describe "Api::V1::Sessions", type: :request do
     end
 
     context "when user is not logged in" do
-      it "returns unauthorized status (or potentially another status)" do
+      it "clears the session even when its credentials are no longer valid" do
         delete api_v1_sessions_path
-        # Adjust expected status based on your ApplicationController's behavior for unauthenticated DELETE
-        expect(response).to have_http_status(:unauthorized) # Or :no_content etc.
+        expect(response).to have_http_status(:ok)
+        expect(session[:user_id]).to be_nil
       end
     end
   end

@@ -1,6 +1,5 @@
 class Api::V1::SessionsController < ApplicationController
-  # Skip login requirement only for the sign-in action
-  skip_before_action :require_login, only: [ :create ]
+  skip_before_action :require_login, only: [ :create, :destroy ]
   rate_limit to: 10, within: 1.minute, only: :create,
     with: -> { render json: { error: "Too many sign-in attempts. Try again shortly." }, status: :too_many_requests }
 
