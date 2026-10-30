@@ -10,6 +10,8 @@ import AccountPage from "@/pages/AccountPage";
 import DaysListPage from "@/pages/DaysListPage";
 import AuthPage from "@/pages/AuthPage";
 import ConfirmEmailPage from "@/pages/ConfirmEmailPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import CallbackPage from "./pages/CallbackPage";
 import PhotoImportPage from "@/pages/PhotoImportPage";
 import TextImportPage from "@/pages/TextImportPage";
@@ -49,6 +51,14 @@ export const AppRoutes = () => {
 
   if (location.pathname === '/confirm-email') {
     return <ConfirmEmailPage />;
+  }
+
+  if (location.pathname === '/forgot-password') {
+    return <ForgotPasswordPage />;
+  }
+
+  if (location.pathname === '/reset-password') {
+    return <ResetPasswordPage key={location.key} />;
   }
 
   if (emailConfirmationRequired && location.pathname === '/') {

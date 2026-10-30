@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { GoogleIcon } from '@/assets/icons/google-g-logo';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { skiService } from '@/services/skiService';
 import { accountService } from '@/services/accountService';
 import { EmailConfirmationRequiredError } from '@/lib/apiClient';
@@ -133,6 +133,7 @@ export default function AuthPage() {
                 </button>
               </div>
             </div>
+            <Link to="/forgot-password" className="block py-2 text-right text-blue-700 underline">Forgot password?</Link>
             {loginError && <p role="alert" className="text-sm text-red-700">{loginError}</p>}
             <Button type="submit" className="w-full h-12 text-lg" disabled={isLoggingIn}>
               {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 w-5 h-5" />}
