@@ -26,6 +26,11 @@ const showSignup = () => render(<HelmetProvider><MemoryRouter initialEntries={['
 const showLogin = () => render(<HelmetProvider><MemoryRouter initialEntries={['/auth']}><AuthPage /></MemoryRouter></HelmetProvider>);
 beforeEach(() => { jest.clearAllMocks(); mockConfirmationRequired = false; });
 
+it('offers password recovery directly from the login form', () => {
+  showLogin();
+  expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute('href', '/forgot-password');
+});
+
 it('collects email only and explains that the email link confirms ownership and sets a password', () => {
   showSignup();
   expect(screen.queryByLabelText('Password', { exact: true })).not.toBeInTheDocument();

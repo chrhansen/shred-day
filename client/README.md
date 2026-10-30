@@ -33,6 +33,8 @@ Signup collects an email address and requests a confirmation link. The public `/
 
 Unconfirmed password accounts receive confirmation/resend guidance, including legacy sessions rejected by the API. Google sign-in uses the provider's verified email and needs no separate email step. Expired or used links can request another email; resend responses remain generic. Tokens and passwords are never stored in browser storage or navigation state.
 
+The sign-in form's “Forgot password?” link opens `/forgot-password`. Recovery links open the public `/reset-password` page and expire after one hour. That page removes the fragment token from the address bar and submits it only with matching new passwords. Invalid or used links offer another request; validation or network errors allow a retry. Successful recovery clears the current browser session before offering sign-in with the new password. See [password recovery API and delivery](../server/README.md#password-recovery) for account eligibility, session invalidation, and deployment requirements.
+
 Primary email is displayed read-only in account settings. Changing it is unavailable; other profile settings remain editable.
 
 ### Cypress fixtures

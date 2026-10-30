@@ -40,6 +40,8 @@ Rails.application.routes.draw do
       resources :users, only: [:create] # Sign Up
       resources :email_confirmation_requests, only: [:create]
       resources :email_confirmations, only: [:create]
+      resources :password_reset_requests, only: [ :create ]
+      resources :password_resets, only: [ :create ]
       resource :sessions, only: [:create, :destroy] # Sign In, Sign Out
       resource :google_sign_in_flow, only: [:update, :create], controller: :google_sign_in_flow
 

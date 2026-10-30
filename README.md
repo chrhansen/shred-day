@@ -18,7 +18,7 @@ Personal ski-day log for capturing each day (date, resort, skis, tags, notes, ph
 - Text/CSV import that creates draft days before commit.
 - CSV export.
 - Google Sheets sync integration.
-- Email/password accounts and session auth.
+- Email/password accounts with email confirmation and [password recovery](server/README.md#password-recovery).
 
 ## Quickstart
 
