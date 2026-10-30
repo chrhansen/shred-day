@@ -40,3 +40,5 @@ Primary email is displayed read-only in account settings. Changing it is unavail
 ### Cypress fixtures
 
 `cy.createUser` creates confirmed synthetic users through a Node/Rails test task, never through a production bypass endpoint. It requires `RAILS_ENV=test`, a loopback HTTP API, and a loopback `DATABASE_URL` whose database is exactly `shred_day_test`. The Ruby runner independently checks the test environment, database and test mail delivery before any write. Fixture inputs travel through stdin; credentials are not logged. Local runs should use asdf Ruby 3.4.2. Public signup tests exercise the separate pending-confirmation flow.
+
+Photo import tests wait for upload responses and assert the processed review items by server photo ID. Uploader thumbnails are temporary and disappear once processing moves photos into the review list; they do not signal completed imports.

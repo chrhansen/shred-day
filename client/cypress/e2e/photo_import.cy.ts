@@ -47,12 +47,15 @@ describe('Photo Import', () => {
   });
 
   it('should create a new photo import and upload photos', function() {
+    cy.intercept('POST', '/api/v1/photo_imports/*/photos').as('uploadPhoto');
     goToPhotoImportPage();
-    // cy.wait('@getRecentResorts');
     cy.get('[data-testid="photo-dropzone-label"]').selectFile('cypress/fixtures/test_image_with_full_exif.jpg', { action: 'drag-drop' });
-    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('be.visible');
-    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
-    cy.get('[data-testid="photo-preview"] img').should('be.visible');
+    cy.wait('@uploadPhoto').then(({ response }) => {
+      expect(response?.statusCode).to.eq(201);
+      cy.get(`[data-testid="photo-processed-${response?.body.id}"]`).should('be.visible')
+        .parent().find('img').should('be.visible');
+    });
+    cy.get('[data-testid="photo-preview"]').should('not.exist');
 
     // Wait for draft day to be created
     cy.get('[data-testid^="draft-day-"]').should('exist');
@@ -109,19 +112,21 @@ describe('Photo Import', () => {
   });
 
   it('should handle multiple photo uploads', function() {
+    cy.intercept('POST', '/api/v1/photo_imports/*/photos').as('uploadPhotos');
     goToPhotoImportPage();
     cy.get('[data-testid="photo-dropzone-label"]').selectFile([
       'cypress/fixtures/test_image.jpg',
       'cypress/fixtures/test_image_with_full_exif.jpg'
     ], { action: 'drag-drop' });
-    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('have.length', 2);
-
-    // Wait for uploads to complete
-    cy.get('[data-testid="photo-preview"] svg.animate-spin').should('not.exist');
-
-    // Verify previews
-    cy.get('[data-testid="photo-preview"]').should('have.length', 2);
-    cy.get('[data-testid="photo-preview"] img').should('have.length.at.least', 1);
+    cy.wait(['@uploadPhotos', '@uploadPhotos']).then(uploads => {
+      uploads.forEach(({ response }) => {
+        expect(response?.statusCode).to.eq(201);
+        cy.get(`[data-testid="photo-processed-${response?.body.id}"]`).should('be.visible')
+          .parent().find('img').should('be.visible');
+      });
+    });
+    cy.get('[data-testid^="photo-processed-"]').should('have.length', 2);
+    cy.get('[data-testid="photo-preview"]').should('not.exist');
 
     // Wait for draft days to be created
     cy.get('[data-testid^="draft-day-"]').should('exist');
