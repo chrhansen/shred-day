@@ -12,7 +12,7 @@ Use this document as the single source of truth for onboarded coding agents. It 
 - `/client` – Vite React SPA with routing, Auth context, service layer, and shadcn/ui components.
 - `/mobile` – Independent Expo/React Native iPhone app; see mobile/README.md and mobile/RELEASE.md.
 - `/server` – Rails API-only app with namespaced `/api/v1` routes, serializers, service objects, and RSpec suite.
-- Root configs – `fly.toml`, `fly.worker.toml`, Docker and deployment helpers, README; legacy Kamal config retained for migration rollback.
+- Root configs – `fly.toml`, `fly.worker.toml`, Docker and Fly deployment helpers, README.
 
 ## Local Development
 1. **Install dependencies**

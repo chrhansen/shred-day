@@ -33,7 +33,7 @@
 # Ignore CI service files.
 /.github
 
-# Ignore Kamal files.
+# Keep retired deployment files out of build contexts.
 /config/deploy*.yml
 /.kamal
 

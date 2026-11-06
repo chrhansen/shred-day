@@ -125,10 +125,9 @@ Before changing infrastructure, save `pg_dump --format=custom --no-owner
 Keep photos and database backups together: database rows alone do not contain
 uploaded files. Neon restore history is limited by the selected plan.
 
-The old Kamal configuration remains available for rollback during migration.
-Retiring the Hetzner server also requires checking its separate database volume,
-IPv4, backups, and object-storage bucket. Powering a Hetzner VM off does not stop
-its billing. Leave innput.app resources alone.
+Christian confirmed on 2026-11-06 that no Hetzner Cloud resources remain.
+The former VM deployment is retired. Deploy and recover through Fly, Neon,
+and Tigris; keep retained backups outside the repository.
 
 ## Cost envelope
 

@@ -47,14 +47,8 @@ server/public/assets
 .bundle/
 config/master.key
 
-# Kamal secrets and potentially large build cache
-.kamal/*
-# But DO track the hooks directory
-!.kamal/hooks/
-# And ensure the specific hook file isn't ignored by other patterns (optional but safe)
-!.kamal/hooks/pre-deploy
-# Also specifically ignore the env file if it exists
-.kamal/*.env
+# Keep any retired deployment credentials and build cache untracked.
+.kamal/
 
 # Local design handoffs and temporary artifacts
 /tmp/
